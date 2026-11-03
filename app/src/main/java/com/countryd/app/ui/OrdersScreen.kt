@@ -1,0 +1,188 @@
+package com.countryd.app.ui
+
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.*
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.*
+import com.countryd.app.*
+import com.countryd.app.data.*
+import com.countryd.app.domain.*
+
+@Composable
+fun OrdersScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) {
+    var filter by rememberSaveable { mutableStateOf("All") }
+    var cancel by remember { mutableStateOf<String?>(null) }
+    ScreenBody {
+        Text("My deliveries", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        DeliveryTabs("Orders") { if (it == "My subscriptions") go("subs") }
+        Options(listOf("All", "Upcoming", "Delivered", "Cancelled"), filter) { filter = it }
+        val orders =
+            state.session.orders.filter {
+                when (filter) {
+                    "Upcoming" -> it.status !in listOf("Delivered", "Cancelled")
+                    "Delivered",
+                    "Cancelled" -> it.status == filter
+                    else -> true
+                }
+            }
+        if (orders.isEmpty())
+            EmptyState(
+                "No orders yet",
+                "Your placed orders and receipts will appear here.",
+                "Shop fresh essentials",
+            ) {
+                go("shop")
+            }
+        orders.forEach { order ->
+            CountryCard {
+                BillRow(order.id, order.status, true)
+                Caption("${order.deliveryDate} · ${order.slot}")
+                order.items.take(2).forEach { item ->
+                    val p = state.products.first { it.id == item.line.productId }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        AssetImage(productImage(p), p.name, Modifier.size(48.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(p.name, fontSize = 14.sp)
+                            Caption("${item.line.qty} × ${item.line.variant?.unit ?: p.unit}")
+                        }
+                    }
+                }
+                BillRow("Total", money(order.totals.total))
+                PrimaryButton("View order") { go("order/${order.id}") }
+                Row {
+                    TextButton({
+                        vm.repeat(order)
+                        go("cart")
+                    }) {
+                        Text("Repeat order")
+                    }
+                    if (order.status in listOf("Order Placed", "Quality Tested"))
+                        TextButton({ cancel = order.id }) { Text("Cancel order") }
+                }
+            }
+        }
+        if (BuildConfig.DEBUG) {
+            TextButton({ go("feedback-samples") }) { Text("Try sample delivered orders ›") }
+        }
+    }
+    if (cancel != null)
+        ConfirmCancel({ cancel = null }) {
+            vm.cancelOrder(cancel!!)
+            cancel = null
+        }
+}
+
+@Composable
+private fun ConfirmCancel(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Cancel this order?") },
+        text = {
+            Text(
+                "Wallet funds and used points will be returned once. Recurring subscriptions are managed separately."
+            )
+        },
+        confirmButton = { TextButton(onConfirm) { Text("Cancel order") } },
+        dismissButton = { TextButton(onDismiss) { Text("Keep order") } },
+    )
+}
+
+@Composable
+fun OrderScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit, id: String) {
+    val order = state.session.orders.find { it.id == id }
+    var cancel by remember { mutableStateOf(false) }
+    ScreenBody {
+        if (order == null) {
+            EmptyState(
+                "This order is not on this device",
+                "Open your saved orders to choose another order.",
+                "View orders",
+            ) {
+                go("orders")
+            }
+            return@ScreenBody
+        }
+        CountryCard(color = Mint) {
+            Caption("ORDER → DELIVERY → HELP")
+            Heading(
+                if (order.status == "Cancelled") "Order cancelled" else "Everything for this order"
+            )
+            Caption("${order.id} · ${order.deliveryDate}")
+            Text(order.status, fontWeight = FontWeight.Bold)
+            Caption("${order.slot}\n${order.address}")
+        }
+        val steps = listOf("Order Placed", "Quality Tested", "Out for Delivery", "Delivered")
+        if (order.status != "Cancelled")
+            CountryCard {
+                Heading("Delivery progress")
+                steps.forEachIndexed { i, label ->
+                    Text(
+                        "${if(i<=steps.indexOf(order.status))"●" else "○"}  $label",
+                        color = if (i <= steps.indexOf(order.status)) Green else Muted,
+                    )
+                }
+                Caption(
+                    "Progress reflects saved demo state. Live delivery tracking is not connected."
+                )
+            }
+        CountryCard {
+            Heading("Manage this order")
+            PrimaryButton("Get help with this order") { go("support?order=${order.id}") }
+            if (order.items.any { it.line.plan != null })
+                TextButton({ go("subs") }) { Text("Manage my subscriptions") }
+            if (order.status in listOf("Order Placed", "Quality Tested"))
+                TextButton({ cancel = true }) { Text("Cancel order") }
+        }
+        Heading("What you ordered")
+        order.items.forEach { item ->
+            val p = state.products.first { it.id == item.line.productId }
+            CountryCard {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AssetImage(productImage(p), p.name, Modifier.size(60.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(p.name, fontWeight = FontWeight.SemiBold)
+                        Caption("${item.line.qty} × ${item.line.variant?.unit ?: p.unit}")
+                    }
+                    Text(money(lineTotal(item.line, p)))
+                }
+                item.line.plan?.let { Caption("${it.frequency} from ${it.startDate} · ${it.slot}") }
+            }
+        }
+        Bill(order.totals, order.tip)
+        if (order.instructions.isNotEmpty())
+            CountryCard {
+                Heading("Delivery instructions")
+                Text(order.instructions.joinToString(" · "))
+            }
+        PrimaryButton("Buy again") {
+            vm.repeat(order)
+            go("cart")
+        }
+        if (order.status == "Delivered")
+            CountryCard {
+                Heading("Rate your delivery")
+                RatingStars(order.rating) { rating ->
+                    vm.update {
+                        it.copy(
+                            orders =
+                                it.orders.map { old ->
+                                    if (old.id == id) old.copy(rating = rating) else old
+                                }
+                        )
+                    }
+                }
+            }
+    }
+    if (cancel && order != null)
+        ConfirmCancel({ cancel = false }) {
+            vm.cancelOrder(id)
+            cancel = false
+        }
+}

@@ -1,0 +1,193 @@
+{
+  "description": "Dummy delivered-product requests for the mobile feedback flow. No real orders or customer data.",
+  "frequencyCapHours": 72,
+  "requests": [
+    {
+      "id": "json-sample:paneer",
+      "orderId": "SAMPLE-201",
+      "orderLineId": "SAMPLE-201:1",
+      "productId": "p2",
+      "productName": "Fresh Paneer",
+      "label": "Paneer",
+      "unit": "200 g",
+      "deliveryDate": "2026-11-02",
+      "area": "Indiranagar \u00b7 sample area",
+      "askAfterDays": 1,
+      "issues": [
+        "Hard texture",
+        "Unusual smell",
+        "Near expiry",
+        "Damaged pack",
+        "Other"
+      ],
+      "canReorder": true,
+      "demo": true
+    },
+    {
+      "id": "json-sample:dahi",
+      "orderId": "SAMPLE-202",
+      "orderLineId": "SAMPLE-202:1",
+      "productId": "p5",
+      "productName": "Fresh Curd",
+      "label": "Dahi",
+      "unit": "500 g",
+      "deliveryDate": "2026-11-02",
+      "area": "Koramangala \u00b7 sample area",
+      "askAfterDays": 1,
+      "issues": [
+        "Too sour",
+        "Watery texture",
+        "Unusual smell",
+        "Near expiry",
+        "Other"
+      ],
+      "canReorder": true,
+      "demo": true
+    },
+    {
+      "id": "json-sample:bread",
+      "orderId": "SAMPLE-203",
+      "orderLineId": "SAMPLE-203:1",
+      "productId": "p13",
+      "productName": "Whole Wheat Bread",
+      "label": "Bread",
+      "unit": "400 g",
+      "deliveryDate": "2026-11-01",
+      "area": "Indiranagar \u00b7 sample area",
+      "askAfterDays": 2,
+      "issues": [
+        "Stale or dry",
+        "Mould",
+        "Damaged slices",
+        "Near expiry",
+        "Other"
+      ],
+      "canReorder": true,
+      "demo": true
+    },
+    {
+      "id": "json-sample:atta",
+      "orderId": "SAMPLE-204",
+      "orderLineId": "SAMPLE-204:1",
+      "productId": "p24",
+      "productName": "Whole Wheat Atta",
+      "label": "Atta",
+      "unit": "1 kg",
+      "deliveryDate": "2026-10-29",
+      "area": "Whitefield \u00b7 sample area",
+      "askAfterDays": 5,
+      "issues": [
+        "Coarse texture",
+        "Unusual smell",
+        "Insects in pack",
+        "Damaged pack",
+        "Other"
+      ],
+      "canReorder": true,
+      "demo": true
+    },
+    {
+      "id": "json-sample:ghee",
+      "orderId": "SAMPLE-205",
+      "orderLineId": "SAMPLE-205:1",
+      "productId": "p6",
+      "productName": "Traditional Cow Ghee",
+      "label": "Ghee",
+      "unit": "500 ml",
+      "deliveryDate": "2026-10-27",
+      "area": "Koramangala \u00b7 sample area",
+      "askAfterDays": 7,
+      "issues": [
+        "Unusual taste",
+        "Unusual smell",
+        "Unexpected texture",
+        "Leaking jar",
+        "Other"
+      ],
+      "canReorder": true,
+      "demo": true
+    }
+  ],
+  "acceptanceScenarios": [
+    {
+      "name": "One-tap rating",
+      "action": "Tap any star",
+      "expected": "Rating saved immediately; no extra submit step"
+    },
+    {
+      "name": "Positive",
+      "rating": 4,
+      "expected": "Buy again for tomorrow or a chosen date"
+    },
+    {
+      "name": "Low rating",
+      "rating": 2,
+      "expected": "Product-specific issue chips; optional note and photo"
+    },
+    {
+      "name": "Subscribed",
+      "subscribed": true,
+      "expected": "No feedback request or buy-again nudge"
+    },
+    {
+      "name": "Skipped or ignored",
+      "expected": "No repeat request for that product; 72-hour cap on new prompts"
+    }
+  ],
+  "bannerScenarios": [
+    {
+      "name": "Before product is due",
+      "evaluatedAt": "2026-11-02T12:00:00+05:30",
+      "expected": "No banner: wait period not reached"
+    },
+    {
+      "name": "One day after paneer delivery",
+      "evaluatedAt": "2026-11-03T06:00:00+05:30",
+      "productId": "p2",
+      "expected": "One skippable rating banner"
+    },
+    {
+      "name": "Subscribed product",
+      "productId": "p2",
+      "subscriptionStatus": "Active",
+      "expected": "No feedback banner or buy-again nudge"
+    },
+    {
+      "name": "Paused subscription",
+      "productId": "p5",
+      "subscriptionStatus": "Paused",
+      "expected": "No feedback banner"
+    },
+    {
+      "name": "Skipped or ignored",
+      "expected": "Same product suppressed; no new banner for 72 hours"
+    },
+    {
+      "name": "No customer orders, existing subscriptions",
+      "expected": "Show subscriptions only; do not invent previous orders"
+    }
+  ],
+  "checkoutExamples": [
+    {
+      "productId": "p2",
+      "rating": 4
+    },
+    {
+      "productId": "p5",
+      "rating": 5
+    },
+    {
+      "productId": "p13",
+      "rating": 2
+    },
+    {
+      "productId": "p24",
+      "rating": 3
+    },
+    {
+      "productId": "p6",
+      "rating": 5,
+      "subscriptionStatus": "Active"
+    }
+  ]
+}

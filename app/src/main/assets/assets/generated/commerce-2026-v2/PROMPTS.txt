@@ -1,0 +1,9 @@
+Generated with the built-in image generation tool. Artwork has no baked-in offer text; UI renders catalog-based text.
+
+morning-banner.png: Wide 2.4:1 grocery delivery banner in white and pale mint. Glass milk bottle, paneer, eggs, banana and oats on the right, clean left side for UI headline. Soft studio daylight, organic green curves, no text or logos.
+
+produce-banner.png: Wide 2.4:1 grocery delivery banner with pale peach and white background. Apple, bananas, broccoli and spinach on the right, clean left side for UI offer headline. Crisp fresh produce, grounded shadows, no text or logos.
+
+loading-portrait.png: Portrait 9:16. Friendly 3D cream milk-bottle character with leafy sprout and green boots carrying a basket of banana, spinach and eggs. Pale mint and white background. Space at top and bottom for branding and loading indicator. No text or logos.
+
+fallback-portrait.png: Portrait 9:16. Friendly milk-bottle character with leafy sprout and green boots holding a blank map beside a blank signpost. Gently puzzled, reassuring expression, soft mint ground, white space for title and action. No text or logos.

@@ -1,0 +1,847 @@
+{
+  "deliveryInstructionsList": [
+    {
+      "id": "avoid_bell",
+      "title": "Avoid ringing bell",
+      "iconName": "notifications-off-outline",
+      "iconSet": "Ionicons"
+    },
+    {
+      "id": "leave_door",
+      "title": "Leave at the door",
+      "iconName": "door-closed-lock",
+      "iconSet": "MaterialCommunityIcons"
+    },
+    {
+      "id": "directions",
+      "title": "Meet at building entrance",
+      "subtitle": "",
+      "iconName": "mic-outline",
+      "iconSet": "Ionicons"
+    },
+    {
+      "id": "avoid_call",
+      "title": "Avoid calling",
+      "iconName": "volume-mute-outline",
+      "iconSet": "Ionicons"
+    },
+    {
+      "id": "leave_security",
+      "title": "Leave with security",
+      "iconName": "shield-checkmark-outline",
+      "iconSet": "Ionicons"
+    },
+    {
+      "id": "meet_door",
+      "title": "Hand it to me",
+      "iconName": "person-outline",
+      "iconSet": "Ionicons"
+    }
+  ],
+  "categories": [
+    {
+      "id": "all",
+      "title": "All"
+    },
+    {
+      "id": "milk",
+      "title": "Milk & Dairy"
+    },
+    {
+      "id": "eggs",
+      "title": "Farm Eggs"
+    },
+    {
+      "id": "produce",
+      "title": "Fruits & Veg"
+    },
+    {
+      "id": "bakery",
+      "title": "Bakery & Breakfast"
+    },
+    {
+      "id": "staples",
+      "title": "Staples"
+    }
+  ],
+  "products": [
+    {
+      "id": "p1",
+      "name": "Cow Milk",
+      "category": "Milk & Dairy",
+      "unit": "1 L",
+      "price": 68,
+      "mrp": 75,
+      "imageUri": "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80",
+      "localAssetKey": "rec_milk",
+      "rating": 4.9,
+      "reviewsCount": 3820,
+      "tag": "Bestseller",
+      "description": "Chilled within 1 hour of milking and delivered fresh in sealed, sterilized glass bottles without preservatives.",
+      "frequency": [
+        "Daily",
+        "Alternate days",
+        "Custom days"
+      ],
+      "isVeg": true,
+      "highProtein": true,
+      "customizable": true,
+      "variants": [
+        {
+          "id": "v1",
+          "name": "500 ml Glass Bottle",
+          "unit": "500 ml",
+          "price": 36
+        },
+        {
+          "id": "v2",
+          "name": "1 Litre Glass Bottle",
+          "unit": "1 L",
+          "price": 68
+        },
+        {
+          "id": "v3",
+          "name": "2 Litres (Family Pack)",
+          "unit": "2 L",
+          "price": 132
+        }
+      ],
+      "addons": [
+        {
+          "id": "a1",
+          "name": "Thermal Insulated Pouch",
+          "price": 15
+        },
+        {
+          "id": "a2",
+          "name": "Doorstep Bottle Hook",
+          "price": 29
+        }
+      ]
+    },
+    {
+      "id": "p2",
+      "name": "Fresh Paneer",
+      "category": "Milk & Dairy",
+      "unit": "200 g",
+      "price": 120,
+      "mrp": 140,
+      "imageUri": "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=400&q=80",
+      "localAssetKey": "rec_paneer",
+      "rating": 4.8,
+      "reviewsCount": 1940,
+      "tag": "Fresh today",
+      "description": "Soft, melt-in-your-mouth malai paneer crafted daily with 100% natural whole cow milk. Zero adulteration.",
+      "frequency": [
+        "Twice a week",
+        "Weekly",
+        "Once"
+      ],
+      "isVeg": true,
+      "highProtein": true,
+      "customizable": true,
+      "variants": [
+        {
+          "id": "v1",
+          "name": "Standard Pack (200 g)",
+          "unit": "200 g",
+          "price": 120
+        },
+        {
+          "id": "v2",
+          "name": "Family Pack (400 g)",
+          "unit": "400 g",
+          "price": 230
+        }
+      ],
+      "addons": [
+        {
+          "id": "a1",
+          "name": "Delight Chaat Masala (50g)",
+          "price": 20
+        },
+        {
+          "id": "a2",
+          "name": "Cold-pack freshness wrapper",
+          "price": 10
+        }
+      ]
+    },
+    {
+      "id": "p3",
+      "name": "Pure Buffalo Milk",
+      "category": "Milk & Dairy",
+      "unit": "1 L",
+      "price": 78,
+      "mrp": 88,
+      "imageUri": "https://images.unsplash.com/photo-1528750997573-59b89d56f4f7?auto=format&fit=crop&w=400&q=80",
+      "rating": 4.8,
+      "reviewsCount": 1420,
+      "tag": "Thick & Creamy",
+      "description": "Naturally thick, creamy, rich buffalo milk sourced from healthy pasture-fed Murrah buffaloes.",
+      "frequency": [
+        "Daily",
+        "Alternate days",
+        "Custom days"
+      ],
+      "isVeg": true,
+      "highProtein": true,
+      "customizable": true,
+      "variants": [
+        {
+          "id": "v1",
+          "name": "500 ml Glass Bottle",
+          "unit": "500 ml",
+          "price": 42
+        },
+        {
+          "id": "v2",
+          "name": "1 Litre Glass Bottle",
+          "unit": "1 L",
+          "price": 78
+        }
+      ],
+      "addons": [
+        {
+          "id": "a1",
+          "name": "Extra Thick Malai Pack",
+          "price": 25
+        }
+      ]
+    },
+    {
+      "id": "p4",
+      "name": "Pure A2 Cow Milk",
+      "category": "Milk & Dairy",
+      "unit": "1 L",
+      "price": 95,
+      "mrp": 108,
+      "imageUri": "https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=400&q=80",
+      "rating": 4.9,
+      "reviewsCount": 2210,
+      "tag": "Desi Gir Cow",
+      "description": "Pure A2 beta-casein milk from indigenous Gir cows, easy to digest and packed with natural nutrition.",
+      "frequency": [
+        "Daily",
+        "Alternate days",
+        "Custom days"
+      ],
+      "isVeg": true,
+      "highProtein": true,
+      "customizable": true,
+      "variants": [
+        {
+          "id": "v1",
+          "name": "500 ml Glass Bottle",
+          "unit": "500 ml",
+          "price": 50
+        },
+        {
+          "id": "v2",
+          "name": "1 Litre Glass Bottle",
+          "unit": "1 L",
+          "price": 95
+        }
+      ],
+      "addons": [
+        {
+          "id": "a1",
+          "name": "Thermal Insulated Pouch",
+          "price": 15
+        }
+      ]
+    },
+    {
+      "id": "p5",
+      "name": "Fresh Curd",
+      "category": "Milk & Dairy",
+      "unit": "500 g",
+      "price": 60,
+      "mrp": 70,
+      "imageUri": "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=400&q=80",
+      "localAssetKey": "deliv_curd",
+      "rating": 4.8,
+      "reviewsCount": 1650,
+      "tag": "Probiotic",
+      "description": "Slow-set traditional creamy curd rich in live gut-friendly cultures. Thick and naturally delicious.",
+      "frequency": [
+        "Daily",
+        "Alternate days",
+        "Weekly"
+      ],
+      "isVeg": true,
+      "highProtein": true,
+      "customizable": true,
+      "variants": [
+        {
+          "id": "v1",
+          "name": "Classic Tub (500 g)",
+          "unit": "500 g",
+          "price": 60
+        },
+        {
+          "id": "v2",
+          "name": "Value Bucket (1 kg)",
+          "unit": "1 kg",
+          "price": 115
+        }
+      ],
+      "addons": [
+        {
+          "id": "a1",
+          "name": "Raw Honey Drizzle Cup (30g)",
+          "price": 30
+        }
+      ]
+    },
+    {
+      "id": "p6",
+      "name": "Traditional Cow Ghee",
+      "category": "Milk & Dairy",
+      "unit": "500 ml",
+      "price": 585,
+      "mrp": 650,
+      "imageUri": "https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=400&q=80",
+      "rating": 4.9,
+      "reviewsCount": 880,
+      "tag": "Bilona Churned",
+      "description": "Slow-cooked golden aromatic ghee made from cultured cow milk butter with an authentic granular texture.",
+      "frequency": [
+        "Monthly",
+        "Every 45 days",
+        "Once"
+      ],
+      "isVeg": true,
+      "customizable": true,
+      "variants": [
+        {
+          "id": "v1",
+          "name": "Glass Jar (250 ml)",
+          "unit": "250 ml",
+          "price": 310
+        },
+        {
+          "id": "v2",
+          "name": "Glass Jar (500 ml)",
+          "unit": "500 ml",
+          "price": 585
+        },
+        {
+          "id": "v3",
+          "name": "Aroma Tin (1 L)",
+          "unit": "1 L",
+          "price": 1120
+        }
+      ]
+    },
+    {
+      "id": "p7",
+      "name": "Farm Eggs",
+      "category": "Farm Eggs",
+      "unit": "12 pcs",
+      "price": 110,
+      "mrp": 130,
+      "imageUri": "https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&w=400&q=80",
+      "localAssetKey": "rec_eggs",
+      "rating": 4.9,
+      "reviewsCount": 4210,
+      "tag": "Farm fresh",
+      "description": "Brown farm fresh eggs laid by vegetarian-fed hens. Packed securely in biodegradable protective trays.",
+      "frequency": [
+        "Daily",
+        "Alternate days",
+        "Weekly"
+      ],
+      "isVeg": false,
+      "highProtein": true,
+      "customizable": true,
+      "variants": [
+        {
+          "id": "v1",
+          "name": "Pack of 6 Brown Eggs",
+          "unit": "6 pcs",
+          "price": 60
+        },
+        {
+          "id": "v2",
+          "name": "Pack of 12 Brown Eggs",
+          "unit": "12 pcs",
+          "price": 110
+        },
+        {
+          "id": "v3",
+          "name": "Crate of 30 Brown Eggs",
+          "unit": "30 pcs",
+          "price": 260
+        }
+      ],
+      "addons": [
+        {
+          "id": "a1",
+          "name": "Eco Egg Storage Case",
+          "price": 25
+        }
+      ]
+    },
+    {
+      "id": "p8",
+      "name": "Classic White Eggs",
+      "category": "Farm Eggs",
+      "unit": "30 pcs",
+      "price": 215,
+      "mrp": 250,
+      "imageUri": "https://images.unsplash.com/photo-1506976785307-8732e854ad03?auto=format&fit=crop&w=400&q=80",
+      "rating": 4.7,
+      "reviewsCount": 1870,
+      "tag": "Value Crate",
+      "description": "Wholesome breakfast crate of fresh white farm eggs, rich in natural protein and essential vitamins.",
+      "frequency": [
+        "Weekly",
+        "Bi-weekly",
+        "Once"
+      ],
+      "isVeg": false,
+      "highProtein": true,
+      "customizable": true,
+      "variants": [
+        {
+          "id": "v1",
+          "name": "Pack of 12 White Eggs",
+          "unit": "12 pcs",
+          "price": 90
+        },
+        {
+          "id": "v2",
+          "name": "Crate of 30 White Eggs",
+          "unit": "30 pcs",
+          "price": 215
+        }
+      ]
+    },
+    {
+      "id": "p9",
+      "name": "Tender Coconut Water",
+      "subCategory": "Fruits",
+      "category": "Fruits & Veg",
+      "unit": "1 pc",
+      "price": 60,
+      "mrp": 70,
+      "imageUri": "https://images.unsplash.com/photo-1525385133512-2f3bdd039054?auto=format&fit=crop&w=400&q=80",
+      "localAssetKey": "rec_coconut",
+      "rating": 4.8,
+      "reviewsCount": 2980,
+      "tag": "Hydration",
+      "description": "Naturally chilled sweet coconut water straight from coastal groves. Zero sugar or preservatives added.",
+      "frequency": [
+        "Daily",
+        "Alternate days",
+        "Once"
+      ],
+      "isVeg": true,
+      "customizable": true,
+      "variants": [
+        {
+          "id": "v1",
+          "name": "Single Nut (1 pc)",
+          "unit": "1 pc",
+          "price": 60
+        },
+        {
+          "id": "v2",
+          "name": "Pair Pack (2 pcs)",
+          "unit": "2 pcs",
+          "price": 115
+        }
+      ],
+      "addons": [
+        {
+          "id": "a1",
+          "name": "Pre-punched drinking straw",
+          "price": 5
+        }
+      ]
+    },
+    {
+      "id": "p10",
+      "name": "Robusta Bananas",
+      "subCategory": "Fruits",
+      "category": "Fruits & Veg",
+      "unit": "1 kg",
+      "price": 48,
+      "mrp": 60,
+      "imageUri": "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=400&q=80",
+      "rating": 4.7,
+      "reviewsCount": 1350,
+      "tag": "Natural Ripen",
+      "description": "Naturally ripened, carbide-free golden bananas perfect for breakfast cereals, smoothies, and energy snacks.",
+      "frequency": [
+        "Alternate days",
+        "Weekly",
+        "Once"
+      ],
+      "isVeg": true,
+      "customizable": false
+    },
+    {
+      "id": "p11",
+      "name": "Farm Fresh Tomatoes",
+      "subCategory": "Vegetables",
+      "category": "Fruits & Veg",
+      "unit": "1 kg",
+      "price": 36,
+      "mrp": 45,
+      "imageUri": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80",
+      "rating": 4.6,
+      "reviewsCount": 920,
+      "tag": "Crisp & Juicy",
+      "description": "Vine-ripened farm country tomatoes harvested early morning with sweet tangy flavor for daily curries and salads.",
+      "frequency": [
+        "Twice a week",
+        "Weekly",
+        "Once"
+      ],
+      "isVeg": true,
+      "customizable": false
+    },
+    {
+      "id": "p12",
+      "name": "Shimla Royal Apples",
+      "subCategory": "Fruits",
+      "category": "Fruits & Veg",
+      "unit": "1 kg (4-5 pcs)",
+      "price": 180,
+      "mrp": 210,
+      "imageUri": "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=400&q=80",
+      "rating": 4.8,
+      "reviewsCount": 650,
+      "tag": "Orchard Fresh",
+      "description": "Hand-picked crisp juicy apples from high altitude orchards in Himachal Pradesh. Wax-free.",
+      "frequency": [
+        "Weekly",
+        "Once"
+      ],
+      "isVeg": true,
+      "customizable": false
+    },
+    {
+      "id": "p13",
+      "name": "Whole Wheat Bread",
+      "category": "Bakery & Breakfast",
+      "unit": "400 g",
+      "price": 52,
+      "mrp": 60,
+      "imageUri": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+      "rating": 4.7,
+      "reviewsCount": 1120,
+      "tag": "Zero Maida",
+      "description": "Stone-ground 100% whole wheat bread baked without chemical improvers or palm oil.",
+      "frequency": [
+        "Alternate days",
+        "Weekly",
+        "Once"
+      ],
+      "isVeg": true,
+      "customizable": true,
+      "variants": [
+        {
+          "id": "v1",
+          "name": "Sliced Loaf (400 g)",
+          "unit": "400 g",
+          "price": 52
+        },
+        {
+          "id": "v2",
+          "name": "Twin Pack (800 g)",
+          "unit": "800 g",
+          "price": 98
+        }
+      ],
+      "addons": [
+        {
+          "id": "a1",
+          "name": "Farm Butter Cup (50g)",
+          "price": 30
+        }
+      ]
+    },
+    {
+      "id": "p14",
+      "name": "Raw Multifloral Honey",
+      "category": "Bakery & Breakfast",
+      "unit": "250 g",
+      "price": 195,
+      "mrp": 230,
+      "imageUri": "https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=400&q=80",
+      "rating": 4.9,
+      "reviewsCount": 780,
+      "tag": "100% Pure",
+      "description": "Unprocessed, unheated wild forest raw honey retaining natural pollen, enzymes, and medicinal benefits.",
+      "frequency": [
+        "Monthly",
+        "Once"
+      ],
+      "isVeg": true,
+      "customizable": false
+    },
+    {
+      "id": "p15",
+      "name": "Rolled Oats",
+      "category": "Bakery & Breakfast",
+      "unit": "500 g",
+      "price": 115,
+      "mrp": 135,
+      "imageUri": "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&w=400&q=80",
+      "rating": 4.8,
+      "reviewsCount": 540,
+      "tag": "High Fiber",
+      "description": "Whole grain jumbo rolled oats for porridge, overnight oats, and high-protein breakfast bowls.",
+      "frequency": [
+        "Monthly",
+        "Once"
+      ],
+      "isVeg": true,
+      "highProtein": true,
+      "customizable": false
+    },
+    {
+      "id": "p16",
+      "name": "Fresh Broccoli",
+      "category": "Fruits & Veg",
+      "unit": "250 g",
+      "subCategory": "Vegetables",
+      "price": 65,
+      "mrp": 75,
+      "imageUri": "",
+      "rating": 4.7,
+      "reviewsCount": 0,
+      "tag": "Demo catalog",
+      "description": "Fresh broccoli for stir-fries and simple vegetable sides. Preview product; availability and price are illustrative.",
+      "frequency": [
+        "Weekly",
+        "Twice a week",
+        "Once"
+      ],
+      "isVeg": true
+    },
+    {
+      "id": "p17",
+      "name": "Fresh Spinach",
+      "category": "Fruits & Veg",
+      "unit": "250 g",
+      "subCategory": "Vegetables",
+      "price": 30,
+      "mrp": 35,
+      "imageUri": "",
+      "rating": 4.7,
+      "reviewsCount": 0,
+      "tag": "Demo catalog",
+      "description": "A bunch of spinach for everyday cooking, paneer sides and vegetable combinations. Preview product; availability and price are illustrative.",
+      "frequency": [
+        "Weekly",
+        "Twice a week",
+        "Once"
+      ],
+      "isVeg": true
+    },
+    {
+      "id": "p18",
+      "name": "Fresh Carrots",
+      "category": "Fruits & Veg",
+      "subCategory": "Vegetables",
+      "unit": "500 g",
+      "price": 38,
+      "mrp": 45,
+      "imageUri": "",
+      "rating": 0,
+      "reviewsCount": 0,
+      "tag": "New",
+      "description": "Carrots for salads, soups and everyday cooking. Sample product with illustrative price and availability.",
+      "frequency": [
+        "Weekly",
+        "Once"
+      ],
+      "isVeg": true,
+      "variants": [
+        {
+          "id": "v1",
+          "name": "500 g pack",
+          "unit": "500 g",
+          "price": 38
+        },
+        {
+          "id": "v2",
+          "name": "1 kg pack",
+          "unit": "1 kg",
+          "price": 72
+        }
+      ]
+    },
+    {
+      "id": "p19",
+      "name": "Basmati Rice",
+      "category": "Staples",
+      "subCategory": "Rice & Grains",
+      "unit": "1 kg",
+      "price": 145,
+      "mrp": 170,
+      "imageUri": "",
+      "rating": 0,
+      "reviewsCount": 0,
+      "tag": "New",
+      "description": "Long-grain rice for pulao, biryani and everyday meals. Sample product with illustrative price and availability.",
+      "frequency": [
+        "Monthly",
+        "Once"
+      ],
+      "isVeg": true,
+      "variants": [
+        {
+          "id": "v1",
+          "name": "1 kg pack",
+          "unit": "1 kg",
+          "price": 145
+        },
+        {
+          "id": "v2",
+          "name": "5 kg family pack",
+          "unit": "5 kg",
+          "price": 695
+        }
+      ]
+    },
+    {
+      "id": "p20",
+      "name": "Yellow Moong Dal",
+      "category": "Staples",
+      "subCategory": "Dals & Pulses",
+      "unit": "500 g",
+      "price": 79,
+      "mrp": 90,
+      "imageUri": "",
+      "rating": 0,
+      "reviewsCount": 0,
+      "tag": "New",
+      "description": "Split yellow moong dal for dal, khichdi and home cooking. Sample product with illustrative price and availability.",
+      "frequency": [
+        "Monthly",
+        "Once"
+      ],
+      "isVeg": true,
+      "variants": [
+        {
+          "id": "v1",
+          "name": "500 g pack",
+          "unit": "500 g",
+          "price": 79
+        },
+        {
+          "id": "v2",
+          "name": "1 kg pack",
+          "unit": "1 kg",
+          "price": 152
+        }
+      ]
+    },
+    {
+      "id": "p21",
+      "name": "Sunflower Cooking Oil",
+      "category": "Staples",
+      "subCategory": "Oils",
+      "unit": "1 L",
+      "price": 139,
+      "mrp": 160,
+      "imageUri": "",
+      "rating": 0,
+      "reviewsCount": 0,
+      "tag": "New",
+      "description": "Sunflower oil for everyday cooking. Sample product with illustrative price and availability.",
+      "frequency": [
+        "Monthly",
+        "Once"
+      ],
+      "isVeg": true
+    },
+    {
+      "id": "p22",
+      "name": "Turmeric Powder",
+      "category": "Staples",
+      "subCategory": "Spices",
+      "unit": "100 g",
+      "price": 35,
+      "mrp": 42,
+      "imageUri": "",
+      "rating": 0,
+      "reviewsCount": 0,
+      "tag": "New",
+      "description": "Ground turmeric for dals, curries and everyday recipes. Sample product with illustrative price and availability.",
+      "frequency": [
+        "Monthly",
+        "Once"
+      ],
+      "isVeg": true
+    },
+    {
+      "id": "p23",
+      "name": "Whole Almonds",
+      "category": "Staples",
+      "subCategory": "Dry Fruits",
+      "unit": "200 g",
+      "price": 189,
+      "mrp": 220,
+      "imageUri": "",
+      "rating": 0,
+      "reviewsCount": 0,
+      "tag": "New",
+      "description": "Whole almonds for snacking, breakfast bowls and baking. Contains tree nuts. Sample product with illustrative price and availability.",
+      "frequency": [
+        "Monthly",
+        "Once"
+      ],
+      "isVeg": true,
+      "variants": [
+        {
+          "id": "v1",
+          "name": "200 g pack",
+          "unit": "200 g",
+          "price": 189
+        },
+        {
+          "id": "v2",
+          "name": "500 g pack",
+          "unit": "500 g",
+          "price": 455
+        }
+      ]
+    },
+    {
+      "id": "p24",
+      "name": "Whole Wheat Atta",
+      "category": "Staples",
+      "subCategory": "Rice & Grains",
+      "unit": "1 kg",
+      "price": 65,
+      "mrp": 75,
+      "imageUri": "",
+      "rating": 0,
+      "reviewsCount": 0,
+      "tag": "New",
+      "description": "Whole wheat atta. Illustrative catalogue item for the product feedback assignment; price and availability are simulated.",
+      "frequency": [
+        "Monthly",
+        "Once"
+      ],
+      "isVeg": true
+    }
+  ],
+  "initialSubscriptions": [],
+  "initialOrders": [],
+  "profile": {
+    "name": "Guest",
+    "phone": "",
+    "email": "",
+    "address": "",
+    "walletBalance": 0,
+    "vipStatus": "Delight Club Gold Member",
+    "vipValidTill": "31 Dec 2026"
+  }
+}

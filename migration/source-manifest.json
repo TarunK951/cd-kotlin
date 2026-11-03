@@ -1,0 +1,1869 @@
+{
+  "source": "D:\\country",
+  "importedAt": "2026-11-03T18:15:20.636Z",
+  "assets": [
+    {
+      "source": "assets/android-icon-background.png",
+      "sha256": "c524549a662f8bbee500de0fce3052f659f2235b1116f2eebbdc22a4398d4d59",
+      "bytes": 133002
+    },
+    {
+      "source": "assets/android-icon-foreground.png",
+      "sha256": "53edc0df68f89b8188642cc9c479535d06f73b1dc7e26269ddf9923e74545514",
+      "bytes": 115501
+    },
+    {
+      "source": "assets/android-icon-monochrome.png",
+      "sha256": "53edc0df68f89b8188642cc9c479535d06f73b1dc7e26269ddf9923e74545514",
+      "bytes": 115501
+    },
+    {
+      "source": "assets/brand-logo-live-better.png",
+      "sha256": "e5baaf156ef92ee69431ea4d999b86ef4bda8e385fbb356730ddab079cbb7438",
+      "bytes": 57471
+    },
+    {
+      "source": "assets/brand-logo.png",
+      "sha256": "bd2229786b508ccb354dd25721403362fd13a966a13cdaaddc3155ddb706c656",
+      "bytes": 289491
+    },
+    {
+      "source": "assets/categories/bakery.png",
+      "sha256": "be92e92710ed295f326bdb2ad8c80f2d5df3da50074cb359c5b3a7e03cf4b8bc",
+      "bytes": 117906
+    },
+    {
+      "source": "assets/categories/breakfast.png",
+      "sha256": "08009900a713f9de79c7e972e03f20a48061532b31f5bf2a3f11aebdaa235755",
+      "bytes": 116178
+    },
+    {
+      "source": "assets/categories/dairy.png",
+      "sha256": "b1dff9bc2d4e3536c9b4d9b641fe2a6cfd36bd61cfb1bdf9cf1fe2456f7ab87f",
+      "bytes": 95735
+    },
+    {
+      "source": "assets/categories/dryfruits.png",
+      "sha256": "e23000873302b1453a83c5cc0878bd3a7293268910826dcabbda53974e319674",
+      "bytes": 111489
+    },
+    {
+      "source": "assets/categories/eggs.png",
+      "sha256": "29aba74e2fbd82bf4b9ef7af08303777afd01ddec3dfc782a1880f278f1e537e",
+      "bytes": 88771
+    },
+    {
+      "source": "assets/categories/fruits.png",
+      "sha256": "7c2e435f9ce9eb7f0381bf219cf3611b8bd761991e8b0fa56c90924f8cb31e2c",
+      "bytes": 105007
+    },
+    {
+      "source": "assets/categories/grains.png",
+      "sha256": "ba32889b3886e5369432d055392cc1eae5bb32546cf85bf286e783afd26e5678",
+      "bytes": 114223
+    },
+    {
+      "source": "assets/categories/milk.png",
+      "sha256": "97d2074cb9c85cdd670e6b114b53c87ad9ba481b930d613cfd90796a2ae32bd0",
+      "bytes": 98148
+    },
+    {
+      "source": "assets/categories/oils.png",
+      "sha256": "5a79cde9cc31909611a5e5adf3c585ccd98cf64b2ed803a5798409a2bb298f20",
+      "bytes": 118023
+    },
+    {
+      "source": "assets/categories/pulses.png",
+      "sha256": "f9e612c8e935cd11f39f7483d97f1565a445084c5a9f0ad7550d746351bfafd5",
+      "bytes": 117900
+    },
+    {
+      "source": "assets/categories/spices.png",
+      "sha256": "ebb22a8c8dc13d78663ea3fe40504b7876e9528101993c2ef62f770aa80072bc",
+      "bytes": 123635
+    },
+    {
+      "source": "assets/categories/vegetables.png",
+      "sha256": "5869a60a2911c5a4e3a399e551ecb2a3c45c0f5af6c0b6a56c7eff4470b161a6",
+      "bytes": 119428
+    },
+    {
+      "source": "assets/favicon.png",
+      "sha256": "5581b741fd566a4a06ada48badb318c43164fe42975a2be773b52eb92d577397",
+      "bytes": 10552
+    },
+    {
+      "source": "assets/fonts/Caveat-SemiBold.ttf",
+      "sha256": "1f44700f4362468de6f8b4d87fed36ad101d14696272dd1b5eceaa5d64b5baa8",
+      "bytes": 257920
+    },
+    {
+      "source": "assets/ftue/dahi-cutout.png",
+      "sha256": "ee2f02545cf575c6360a9bf75f0d5bb9c8b2b82114a6201f7ae48fe1dbb634d4",
+      "bytes": 230103
+    },
+    {
+      "source": "assets/ftue/eggs-cutout.png",
+      "sha256": "119f85c794a08f5f31fd6c068a59f5b1b7a33faa30a9f382d38838cfe30731a6",
+      "bytes": 210848
+    },
+    {
+      "source": "assets/ftue/generated-2026-10-07/buffalo-milk-pack.png",
+      "sha256": "dd7a7f548e08de4b45d0677f987235b1b2340a03576ec19d0b02eca43a5501d1",
+      "bytes": 1419164
+    },
+    {
+      "source": "assets/ftue/generated-2026-10-07/offer-4-plus-3.png",
+      "sha256": "b4e0a0203d7c8d8a5645b5a6014a0f318c65db7c0f28c1660d0998f6a604c638",
+      "bytes": 1327117
+    },
+    {
+      "source": "assets/ftue/generated-2026-10-07/optimized/buffalo-milk-pack.png",
+      "sha256": "00ceef80bb19c135bb93c14c58af71b9e6c1bed91d7b3f1dd19c453a758be1f5",
+      "bytes": 374552
+    },
+    {
+      "source": "assets/ftue/generated-2026-10-07/optimized/offer-4-plus-3.png",
+      "sha256": "195f3ebc2145af27b7aaaa63dcb8e9ac2fbd471985668f72fd1fedd051a76255",
+      "bytes": 192064
+    },
+    {
+      "source": "assets/ftue/generated-2026-10-07/optimized/reward-hamper.png",
+      "sha256": "8567a73139f6983dca5b3c29a10565f1cdb15eb8bae7d7102b0ff7cef7cb78de",
+      "bytes": 181125
+    },
+    {
+      "source": "assets/ftue/generated-2026-10-07/optimized/vip-gift.png",
+      "sha256": "21bc95676f6e11986e0402a440d1aaed47f6059236f5e75dc202cc5a654b40ae",
+      "bytes": 459088
+    },
+    {
+      "source": "assets/ftue/generated-2026-10-07/reward-hamper.png",
+      "sha256": "281ae1813352c9723d8771944267fca05d7794a79cc155daaf72ca114391578c",
+      "bytes": 1465153
+    },
+    {
+      "source": "assets/ftue/generated-2026-10-07/vip-gift.png",
+      "sha256": "0cdd802b533c98a7c3d032ff92c763ac218cdadef38aeb633b6d46e203ce36a8",
+      "bytes": 1840304
+    },
+    {
+      "source": "assets/ftue/milk-cutout.png",
+      "sha256": "d9a950f8216cbf65d06e77ded3efd4007e35e8aed09adef99e899f20113b84d1",
+      "bytes": 461532
+    },
+    {
+      "source": "assets/ftue/paneer-cutout.png",
+      "sha256": "f7c6b2c343f0efc84e97e3d27cb6d25570e6fe3524b69742dd2933e68a469a26",
+      "bytes": 339068
+    },
+    {
+      "source": "assets/generated/assistant-2026/README.md",
+      "sha256": "3843c131e433f9f214d77b2ea79677df762502a17aa18d41abcb3cf6741ef70e",
+      "bytes": 601
+    },
+    {
+      "source": "assets/generated/assistant-2026/delight-guide-original.png",
+      "sha256": "2fbfb5dae83d06669da9c1b9abde26b04515280e4c75c518c151a4625a082fd9",
+      "bytes": 1891497
+    },
+    {
+      "source": "assets/generated/assistant-2026/delight-guide.png",
+      "sha256": "d2db98baf430fc814371160dde285e68abb81b3821e307edc277a42b691f9041",
+      "bytes": 181523
+    },
+    {
+      "source": "assets/generated/balances-v1/icons.png",
+      "sha256": "dd3764e488be80b83c0f8753b764ba2e0843c1294a71de2e4f1db9a756e8a05e",
+      "bytes": 1294581
+    },
+    {
+      "source": "assets/generated/banner-better-bites-card.jpg",
+      "sha256": "a50cc8e0b8b218b830ee22d9ac6c4faccb2d747a8089cbd7613a2fe59c0274e0",
+      "bytes": 126564
+    },
+    {
+      "source": "assets/generated/banner-better-bites-clean.png",
+      "sha256": "a9c71e6a82a2c4a474d26edf9a7be599942f96cfb82db42fd483ab67d5a5ccd9",
+      "bytes": 2822889
+    },
+    {
+      "source": "assets/generated/banner-fresh-daily-card.jpg",
+      "sha256": "8bb40b2621323321d01709beba00c0d9f196e783abc89fc069a27e200cc291ba",
+      "bytes": 94009
+    },
+    {
+      "source": "assets/generated/banner-fresh-daily-clean.png",
+      "sha256": "5165110b94c77d0ee914305bffeb141309a70145a78e00ba517bfa21e3cfc5c3",
+      "bytes": 2823916
+    },
+    {
+      "source": "assets/generated/banner-fresh-essentials-normalized.png",
+      "sha256": "0d36ef80e1203ae91c5b5bfab6b629a75458dc1532f8d2db24cf3fa96406aa0f",
+      "bytes": 1858684
+    },
+    {
+      "source": "assets/generated/banner-fresh-essentials-tall.png",
+      "sha256": "611b2491d4c9e19242541ca8551339e2e335e1158bac74e9199ecf655a063a37",
+      "bytes": 2249847
+    },
+    {
+      "source": "assets/generated/banner-hero-normalized.png",
+      "sha256": "dcb928f9d6989247788d126276a280b15664bf3853f378b7f155493a46da7ca6",
+      "bytes": 885669
+    },
+    {
+      "source": "assets/generated/banner-hero-tall.png",
+      "sha256": "59c10a78fb7a3bc862cf552ccd6d97b4dc6ad05f90d2979241674572d26d6827",
+      "bytes": 1091809
+    },
+    {
+      "source": "assets/generated/banner-high-protein-clean.png",
+      "sha256": "09188fb21f0faf3322ea4a110b393903853ae0c6e2d9893467e84e82041172e5",
+      "bytes": 2903218
+    },
+    {
+      "source": "assets/generated/banner-limited-offers-normalized.png",
+      "sha256": "28716111c03455c0180cee36df9e6522e2c7db14a5ddff0e3adc6fa27116cca6",
+      "bytes": 1768974
+    },
+    {
+      "source": "assets/generated/banner-limited-offers-tall.png",
+      "sha256": "55b879fe3c7dfb72360ca3f3d6f2b5b5f7e35eeb850488dfd7833c66731c3854",
+      "bytes": 2108046
+    },
+    {
+      "source": "assets/generated/banner-offer-1plus1-card.jpg",
+      "sha256": "bdb64828973c8977554a960cdb25c66a3b9e7d8e9265df74b82f083309b4ee37",
+      "bytes": 76071
+    },
+    {
+      "source": "assets/generated/banner-offer-1plus1-clean.png",
+      "sha256": "c20d0319a5ff20a64e9d241a86160d5d3d18664eb05d041e4ff97190ed84e7d9",
+      "bytes": 2258149
+    },
+    {
+      "source": "assets/generated/banner-offer-1plus1-normalized.png",
+      "sha256": "3071eb386881469168b906e0369417deacb442f4fd7037a1feb4d6f42dbbc26d",
+      "bytes": 1999602
+    },
+    {
+      "source": "assets/generated/banner-offer-1plus1-tall.png",
+      "sha256": "658221bc80619279881ffe68633945e07fe8b5c4b9876633cd675a0632739911",
+      "bytes": 2328080
+    },
+    {
+      "source": "assets/generated/cart-icons-v1/icons.png",
+      "sha256": "e471d72c82dc3b70057d241cf9bb970f5d10a6758e9f8cf9ee8968a0f642974d",
+      "bytes": 1416221
+    },
+    {
+      "source": "assets/generated/catalogue-2026-10-22/PROMPTS.md",
+      "sha256": "47db1b92f0ad800c2a1818c3883a690fe538db91bb2c891e51f38a6d27c62b82",
+      "bytes": 1491
+    },
+    {
+      "source": "assets/generated/catalogue-2026-10-22/almonds.jpg",
+      "sha256": "6c37e2bff67c80bde7a7b077a9aa64a269ca3642c2d81db5c85441532156665e",
+      "bytes": 58196
+    },
+    {
+      "source": "assets/generated/catalogue-2026-10-22/carrots.jpg",
+      "sha256": "47e57ad3ac352142d336afb8a8abd6f8cd3f4f6532147f713067597fc7f78364",
+      "bytes": 34049
+    },
+    {
+      "source": "assets/generated/catalogue-2026-10-22/dal.jpg",
+      "sha256": "5bf4e334a87581c57809594cbff26c4d6c2c61ad5159ad7c2176443cb909f9b5",
+      "bytes": 52392
+    },
+    {
+      "source": "assets/generated/catalogue-2026-10-22/oil.jpg",
+      "sha256": "9a49043a7a99c8b85fb6996d9d5bfad39b981ee8de6c089623ee458be6837f96",
+      "bytes": 17557
+    },
+    {
+      "source": "assets/generated/catalogue-2026-10-22/rice.jpg",
+      "sha256": "1821c4b4ad460425450880ef760f5558f6f75eac7a0f0348eae5fa564195cdb9",
+      "bytes": 43756
+    },
+    {
+      "source": "assets/generated/catalogue-2026-10-22/turmeric.jpg",
+      "sha256": "ed6a356b97aa04ae7181bac913e92a30184a3e542f36c93d97b14dc5a26c61e7",
+      "bytes": 54841
+    },
+    {
+      "source": "assets/generated/commerce-2026-v2/PROMPTS.txt",
+      "sha256": "29f825931d28574bfc73c8a8b7f25c8c34099eb3a0473320b15d4ba64d150746",
+      "bytes": 1133
+    },
+    {
+      "source": "assets/generated/commerce-2026-v2/fallback-portrait.png",
+      "sha256": "4e6f49ad5f38ee732080495ceda819a5573b93b353c97484a87dc6cda48ed49a",
+      "bytes": 1209071
+    },
+    {
+      "source": "assets/generated/commerce-2026-v2/loading-portrait.png",
+      "sha256": "54e3cdcb070bba9103ebfa30cba039253017bf0367c4222e89510d0acf23c7f9",
+      "bytes": 1189497
+    },
+    {
+      "source": "assets/generated/commerce-2026-v2/morning-banner.png",
+      "sha256": "13a976d35dacee6c6b6d8cef919a296b3831b85f4cd7a68b8437dedf86a6c1a0",
+      "bytes": 1649736
+    },
+    {
+      "source": "assets/generated/commerce-2026-v2/produce-banner.png",
+      "sha256": "ad0f12912f6fbbd381528e94e57ac07d183e42776dffd77dbe869e1081b3d746",
+      "bytes": 1900068
+    },
+    {
+      "source": "assets/generated/commerce-2026-v3/PROMPT.md",
+      "sha256": "9f59506ca673717673e0756a326d85d5ba79a360db75c0394a5550a5c9a832b7",
+      "bytes": 1021
+    },
+    {
+      "source": "assets/generated/commerce-2026-v3/dairy-editorial-banner.png",
+      "sha256": "ad312badeb53e4a842b0f385b1fe614eab1876c5ea2d85718117d75f22f6bf40",
+      "bytes": 1666711
+    },
+    {
+      "source": "assets/generated/commerce-2026-v3/delight-quality-check.png",
+      "sha256": "82e81159a16a2d6696631431924b4c728aed2d90196023e425b44e2f070fb768",
+      "bytes": 1587387
+    },
+    {
+      "source": "assets/generated/commerce-2026-v4/PROMPTS.md",
+      "sha256": "0687dfbae4777214bf2d6fc11e5a01a216aa03daf7e26f5947272acfb66ddf0d",
+      "bytes": 2001
+    },
+    {
+      "source": "assets/generated/commerce-2026-v4/chilled.png",
+      "sha256": "325ce175b278603001450fffa0cf0b9ac6767cdb385a8a38274e9d3c09092039",
+      "bytes": 1045719
+    },
+    {
+      "source": "assets/generated/commerce-2026-v4/delight-celebrate.png",
+      "sha256": "eee6f78c6f18119e2524d0140e9b512b4ed8c791d71ce942dfdd958d4b71ed78",
+      "bytes": 1890827
+    },
+    {
+      "source": "assets/generated/commerce-2026-v4/fresh-pack.png",
+      "sha256": "b494e995344119784a5041b5752255133140bc309814cccb87fac07998c000f4",
+      "bytes": 1028108
+    },
+    {
+      "source": "assets/generated/commerce-2026-v4/milk-check.png",
+      "sha256": "eb85ddb66ea201d1732c7679b5dbb0ea4de1b58a0405fc945bda273b18d0a6bb",
+      "bytes": 942974
+    },
+    {
+      "source": "assets/generated/commerce-2026-v5/PROMPTS.md",
+      "sha256": "f083f0c4035af54d82bb31c651ad5563f4536b942e8b5741aa8fbc73a746e151",
+      "bytes": 3759
+    },
+    {
+      "source": "assets/generated/commerce-2026-v5/dairy-cutout.png",
+      "sha256": "2ce80a2a8b653eda6a430d6124a4e59bb14fa28ed760d722108225fef2fec07f",
+      "bytes": 1225703
+    },
+    {
+      "source": "assets/generated/commerce-2026-v5/farm-cutout.png",
+      "sha256": "8d6a9eeff81d3a02ddb672c1e1b8a56acf2b6179b4aa6bdeeda255f0fb85caf8",
+      "bytes": 2213219
+    },
+    {
+      "source": "assets/generated/commerce-2026-v5/pantry-cutout.png",
+      "sha256": "015acf80522d919ee5b5abf02016c26fc9e0a713e6b5b9c986e704d0da314ae4",
+      "bytes": 2249231
+    },
+    {
+      "source": "assets/generated/commerce-2026-v5/produce-cutout.png",
+      "sha256": "2c61ee25dae7729881b2bb8eb99005e879a9e738f2038c8d1bdb3f1e34855e99",
+      "bytes": 2564351
+    },
+    {
+      "source": "assets/generated/commerce-2026-v6/PROMPTS.md",
+      "sha256": "74c3f48a72ecbc59c2d60fce8c0067ace7413c193e0eef48eb05c1606a4df943",
+      "bytes": 2319
+    },
+    {
+      "source": "assets/generated/commerce-2026-v6/farm-cutout-prompt.md",
+      "sha256": "8ae0098435b76f26974717a1bea504900577dcdf61fb76091db72c6c8eddd4d7",
+      "bytes": 1419
+    },
+    {
+      "source": "assets/generated/commerce-2026-v6/farm-cutout-six-cows.png",
+      "sha256": "cc9a8413c45c5955c87076dc0542cb98eda2c77ca27b6f9813e0bdac601abb15",
+      "bytes": 2492894
+    },
+    {
+      "source": "assets/generated/commerce-2026-v6/farm.png",
+      "sha256": "385bc75bbc4e9c37e9ce6d2cf91f29b1454e17b9923ea435be17d8ad24b5f608",
+      "bytes": 3158507
+    },
+    {
+      "source": "assets/generated/commerce-2026-v6/shopper.png",
+      "sha256": "baedc3c631c71880194e3bb7f3515363a838d44933a12bd7b86ebf831c9b7532",
+      "bytes": 2382556
+    },
+    {
+      "source": "assets/generated/commerce-2026-v6/welcome.png",
+      "sha256": "df1d1b2b00c003fc953b0d425225ce72fa4e00db4d3cbda8425643c813348b78",
+      "bytes": 1539621
+    },
+    {
+      "source": "assets/generated/commerce-2026-v7/morning-ideas-3d.png",
+      "sha256": "8f87be26df1363f21bb5a66c76eff11ac4ceba5c59192231d7e11f98b286d99b",
+      "bytes": 1970768
+    },
+    {
+      "source": "assets/generated/commerce-2026-v7/pair-basket-3d.png",
+      "sha256": "def1f4b0c0448d3cb92614cbfd8530852c9411a5b646d4e61ee53fd0883febaa",
+      "bytes": 2178424
+    },
+    {
+      "source": "assets/generated/commerce-2026-v7/prompts.md",
+      "sha256": "b1457a833784b2950b07a990a79caeba983c28520c5dbf12b15debe024b3424f",
+      "bytes": 1982
+    },
+    {
+      "source": "assets/generated/commerce-2026-v8/milk-bottles-prompt.md",
+      "sha256": "9fa8a6e1588ef72e32766ffea8f876d087c4aa8ee383c5c5c7fa7093928e897e",
+      "bytes": 535
+    },
+    {
+      "source": "assets/generated/commerce-2026-v8/prompts.md",
+      "sha256": "c7ef81e6e977d9c02bd02b10d35a24aa83343af5e26bd1d10f2c749c0825e68e",
+      "bytes": 5127
+    },
+    {
+      "source": "assets/generated/commerce-2026-v8/routine-fitness.png",
+      "sha256": "7a9319c146c910d1ab2bfe14cbf771c2565507a63b8bb2d06c0d3f40804ef266",
+      "bytes": 1789945
+    },
+    {
+      "source": "assets/generated/commerce-2026-v8/routine-groceries.png",
+      "sha256": "0ac2056c24183eac99ae9e204968c6b3b47f4a2bf40c3ce68918e6c41c087ca3",
+      "bytes": 1449984
+    },
+    {
+      "source": "assets/generated/commerce-2026-v8/routine-milk-bottles.png",
+      "sha256": "e9060c2acca8b7aff9947bee664d5aeeaf3d44ee3eb6034dd013e8f648ecd931",
+      "bytes": 891061
+    },
+    {
+      "source": "assets/generated/commerce-2026-v8/routine-milk-delivery.png",
+      "sha256": "15f8d47d2f2a4c09da083d86081273ddf3e15e5ab4b20aad143a797e065af15f",
+      "bytes": 1357629
+    },
+    {
+      "source": "assets/generated/commerce-2026-v8/routine-milk.png",
+      "sha256": "774601eb2e69ffbc59fd43548abfe540a3a6e198ff7d32683a25c9f971662d73",
+      "bytes": 1670760
+    },
+    {
+      "source": "assets/generated/commerce-2026-v8/routine-mindful.png",
+      "sha256": "357a762c8b90952c83a95aabe744691c5d11fc318af2c1ec0ed510b729c671e5",
+      "bytes": 1385968
+    },
+    {
+      "source": "assets/generated/commerce-editorial-v2/PROMPTS.md",
+      "sha256": "3d384660578f13358034d3d636b14bb03c8b774fe4c1ba50fd34333a7994772e",
+      "bytes": 522
+    },
+    {
+      "source": "assets/generated/commerce-editorial-v2/dairy-banner.png",
+      "sha256": "d84c66884f4e1c77657f6f0045c05ef54f09053f874f155bd147b574dbce9c39",
+      "bytes": 1705272
+    },
+    {
+      "source": "assets/generated/commerce-minimal-v1/PROMPTS.md",
+      "sha256": "aebf58a6b2af6ad2bcb4d5756ef9e890fbb0970e3bbcc3a6e8e28d2870811b5a",
+      "bytes": 801
+    },
+    {
+      "source": "assets/generated/commerce-minimal-v1/dairy.png",
+      "sha256": "4a54bf59d4725129aaf7025cdfe0c177637c30b6083cc01439bdae176e54949f",
+      "bytes": 1078133
+    },
+    {
+      "source": "assets/generated/commerce-minimal-v1/fruit.png",
+      "sha256": "e45fcab2a9ba550746f312a7f05017fd9440025e0d9761a5fe9a957ceef5355e",
+      "bytes": 1660981
+    },
+    {
+      "source": "assets/generated/delight-support-2026-10-22/PROMPTS.md",
+      "sha256": "a6b1cb3994ace29f65de8fa1884bfc417eb63fb4a194a877dc07c6fd43d4ccbf",
+      "bytes": 4970
+    },
+    {
+      "source": "assets/generated/delight-support-2026-10-22/customer-care-blue.png",
+      "sha256": "2b39e245c9cd6e0644d02dc2abcd676190a427f669357823e2a92b760202c62e",
+      "bytes": 61576
+    },
+    {
+      "source": "assets/generated/delight-support-2026-10-22/customer-care-chat-v3.png",
+      "sha256": "d8e34c6cd0694530c64ec02e97853d33e03f8a9dce1ce628a4beeb55233e7986",
+      "bytes": 35037
+    },
+    {
+      "source": "assets/generated/delight-support-2026-10-22/customer-care-executive-v4.png",
+      "sha256": "4103218a64faeee6e09015d90e1a1f055fce506b8c31e51d62845f020d1ef477",
+      "bytes": 44216
+    },
+    {
+      "source": "assets/generated/delight-support-2026-10-22/customer-care.png",
+      "sha256": "8dec1fe140cfe54238c2411c5245cd8384f5c8991054bc2dfbc8a83d2ccb7fed",
+      "bytes": 61447
+    },
+    {
+      "source": "assets/generated/delight-support-2026-10-22/requests.png",
+      "sha256": "268146b41d957e3fa08b816e7b940383c1230b388d1d03788a67f440c1fe2793",
+      "bytes": 57509
+    },
+    {
+      "source": "assets/generated/delivery-v1/van.png",
+      "sha256": "a458af0911bca5f86220cd8fc25694b2289f8124c0953b05bf7bc57d9e74571d",
+      "bytes": 1029858
+    },
+    {
+      "source": "assets/generated/limited-offers-banner.png",
+      "sha256": "e790629345290db4e6cb2d93286f8157509d64a31dd078f1a3a23970edb06ac5",
+      "bytes": 1852369
+    },
+    {
+      "source": "assets/generated/loading/club-gold.png",
+      "sha256": "3efac2b80b08367c544a0c5db43c0880e05703b3c7b387646c38396e709f6e45",
+      "bytes": 1807205
+    },
+    {
+      "source": "assets/generated/loading/country-delight-logo-transparent.png",
+      "sha256": "1bb54d8cdff150a3a9aac282187d6ab2297cbbc54755ff91e89a77b90a68debe",
+      "bytes": 240932
+    },
+    {
+      "source": "assets/generated/loading/doorstep-delivery-branded.png",
+      "sha256": "e68b01c8383d04d8444e1602f63996838bf785d79d99b961b9581c4cf1b4d209",
+      "bytes": 2091831
+    },
+    {
+      "source": "assets/generated/loading/doorstep-delivery.png",
+      "sha256": "acd9b91a1699268c7d73b6d6d513de3abf8f57ae548a2cee742aaebea69269cf",
+      "bytes": 2002530
+    },
+    {
+      "source": "assets/generated/loading/farm-morning.png",
+      "sha256": "5f743564be530fe38405920a28ce6c44004ae1ede0ee24435917e72c95c294d8",
+      "bytes": 1946445
+    },
+    {
+      "source": "assets/generated/loading/fresh-offers.png",
+      "sha256": "b21d24646944c999ca39f25ace8f605e7b1a5c654297c5f93f6a774d7f33a9bc",
+      "bytes": 1767015
+    },
+    {
+      "source": "assets/generated/loading/optimized/club-gold-mobile.jpg",
+      "sha256": "9be772a20b4e8b65db85f57c18a7fa75dd60a7598a4fec342882677b492cb602",
+      "bytes": 72298
+    },
+    {
+      "source": "assets/generated/loading/optimized/doorstep-delivery-mobile.jpg",
+      "sha256": "574b91eabbe8c65dc98cc13aad99d1d47d425d536ac050aef71c6540a07542f2",
+      "bytes": 90061
+    },
+    {
+      "source": "assets/generated/loading/optimized/farm-morning-mobile.jpg",
+      "sha256": "308e1997a6e9a238532f75811a64695aeaf7c6405d27184d03be69baa4b7eb62",
+      "bytes": 88754
+    },
+    {
+      "source": "assets/generated/loading/optimized/fresh-offers-mobile.jpg",
+      "sha256": "05c9690a7d076c5e3e23878eb52d6d81ae191ef11857bef793b230be64fc9862",
+      "bytes": 71964
+    },
+    {
+      "source": "assets/generated/loading/optimized/protein-breakfast-mobile.jpg",
+      "sha256": "7a61b33e6d7011519f3627837fcb504a1523e6c65d5d1c1018a5ab34fd9756a0",
+      "bytes": 82151
+    },
+    {
+      "source": "assets/generated/loading/protein-breakfast.png",
+      "sha256": "39c1339ab76e9c098612a9c81b161a5632f54c217e8e8e775e357431721957a1",
+      "bytes": 1864229
+    },
+    {
+      "source": "assets/generated/nutrition-v1/PROMPTS.md",
+      "sha256": "9915af1ce44cc182950e5dafbd7c7ef852b746a2f51cb9933154146298e051c5",
+      "bytes": 321
+    },
+    {
+      "source": "assets/generated/nutrition-v1/protein.png",
+      "sha256": "6c80892694cce32fc220bd6e11210960b74735e2b9f1b99f675e24f177c1ad0f",
+      "bytes": 896216
+    },
+    {
+      "source": "assets/generated/premium-offers-2026-10-22/HAMPER-PROMPT.md",
+      "sha256": "8d62388d2555b4a5e0830a788ba6999d3cf86aa6fe246f0371cd2716ffec07ce",
+      "bytes": 2250
+    },
+    {
+      "source": "assets/generated/premium-offers-2026-10-22/PROMPTS.md",
+      "sha256": "b86e9dde3a01072bf22b87f52a4f1b1bbdd7eb460db8346973c8972d21f6e7a2",
+      "bytes": 1311
+    },
+    {
+      "source": "assets/generated/premium-offers-2026-10-22/milk-hamper-scene-v1.jpg",
+      "sha256": "fb24a661f6d8cadeeb577caa7d01d84de8e4b97ea8c9773206748e7f138c49a9",
+      "bytes": 123624
+    },
+    {
+      "source": "assets/generated/premium-offers-2026-10-22/offer-4-plus-3-gold.png",
+      "sha256": "5a141a8033142be87192e4a1f03b90e5339e2e1d8c5886ea1b1ad4adeeccf20c",
+      "bytes": 215360
+    },
+    {
+      "source": "assets/generated/produce-banana-v2.png",
+      "sha256": "d8dfa50fdc7ff17c14c6bacafbe9ce1062a1337b84babef3ee7ffe83c39aaed3",
+      "bytes": 278630
+    },
+    {
+      "source": "assets/generated/produce-banana.png",
+      "sha256": "e25da8cc8ddb08058838aa8dc78daf786429376da18c3f0e22519283b1d565ea",
+      "bytes": 1939164
+    },
+    {
+      "source": "assets/generated/produce-deals-v2.png",
+      "sha256": "1c42420f2c544d29842efe5c9cfbf8bd898777e2bf173abfe26f4c6a49d6ef17",
+      "bytes": 327144
+    },
+    {
+      "source": "assets/generated/produce-deals.png",
+      "sha256": "fd3e29740851af2062a4ec42fe50b90f9b58ea35024fdb4a05d91815b4a01a0d",
+      "bytes": 2274337
+    },
+    {
+      "source": "assets/generated/produce-fruits-v2.png",
+      "sha256": "bee7e954f335d720b74b2f8fea059473977c99cb8cda5233e99ed9c99a5ac859",
+      "bytes": 325140
+    },
+    {
+      "source": "assets/generated/produce-fruits.png",
+      "sha256": "9d23ad8d06b0d8f43ed59894e58cce0fa4213e57783379989fc37b855fcd30b6",
+      "bytes": 2283444
+    },
+    {
+      "source": "assets/generated/produce-vegetables-v2.png",
+      "sha256": "7253ba36315b94c00a7ae25152a1aba3862128544aa6844524753fd844426196",
+      "bytes": 335276
+    },
+    {
+      "source": "assets/generated/produce-vegetables.png",
+      "sha256": "ac8065e23ad3837eca5a541335323b5b2b888d62293e5214950be3b94d818123",
+      "bytes": 2369192
+    },
+    {
+      "source": "assets/generated/store-backgrounds/farm-doorstep.png",
+      "sha256": "f3423c873c14bb1d8974a2bf69e559768b60c1cc575d1a5e73679e2960fc3703",
+      "bytes": 2417889
+    },
+    {
+      "source": "assets/generated/store-backgrounds/morning-delivery.png",
+      "sha256": "f1d820024ee22bb9e48f7b61fa7fe9144335b2a627e303631cff7c81efce5ff6",
+      "bytes": 2409938
+    },
+    {
+      "source": "assets/generated/store-backgrounds/product-hero.png",
+      "sha256": "53fdd6c8743e8019742c37fbcba613484764310225f7419754c13bfe3d2d2dd2",
+      "bytes": 2419498
+    },
+    {
+      "source": "assets/generated/wellness-2026/README.md",
+      "sha256": "c8f557be2e5a8d33c6cea070ba79c19c22fb9f89e36d3dab221b3049fda5a4d7",
+      "bytes": 1961
+    },
+    {
+      "source": "assets/generated/wellness-2026/breakfast-pairings.jpg",
+      "sha256": "556ae1656b16c24d000e4fd530b50bfb816eab43685b6bcd6824e48d0854ebf3",
+      "bytes": 100170
+    },
+    {
+      "source": "assets/generated/wellness-2026/breakfast-pairings.png",
+      "sha256": "b3837ba391239bcee4c8d791edaff1cc8ee3768d2a6434a9525829d87f31962e",
+      "bytes": 2036243
+    },
+    {
+      "source": "assets/generated/wellness-2026/broccoli.jpg",
+      "sha256": "df03db663d28a925a866b15fe1373d4a2f6e5b62c69495b1a2778fbd95c25911",
+      "bytes": 54936
+    },
+    {
+      "source": "assets/generated/wellness-2026/broccoli.png",
+      "sha256": "86ba83fbf66099eb21747f70f3c20f1afd7eb0f7cca52c780129f36467010730",
+      "bytes": 1605512
+    },
+    {
+      "source": "assets/generated/wellness-2026/farm-eggs.jpg",
+      "sha256": "d0a9d608e88c8e919417554b0f65ecce5a9171fa5e3dd97d91447555245503f5",
+      "bytes": 26785
+    },
+    {
+      "source": "assets/generated/wellness-2026/farm-eggs.png",
+      "sha256": "365ecb683215b578b44418ed9a2271f18ddc9c768d8d9719512e073294eda331",
+      "bytes": 1461805
+    },
+    {
+      "source": "assets/generated/wellness-2026/paneer.jpg",
+      "sha256": "6cbab3663782ac7f0985d50a2ab4a5b095eca1dd81cde599502ca0588ad70a0b",
+      "bytes": 21004
+    },
+    {
+      "source": "assets/generated/wellness-2026/paneer.png",
+      "sha256": "911c6213d9c7d1f135dd50437e4fc4213c0e0617e03357f83e955c2d01f8e663",
+      "bytes": 1097575
+    },
+    {
+      "source": "assets/generated/wellness-2026/spinach.jpg",
+      "sha256": "4bdd93d681c05dc50701a832409b3d40819fee60e9a0e4005056903b7716ed00",
+      "bytes": 41862
+    },
+    {
+      "source": "assets/generated/wellness-2026/spinach.png",
+      "sha256": "97065abfe0c0c37af696bed91c6c1d5819be1e3234f2441b6eee31f98b248f5e",
+      "bytes": 1535289
+    },
+    {
+      "source": "assets/generated/wellness-2026/vegetable-combinations.jpg",
+      "sha256": "367316f020f612e06e9c4a43becf7dccd50d12fea74e13492acc53cef7608139",
+      "bytes": 117371
+    },
+    {
+      "source": "assets/generated/wellness-2026/vegetable-combinations.png",
+      "sha256": "b1a854f453284dbfde4d29ec37c60aba2e177cbb8ac4040f00d2b27b5e3875dc",
+      "bytes": 2149038
+    },
+    {
+      "source": "assets/grocery-still-life-v3.png",
+      "sha256": "d8658b4081c943ff870ddfff4831f50c3916049ff5330a202131cc07b52a4501",
+      "bytes": 1767668
+    },
+    {
+      "source": "assets/home/breakfast_banner.png",
+      "sha256": "d38d91a1db83b3f47d3d26ffbb3e61e7cc6eee4f22c3302b127e2e287ec3fe47",
+      "bytes": 278835
+    },
+    {
+      "source": "assets/home/cat_dairy.png",
+      "sha256": "8fcfffbc3d4c6702490c4821c2d16a6cd8dcf71aa8a1ef04af06141cd0242246",
+      "bytes": 4611
+    },
+    {
+      "source": "assets/home/cat_eggs.png",
+      "sha256": "60573855cfcb486781ae6b3c9e8caa2ceda506c7df9d5e6e085cb182e448e274",
+      "bytes": 5279
+    },
+    {
+      "source": "assets/home/cat_fruits.png",
+      "sha256": "b07025626fc69a596053026c775f989de83fd602c139d9ed7f342437be03dd1f",
+      "bytes": 5612
+    },
+    {
+      "source": "assets/home/cat_groceries.png",
+      "sha256": "8ebac91c99750a156f5cb4a8d33e68b27f646e34f83b3d9225337bb9c7357f40",
+      "bytes": 4693
+    },
+    {
+      "source": "assets/home/cat_milk.png",
+      "sha256": "ae1c20e5ed16f00c521e1219983d258c7293cadc3b79ad2c1b52aff1a83e9c9d",
+      "bytes": 3713
+    },
+    {
+      "source": "assets/home/cat_vegetables.png",
+      "sha256": "bb4fa366a9bca20124843ea6dcec3fe13c8544ba09e10fc5578885af4ec033c7",
+      "bytes": 5744
+    },
+    {
+      "source": "assets/home/deliv_curd.png",
+      "sha256": "fb64c83094dfc07bf35edaa7a60f492e0cb669006deb6380baf719b8f1704d32",
+      "bytes": 1750
+    },
+    {
+      "source": "assets/home/deliv_eggs.png",
+      "sha256": "8a51fd20361564d5260bff67c4e815eed01b221830058a5d3f52024c8e960825",
+      "bytes": 2294
+    },
+    {
+      "source": "assets/home/deliv_milk.png",
+      "sha256": "2c2ca250e18eca732a1680671d5ea7e875c2c2074c2e6d81047ef2395f0b90c8",
+      "bytes": 1561
+    },
+    {
+      "source": "assets/home/hero_cow.png",
+      "sha256": "c854936b3e65e96a1abe9aae5f8b91b8885d88795392668ee721214bfeb9680b",
+      "bytes": 281738
+    },
+    {
+      "source": "assets/home/logo.png",
+      "sha256": "1f43f1060cdb87833b6c4340cea50bc9448af7467b9a8d2c6425c52feab5cf3f",
+      "bytes": 13977
+    },
+    {
+      "source": "assets/home/rec_coconut.png",
+      "sha256": "2ab3484c5c3d56ef11e9b722e14e22b917c0d26f21a3deaaf0e026ff5529680a",
+      "bytes": 5854
+    },
+    {
+      "source": "assets/home/rec_eggs.png",
+      "sha256": "b0cc66fa48ef46f640a248f41aa35986dc6070e79c24a416c51f909047e97f28",
+      "bytes": 8731
+    },
+    {
+      "source": "assets/home/rec_milk.png",
+      "sha256": "ae1c20e5ed16f00c521e1219983d258c7293cadc3b79ad2c1b52aff1a83e9c9d",
+      "bytes": 3713
+    },
+    {
+      "source": "assets/home/rec_paneer.png",
+      "sha256": "5a96c8a90ffb432f110fe61bcd0bd87b3f04ee73801236186fcec83f9d77156f",
+      "bytes": 8510
+    },
+    {
+      "source": "assets/icon.png",
+      "sha256": "6876998b51a5a5362ac55f261becb0217f2269814367293e8616540cc13b0c1c",
+      "bytes": 397447
+    },
+    {
+      "source": "assets/login-farm.jpg",
+      "sha256": "ca1afe20fe82b94853d07983e8b68ce06278fbe61d971f136df5e6f7a33037da",
+      "bytes": 404979
+    },
+    {
+      "source": "assets/photo/banana-icon.jpg",
+      "sha256": "e7d5b613d9fc5b636307bd2cc7c0468be80ae5d2a862fabf75a82f38992eaea1",
+      "bytes": 10116
+    },
+    {
+      "source": "assets/photo/banana.jpg",
+      "sha256": "3498f47af8fba8de95a217173c8200a12e6f58ded694c136e43bada31f9551ff",
+      "bytes": 28864
+    },
+    {
+      "source": "assets/photo/catogaries.png",
+      "sha256": "7384dfef84e3c36c5a05214641f66d556ae7f3e905f3098117799e50bc6c5968",
+      "bytes": 1513765
+    },
+    {
+      "source": "assets/photo/curd-icon.jpg",
+      "sha256": "1e2b0e1343da880001fc901d14fad3ce41dcaa72ac8237f7f704bd15aec22580",
+      "bytes": 5774
+    },
+    {
+      "source": "assets/photo/curd.jpg",
+      "sha256": "69e1b92e1b6790ab4b4988535bfc5c23a0d850e1a5c533d0b87c43da739aa6fa",
+      "bytes": 15162
+    },
+    {
+      "source": "assets/photo/eggs-icon.jpg",
+      "sha256": "2979c345b2595bd12155ed72f18a6613c65db78ff811e3d6ae0efe789fe235ca",
+      "bytes": 6856
+    },
+    {
+      "source": "assets/photo/eggs.jpg",
+      "sha256": "2ab1bdd395839e30cb9355edbd137c36f690f7d8a372b382e2fe59b11d02740e",
+      "bytes": 20787
+    },
+    {
+      "source": "assets/photo/fresh-essentials-banner.png",
+      "sha256": "75afd00deddfdef869de108524b2d434c3d486c9c7d9d0aa9a26bc9d67bd525a",
+      "bytes": 1928591
+    },
+    {
+      "source": "assets/photo/grocery-icon.jpg",
+      "sha256": "2979c345b2595bd12155ed72f18a6613c65db78ff811e3d6ae0efe789fe235ca",
+      "bytes": 6856
+    },
+    {
+      "source": "assets/photo/grocery.jpg",
+      "sha256": "2ab1bdd395839e30cb9355edbd137c36f690f7d8a372b382e2fe59b11d02740e",
+      "bytes": 20787
+    },
+    {
+      "source": "assets/photo/hero-banner.png",
+      "sha256": "0e16258027c23d226905e73cdcce826bcc9b9c43fabf3b427461baea25ff7693",
+      "bytes": 1816460
+    },
+    {
+      "source": "assets/photo/hero-farm.jpg",
+      "sha256": "48538ac0da4ea2f6f9e95245ab76d4a12dcccd6bf2d7bdbff58c85cae31eaa69",
+      "bytes": 91901
+    },
+    {
+      "source": "assets/photo/milk-icon.jpg",
+      "sha256": "9b4ee5323bf18ffa9d60d3c3a3956f11dc2dd0f0d9f6689936ae18a13805727f",
+      "bytes": 8561
+    },
+    {
+      "source": "assets/photo/milk.jpg",
+      "sha256": "4f38853cd6e6fd44e331d0bf720cdb23e56b37c5b5aa4979978f811533421c8e",
+      "bytes": 24655
+    },
+    {
+      "source": "assets/photo/offer-banner-1plus1.png",
+      "sha256": "62a073cdbb55a1be4a082446535c5b933f91f806d8bf17d0f31f8a63a1e4bb90",
+      "bytes": 2074786
+    },
+    {
+      "source": "assets/photo/paneer-icon.jpg",
+      "sha256": "2979c345b2595bd12155ed72f18a6613c65db78ff811e3d6ae0efe789fe235ca",
+      "bytes": 6856
+    },
+    {
+      "source": "assets/photo/paneer.jpg",
+      "sha256": "2ab1bdd395839e30cb9355edbd137c36f690f7d8a372b382e2fe59b11d02740e",
+      "bytes": 20787
+    },
+    {
+      "source": "assets/photo/vegetables-icon.jpg",
+      "sha256": "2979c345b2595bd12155ed72f18a6613c65db78ff811e3d6ae0efe789fe235ca",
+      "bytes": 6856
+    },
+    {
+      "source": "assets/photo/vegetables.jpg",
+      "sha256": "2ab1bdd395839e30cb9355edbd137c36f690f7d8a372b382e2fe59b11d02740e",
+      "bytes": 20787
+    },
+    {
+      "source": "assets/products/a2-milk.png",
+      "sha256": "898aac00ad62eeec6825f8eb179d047ee3d51b57f72ed6b4c08c1aad422170f0",
+      "bytes": 4076
+    },
+    {
+      "source": "assets/products/banana.png",
+      "sha256": "03483363198189d88ff002db02adeb1796f897f9e6b34e454254800f0559559e",
+      "bytes": 4385
+    },
+    {
+      "source": "assets/products/breakfast-banner.png",
+      "sha256": "e3dfe7359f33bbfd8b35e37048a99a1912efed6274360e7d58ba5daa75300afd",
+      "bytes": 26330
+    },
+    {
+      "source": "assets/products/country-delight/a2-cow-milk.jpg",
+      "sha256": "a1897e8fc897c48d8d5679d620bede82c2028c9547071ceccb622a68141c73c6",
+      "bytes": 53759
+    },
+    {
+      "source": "assets/products/country-delight/coconut-water.jpg",
+      "sha256": "a48ec4b364915bcf7aa4255589b9f1e0e9123f92728208c694f36145d43d6be1",
+      "bytes": 163571
+    },
+    {
+      "source": "assets/products/country-delight/creamy-cow-milk.jpg",
+      "sha256": "51fcd02a85082e9ae295927bd8b598eb0f6ed2972c0ec9b08902d21c3dbb277e",
+      "bytes": 116738
+    },
+    {
+      "source": "assets/products/country-delight/ghar-jaisa-dahi.jpg",
+      "sha256": "d7b36d4d00f2e9fcee9e80a520e99791845d9a03c221ad16320d78712c2a91a5",
+      "bytes": 95405
+    },
+    {
+      "source": "assets/products/country-delight/protein-white-eggs.jpg",
+      "sha256": "5e4762cdc61c790900009a6813e8aaaf1980d79f3da9724086b72947a5422d79",
+      "bytes": 37995
+    },
+    {
+      "source": "assets/products/country-delight/taaza-paneer.jpg",
+      "sha256": "4330a9be588518d2fae8163ccf8bb7a87cff2bbc99c3642c0099cbc6d3f8ac25",
+      "bytes": 61453
+    },
+    {
+      "source": "assets/products/curd.png",
+      "sha256": "d3d23600d11b9265dcb593b275243951b9f7008a1eaf72f129c9231a53e8296c",
+      "bytes": 5739
+    },
+    {
+      "source": "assets/products/eggs.png",
+      "sha256": "8076ac377b1f595abcdc32e538051838a56bfd287dd1e90a8b717613c2d55f09",
+      "bytes": 6163
+    },
+    {
+      "source": "assets/products/grocery.png",
+      "sha256": "698c653c52ed51aa868eeb848f55343f2e3e500ddfacd2c9833f594d7ceacfa4",
+      "bytes": 2773
+    },
+    {
+      "source": "assets/products/hero-cow.png",
+      "sha256": "f1c6dadd0fed6060e686f47a1039296f0f59d49edac509755a06ab456f4c4024",
+      "bytes": 6997
+    },
+    {
+      "source": "assets/products/milk.png",
+      "sha256": "68b9197c95c7f38a3b94e9bdefac7fef5799a207c1436af7113e3a7d1792067f",
+      "bytes": 5712
+    },
+    {
+      "source": "assets/products/paneer.png",
+      "sha256": "6d8d3836cc4d9029ced5bc40d93eb1b32e6ec8f78c796e2d411a2f114a91e659",
+      "bytes": 5146
+    },
+    {
+      "source": "assets/products/photos/CREDITS.md",
+      "sha256": "c37085a3492bf25f2c73b54c54e45ee4503e8947ce0d97db50dbf6940c09c2e3",
+      "bytes": 2285
+    },
+    {
+      "source": "assets/products/photos/a2-milk.jpg",
+      "sha256": "a9493fbdbe406df6ad7d9597e8c051a3939b0b070829f537cdc4f51d062a91b0",
+      "bytes": 36710
+    },
+    {
+      "source": "assets/products/photos/apple.jpg",
+      "sha256": "3214a97c0e6d79adb4a2843ace73d5389b5e21906cfff4f06539bbc36e950c83",
+      "bytes": 80596
+    },
+    {
+      "source": "assets/products/photos/banana.jpg",
+      "sha256": "e6d338602f02cde8bb09c4dce664d3e74a02b51b45369e0939a0479142d7ce11",
+      "bytes": 44685
+    },
+    {
+      "source": "assets/products/photos/bread.jpg",
+      "sha256": "00fa4412b2f9e5d8e69fcc8f394b8462ab94756e316cd93d264f3fff0511cdbe",
+      "bytes": 80353
+    },
+    {
+      "source": "assets/products/photos/broccoli.jpg",
+      "sha256": "19369872d26dd5ff556d3f57c26662a625b2331371fb1d417668dd380ecad253",
+      "bytes": 38004
+    },
+    {
+      "source": "assets/products/photos/buffalo-milk.jpg",
+      "sha256": "9d1a45f0cebf7a26a0cd676ecac89d24ac48247ad2fa9df3460bdc0af2e97c75",
+      "bytes": 28436
+    },
+    {
+      "source": "assets/products/photos/coconut.jpg",
+      "sha256": "ab24d70aadb664d6a72b6eab387725d6f12951faff42985236a68cda849ee82b",
+      "bytes": 118275
+    },
+    {
+      "source": "assets/products/photos/cow-milk.jpg",
+      "sha256": "86289e54853c377bcad34114de3ba987abaad952e6c407eb977acc6bf50574f5",
+      "bytes": 17939
+    },
+    {
+      "source": "assets/products/photos/croissant.jpg",
+      "sha256": "f083a20314d7dc5485ae46b3adf0b5290f2e960a36fdaa3ca93d78b15dfb1322",
+      "bytes": 68388
+    },
+    {
+      "source": "assets/products/photos/curd.jpg",
+      "sha256": "fdd121826dff5c4a6596b5135d6901844c7f9112f0ede74b002e7c20d382a320",
+      "bytes": 51070
+    },
+    {
+      "source": "assets/products/photos/eggs.jpg",
+      "sha256": "37906e3d3fc13f64ca9a909362f355f4c02af368818a57d9e380fdd1865fc9ce",
+      "bytes": 37736
+    },
+    {
+      "source": "assets/products/photos/ghee.jpg",
+      "sha256": "527b04bdec04cfd1cd69437063125e923217737da96c5ca85de7daab578d49d7",
+      "bytes": 54782
+    },
+    {
+      "source": "assets/products/photos/honey.jpg",
+      "sha256": "949043f0acfb4d0b0bd13a7981eb72e67f91367851ec735b90b59504dbba1c58",
+      "bytes": 62240
+    },
+    {
+      "source": "assets/products/photos/oats.jpg",
+      "sha256": "ff77065dc62e0a11818e6e86332500f6361e2d1c5de2cf0564c7f60040a6b080",
+      "bytes": 124119
+    },
+    {
+      "source": "assets/products/photos/paneer.jpg",
+      "sha256": "1e264c1804120237a80e63b75f479dbf3e26c16d0be28ce7837278b7231b7e4f",
+      "bytes": 29018
+    },
+    {
+      "source": "assets/products/photos/tomato.jpg",
+      "sha256": "6a19245e57c36891582310851004d9098c43027c0d588c202cfe75168fe2167c",
+      "bytes": 52080
+    },
+    {
+      "source": "assets/products/photos/vegetables.jpg",
+      "sha256": "5668c166a3eaaca47582cad873d204824ebbfd8a20a93b0a78e660f0556ec67c",
+      "bytes": 97899
+    },
+    {
+      "source": "assets/products/photos/white-eggs.jpg",
+      "sha256": "b2c606c87fa72215c59367e850c4aa75ebf6c232f33341ed914ec555d68a4e24",
+      "bytes": 19399
+    },
+    {
+      "source": "assets/products/placeholder.png",
+      "sha256": "31ea65e1c0f454e8eb15672ea5d88fbe60f9daf39601c5c1ac0345a99afdd4db",
+      "bytes": 5440
+    },
+    {
+      "source": "assets/products/vegetables.png",
+      "sha256": "8d669abf2375ddc8dedf5adb8590f83ffe13597af27ab75a9aec8f891803205e",
+      "bytes": 4865
+    },
+    {
+      "source": "assets/reference/banana.jpg",
+      "sha256": "c3967112e94e2fffd27d4b5325922a4960dca2da70f2fad9e1599948ae570e96",
+      "bytes": 6181
+    },
+    {
+      "source": "assets/reference/banana.png",
+      "sha256": "f3c06561e513b403ea91ad10f3f7bea4618a6fc3adef1aba294f229af06ba4f6",
+      "bytes": 34945
+    },
+    {
+      "source": "assets/reference/breakfast.jpg",
+      "sha256": "f4d3a6f8011c96afd5add85dfb74ead32a2bb56762534998e104041c11b0f0db",
+      "bytes": 39777
+    },
+    {
+      "source": "assets/reference/breakfast.png",
+      "sha256": "d38d91a1db83b3f47d3d26ffbb3e61e7cc6eee4f22c3302b127e2e287ec3fe47",
+      "bytes": 278835
+    },
+    {
+      "source": "assets/reference/curd.jpg",
+      "sha256": "5d5b6aaf39759b23f165ab214373b573c5805c46459d5c5c870489420448cd49",
+      "bytes": 4578
+    },
+    {
+      "source": "assets/reference/curd.png",
+      "sha256": "e916e20ba0344501c557cacab294b05dc855433e28effae143c04a153183f82c",
+      "bytes": 21513
+    },
+    {
+      "source": "assets/reference/eggs.jpg",
+      "sha256": "6b5929ad0f6a1619bc14c72644bc464a52d999e6c77ed859bd785ed8c1564ec1",
+      "bytes": 4172
+    },
+    {
+      "source": "assets/reference/eggs.png",
+      "sha256": "41b1efc8837a5a0779d7a2cdfe058d7997dbafc9226f395b8e3aaaf98025bfc0",
+      "bytes": 20032
+    },
+    {
+      "source": "assets/reference/grocery.jpg",
+      "sha256": "1f3e532dec909faf5e8e5fc6950e719c4128886d9b9e0c9019cbafd2513700bc",
+      "bytes": 4777
+    },
+    {
+      "source": "assets/reference/grocery.png",
+      "sha256": "3d51ce817afb089e2d4210c2ec31b9e6dc1a528c98a8bfb6154e867639a327dd",
+      "bytes": 22993
+    },
+    {
+      "source": "assets/reference/hero-cow.jpg",
+      "sha256": "d665b4a4e7a58bec4894c06dc38a984e595066cd13451128bc84ab7dd4e73187",
+      "bytes": 37204
+    },
+    {
+      "source": "assets/reference/hero-cow.png",
+      "sha256": "c854936b3e65e96a1abe9aae5f8b91b8885d88795392668ee721214bfeb9680b",
+      "bytes": 281738
+    },
+    {
+      "source": "assets/reference/milk.jpg",
+      "sha256": "b0ea67d1dd71e94bc1b98264fef05ce5da28085103415ed2b995a9e3ba62e87d",
+      "bytes": 4452
+    },
+    {
+      "source": "assets/reference/milk.png",
+      "sha256": "c9b5a8fc72be8f8ec091cf2c880b525030cb9bec6608d7b4619a4ab7671bcbd9",
+      "bytes": 18264
+    },
+    {
+      "source": "assets/reference/paneer.jpg",
+      "sha256": "9b5010229f92f1049b8cbd6526306a7879226a3c4d94f16c503f4512aa8958e2",
+      "bytes": 4406
+    },
+    {
+      "source": "assets/reference/paneer.png",
+      "sha256": "3493daa7a0f33e2893afd90636054f65e124edc2417f25305aa7c42b02cb05f6",
+      "bytes": 24666
+    },
+    {
+      "source": "assets/reference/vegetables.jpg",
+      "sha256": "53976fbc76d6975c13ef6fe9b11492ab796d5cd2228a767c5894b8bc13b480bb",
+      "bytes": 6099
+    },
+    {
+      "source": "assets/reference/vegetables.png",
+      "sha256": "105005f5ceff0fa4cbe77910d1d5b2c33ad229265cd1cdff111250c1ff73f7e8",
+      "bytes": 33265
+    },
+    {
+      "source": "assets/splash-icon.png",
+      "sha256": "5058ae25be9f51655d9d4afa22ad59415b99fae2ed88bb58001bbd6e678b1902",
+      "bytes": 346092
+    },
+    {
+      "source": "assets/tabbar/home.png",
+      "sha256": "34de3422e58c638db16d26ae02b6fb31c5202f18d5af9915988043a7bbf3f2a6",
+      "bytes": 387
+    },
+    {
+      "source": "assets/tabbar/home@2x.png",
+      "sha256": "f0644893d7016627c2a5ff85375f24d59f686974f69ae99208bd4c4aeb39fb1c",
+      "bytes": 725
+    },
+    {
+      "source": "assets/tabbar/home@3x.png",
+      "sha256": "273c6598205fe9d322eb2dd2045bbf9bc6c7646fc5024059a98a6910b29b08e1",
+      "bytes": 1110
+    },
+    {
+      "source": "assets/tabbar/profile.png",
+      "sha256": "41b5fa063986fbcd656b42933107948075a3dafaa6ea245b5248a0f2b049eedb",
+      "bytes": 427
+    },
+    {
+      "source": "assets/tabbar/profile@2x.png",
+      "sha256": "7e76fe603ce8681ecf60b967b0d4b7bb65ba7daf2207941d6879ed21b1e3d231",
+      "bytes": 862
+    },
+    {
+      "source": "assets/tabbar/profile@3x.png",
+      "sha256": "086810e7a3b09d0994453c4497ead0b51009abdce2dc0e6af03b4d7a180b6ea9",
+      "bytes": 1295
+    },
+    {
+      "source": "assets/tabbar/shop.png",
+      "sha256": "14fc56163035369d5f2a2f06bf191af64abe2c4998607cafaa370a57a8f05f01",
+      "bytes": 402
+    },
+    {
+      "source": "assets/tabbar/shop@2x.png",
+      "sha256": "5307e02ebf7adbe1b61943757f2dff8a1c146dd1c5240a5decaf30bdf284a1a0",
+      "bytes": 804
+    },
+    {
+      "source": "assets/tabbar/shop@3x.png",
+      "sha256": "aefc98219e818eef09d61296642e686745fd51f52285e94206adf2d1391158a2",
+      "bytes": 1272
+    },
+    {
+      "source": "assets/tabbar/subs.png",
+      "sha256": "cb659bbca40757620c0a6074f2b60fd6035525b20ddee5d6edb8a57ed2091704",
+      "bytes": 295
+    },
+    {
+      "source": "assets/tabbar/subs@2x.png",
+      "sha256": "f2194c74bd1ae382fad289c3e1fb625d8038e26f8ab383dd4c80ab0b6770c2e2",
+      "bytes": 570
+    },
+    {
+      "source": "assets/tabbar/subs@3x.png",
+      "sha256": "e52390f823fa318fdd294a54dc61a2e357e569d146fd3a85d195c96e7936535e",
+      "bytes": 1009
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "src/addresses.ts",
+      "sha256": "90a480fde2c86575c90abec3d18cfa491899a3fb7ba9ee41e824305c76259252"
+    },
+    {
+      "path": "src/app/(tabs)/index.tsx",
+      "sha256": "2d00ed6ab5323515c8af79dc006beaf5a210356786c9d6f2a67eca45869d608d"
+    },
+    {
+      "path": "src/app/(tabs)/orders.tsx",
+      "sha256": "7a5dd970c661ffe1b0c2c50cd2d04a2872ff4d8aafebecf9110c21d353ea5b9a"
+    },
+    {
+      "path": "src/app/(tabs)/profile.tsx",
+      "sha256": "a259360f8ffbdcc57afe220e3a58a141c4edc06646d79d62a67e6e1110a378b9"
+    },
+    {
+      "path": "src/app/(tabs)/protein.tsx",
+      "sha256": "12c9acdd47625b7e184e7900084f476e8c408c5688c5a0eff83d6592951a5745"
+    },
+    {
+      "path": "src/app/(tabs)/shop.tsx",
+      "sha256": "e45684a82df948a3ff38ab0111a561a6412111df42b1c6d9211c15fc5a433251"
+    },
+    {
+      "path": "src/app/(tabs)/subs.tsx",
+      "sha256": "df0b6025c8e69836e43bccfc61683f50525837c56eda3ec466949d30275f9bae"
+    },
+    {
+      "path": "src/app/(tabs)/_layout.ios.tsx",
+      "sha256": "f2c9e362e9605d8fcc9a5aa62b7328de7aa536d5577285cb1759579543511cf7"
+    },
+    {
+      "path": "src/app/(tabs)/_layout.tsx",
+      "sha256": "15655f6f964e2245a7e35d4f702520029b2e676186db92dcd1abbe1e96abc28b"
+    },
+    {
+      "path": "src/app/+not-found.tsx",
+      "sha256": "91a1f763e8b736d14274d0ef53d87dc6d9820b2869a8807b7a79a28830fce9e5"
+    },
+    {
+      "path": "src/app/assistant.tsx",
+      "sha256": "85c08bebdc170ea6bcbe07f682371ddc3cfb4c42ded1e145191b26f310947313"
+    },
+    {
+      "path": "src/app/calendar.tsx",
+      "sha256": "575bd1ea7a7021e4f28d190d6f5e424b9c01c46eb351f3704bf0a883a829c8e7"
+    },
+    {
+      "path": "src/app/checkout.tsx",
+      "sha256": "d9d4d7bf11c4b6614a030c00c96cbf25f18bba372063aa328e99a2c9b131c605"
+    },
+    {
+      "path": "src/app/feedback-demo.tsx",
+      "sha256": "572c05f1a7b8920c25ee669651f3ee5709f57620dd4ee13dc02ca000f3b8532a"
+    },
+    {
+      "path": "src/app/information.tsx",
+      "sha256": "7a3a35edd6e5a20f418cddff7daf08d765fe13bd3915b5ef4c7b18475a71c72b"
+    },
+    {
+      "path": "src/app/milk-offer.tsx",
+      "sha256": "8105f8797267980cd23cf50bca65155f92a9e999887592ee8de763c5ff2c4e2d"
+    },
+    {
+      "path": "src/app/milk-plan.tsx",
+      "sha256": "6b8dc61e9de4c36e7747bf0c03593692e2f910e9c85ffc559fa06fd3969b0918"
+    },
+    {
+      "path": "src/app/nutrition.tsx",
+      "sha256": "39bdbf40caa2c300697a2b7949e5af03df202822a5b03a1efa4db8bfe7025f4a"
+    },
+    {
+      "path": "src/app/order.tsx",
+      "sha256": "af2a08e378163d85f000e342b5281c271c712a7273fad47f23aa4bd586badd10"
+    },
+    {
+      "path": "src/app/product.tsx",
+      "sha256": "a10f80260471d300dc191e9e1d70e40cc2663ae307b3f44aaa0f0380c24799fa"
+    },
+    {
+      "path": "src/app/support.tsx",
+      "sha256": "1f4806cb529e787b31c005fbb8c356fcf1253f9b5de979cffbb08ee91f041c92"
+    },
+    {
+      "path": "src/app/wallet.tsx",
+      "sha256": "78bc1417c04013ab30360136f07dbca164b1c558bb64d008eae272735fc94b81"
+    },
+    {
+      "path": "src/app/welcome.tsx",
+      "sha256": "295ec6d9a576f17cf1dfce79207d97e43af460caeb3e2457daef9ea72340d8d3"
+    },
+    {
+      "path": "src/app/_layout.tsx",
+      "sha256": "8b088c9e985f6adf7f93afce9f3553dd73567edf7b0a19d893bff4d38d5d74ac"
+    },
+    {
+      "path": "src/checkoutFeedback.ts",
+      "sha256": "b379d021fac14f8f0112368cbb5c7b4507b8c7deece15c1c628ce25d962ca7f1"
+    },
+    {
+      "path": "src/commerce.ts",
+      "sha256": "9624ce4d472d972d244fbae7a9f73824da532d3588f23831a21a40e35ed45fd7"
+    },
+    {
+      "path": "src/components/AccountPanel.tsx",
+      "sha256": "6fa5aa61e0a5c658536752a11275c0c953c24e1a0fa208b6325a11b988a752d9"
+    },
+    {
+      "path": "src/components/AddressField.tsx",
+      "sha256": "6085ab888fd07ac367d3227054796ff861e656468bdddf372a1039c12c668a97"
+    },
+    {
+      "path": "src/components/AnimatedDisclosure.tsx",
+      "sha256": "464f43085f3c2a5c29d5f6e3a0fab4a79d5e74dca899b008532f1eab7fbde1d8"
+    },
+    {
+      "path": "src/components/AnimatedSegment.tsx",
+      "sha256": "acd2a63744d98794ed3296cf470ccc6c7b7fbea65f46e9e3f5618c33cab0a810"
+    },
+    {
+      "path": "src/components/AssistantScreen.tsx",
+      "sha256": "f4ad36e488d1e103e430bd038ab197b57390f6a18914aabd41b10c1439dbef5a"
+    },
+    {
+      "path": "src/components/BalanceArt.tsx",
+      "sha256": "95c1604c3236435bb0cd688aa204231971be9dec6e2e58d8f8b6f2bd1af0f5eb"
+    },
+    {
+      "path": "src/components/BundleOffers.tsx",
+      "sha256": "5172970a6281488616a6aa07cd6947b352928e50e418820d5a4e63d88220e6d2"
+    },
+    {
+      "path": "src/components/CalendarPopup.tsx",
+      "sha256": "ac311805e917b41bb39112f4589b0dada4b3a9b75add261d8dea3394b17f9621"
+    },
+    {
+      "path": "src/components/CampaignCard.tsx",
+      "sha256": "18f039b9cb98d8ef1e7501d3e565f41d0c8deb573fe3afa627d96959968296f0"
+    },
+    {
+      "path": "src/components/CancelOrder.tsx",
+      "sha256": "5efbd138b5d6a4d712c9052da77fd93610e23429d07567034463ef5afa359819"
+    },
+    {
+      "path": "src/components/CartExtras.tsx",
+      "sha256": "30eb712c23ea2b6c316a6c82a75425737c10616029d208cd8b7c98aa7cd20359"
+    },
+    {
+      "path": "src/components/CollectionShelf.tsx",
+      "sha256": "c3075d9c1182c201c177a22e27fd8291d2afd44903a86464a7883f56b515f8b5"
+    },
+    {
+      "path": "src/components/CommerceBanners.tsx",
+      "sha256": "1b10feb8fcd3f7b7c35afabcb07fb542777493b02c6ab31815a911d43a2315db"
+    },
+    {
+      "path": "src/components/DelightGuide.tsx",
+      "sha256": "9cc75e199ee528105737356bcecf9db51ab6e1ef6aae576c54fd986c1907cc24"
+    },
+    {
+      "path": "src/components/DeliveryMilkStreak.tsx",
+      "sha256": "7238476f572888f6e19834f73d340d833ed0e05cc5daf46225d65a356ee9a1e4"
+    },
+    {
+      "path": "src/components/DeliveryPriceBreakdown.tsx",
+      "sha256": "2827e8aee89fd2bd97eca3f116c1a1a426f9c54b827a93f9f35106a5acbb3944"
+    },
+    {
+      "path": "src/components/DeliveryProgress.tsx",
+      "sha256": "0c6e94d6a65668b19867cca937254e93d0d14b4ff7cf73e6fb1697929b045027"
+    },
+    {
+      "path": "src/components/DeliveryQuickActions.tsx",
+      "sha256": "62ea887a498fc3b9d9e3aab2a5bc283a65ad1b8b5749afadd2b5b746be48ee6d"
+    },
+    {
+      "path": "src/components/DemoLocationPreview.tsx",
+      "sha256": "7d5323eeae1cfd580ecbd057ec42c90469797a0eb2bde4237ba20940913034c0"
+    },
+    {
+      "path": "src/components/DemoPaymentSheet.tsx",
+      "sha256": "eb592149edff02a83841394be63dcf40404b1abc6a6310bf345bcb4b3e750b85"
+    },
+    {
+      "path": "src/components/EndSubscription.tsx",
+      "sha256": "3eaf306c5ba8e02bfd35867767848a2585e21d26528b427e142acd24bb8296dc"
+    },
+    {
+      "path": "src/components/ExtrudedText.tsx",
+      "sha256": "5d9921b6ede75c48e27cf466768d5020c26bbf4e2253541cd451c5140f47ef0d"
+    },
+    {
+      "path": "src/components/FeedbackCheckInBanner.tsx",
+      "sha256": "61510bf198b9062851572a57982e727408306a8fab2370b15911fd570fdeaa0a"
+    },
+    {
+      "path": "src/components/FeedbackPhotoPicker.tsx",
+      "sha256": "43379af98e5586999f3e3ebc7fc90daecf43911381b269b4e3a33a3d0241100e"
+    },
+    {
+      "path": "src/components/FeedbackSampleOrders.tsx",
+      "sha256": "fb1ad03368a6fe2f318b15d18b2234e3b105374299d56a1c1c3e68330d60bd8f"
+    },
+    {
+      "path": "src/components/FeedbackSheet.tsx",
+      "sha256": "d8486a419948b3c4b904d8adc2992dfe8c8781554e2e61842ffeac2852cf7954"
+    },
+    {
+      "path": "src/components/FeedbackSync.tsx",
+      "sha256": "03f0686882056b353d09f4096504160fce19cebc1e1bf5b3576724b76e2f1ead"
+    },
+    {
+      "path": "src/components/FeedbackSync.web.tsx",
+      "sha256": "e56fc011e403d87a5c62868a096ec753efaa980ad6de0933c7aa5036d61e9550"
+    },
+    {
+      "path": "src/components/FloatingDelight.tsx",
+      "sha256": "ff8c963337666b55a7410abfe8a0c4ee246fc4824eb3fd38e35d45fb520cc48f"
+    },
+    {
+      "path": "src/components/FtueArt.tsx",
+      "sha256": "93364bdaa1ca1a778cfb95d79ede4d749289a937b7713af514473b38f46fdfbc"
+    },
+    {
+      "path": "src/components/FtueJourney.tsx",
+      "sha256": "f8a1e7ddad476bbc0633d00ffa50596f9dcbc7faa62607d6ab782fd3449387c7"
+    },
+    {
+      "path": "src/components/FtueReward.tsx",
+      "sha256": "cd1cff2e97e9b4d0a629195bdb8d31286cbdb9f3d6674cfc6c5faec432144ab4"
+    },
+    {
+      "path": "src/components/HomeRoutine.tsx",
+      "sha256": "d229c38abe9c42a697932800afcb61ffbea8f9c979fc7386a8cabb7eecae0ca5"
+    },
+    {
+      "path": "src/components/Icon.tsx",
+      "sha256": "8d6c6253df2cac26b23d5a2155df7fb6158f2f759d2490266872f593fcd01950"
+    },
+    {
+      "path": "src/components/LoginSetup.tsx",
+      "sha256": "bc287228c23137fdccd41fff5d718e4389862c03d8d06b7cf5aa378197570640"
+    },
+    {
+      "path": "src/components/MilkOfferProgress.tsx",
+      "sha256": "a3d35e86032b2485b35d852d3a943e449e7f3267f9e512ff3342c4188292a1fb"
+    },
+    {
+      "path": "src/components/MilkOfferRow.tsx",
+      "sha256": "8faa9b7bf43ec2f07c5f424ab0ee521b08d72507b9f74f9e6eb48fa1de7451c3"
+    },
+    {
+      "path": "src/components/MobileFeedbackSamples.tsx",
+      "sha256": "a06342dc7c8a8f83bfdd23d0cbc5c4932293b7fa6b5cfb3fd7e94a442f46aec1"
+    },
+    {
+      "path": "src/components/Motion.tsx",
+      "sha256": "24ac58fe2dd69d257c7ae2de118b73b15f92ab2576a3cf8a6094e0d2ea0af602"
+    },
+    {
+      "path": "src/components/NativeControls.ios.tsx",
+      "sha256": "5f2ed3ca61db77674b4c82579a78ed8da9c57e83f75f3c52c1b06800d4de97c5"
+    },
+    {
+      "path": "src/components/NativeControls.shared.tsx",
+      "sha256": "b5e78a2d89976d7e0c6ed2cedecba9893edb2d86596eaeb0efd2afd8cb7ccdae"
+    },
+    {
+      "path": "src/components/NativeControls.tsx",
+      "sha256": "30f65bab3d789be8b63644a6e9793ff53cbbe395be606b725ea5b2e794778953"
+    },
+    {
+      "path": "src/components/NativeGlassBackdrop.tsx",
+      "sha256": "723ffd673582a4def0e7e40aff44e39d867a512f8483ab395019373df820f794"
+    },
+    {
+      "path": "src/components/NutritionHandle.tsx",
+      "sha256": "c5522ff33a29b1fe0f2a62df0fbb1a4f867000b783f9730d599f1bddc1f0f9d1"
+    },
+    {
+      "path": "src/components/OfferBento.tsx",
+      "sha256": "cf47c38f0ca463d8e8ea039148b7d7399a93f8fbf77fb14e81215a264931b804"
+    },
+    {
+      "path": "src/components/OfferZone.tsx",
+      "sha256": "19e31343b5acb41782daab19158bf99f39515650a59d505cf8143c901000c74e"
+    },
+    {
+      "path": "src/components/OrderConfirmed.tsx",
+      "sha256": "d0f76d5ee7dbcfde8b050e7ed0e6ffaa7b1e93953306525125a8f7ee102cb393"
+    },
+    {
+      "path": "src/components/OrderDetailScreen.tsx",
+      "sha256": "7f58434905ee6a40a801b0da6bfdad7bdc7ddb71818d01b40ff7e82f4ad7b501"
+    },
+    {
+      "path": "src/components/OrderHelpAction.tsx",
+      "sha256": "62a535c279853b8bd3694cb0006ebdad02fbe947fb0b463b5db3a421d843aa3a"
+    },
+    {
+      "path": "src/components/OrderProgressDisclosure.tsx",
+      "sha256": "79b3bc59431ddc24781ce8fe7bb569eb0e533e21457552047a4a195bd807b415"
+    },
+    {
+      "path": "src/components/OrderReceipt.tsx",
+      "sha256": "cbfdc773acb3e816d65f088079fcd1d79d68f31edb2935c9907ff454cac61e49"
+    },
+    {
+      "path": "src/components/OtpInput.tsx",
+      "sha256": "ca9a1ad1789bacd85b7f9ae22502b4868c321291cdb2e86a8b5de82cdbbcdc59"
+    },
+    {
+      "path": "src/components/PaymentBurst.tsx",
+      "sha256": "9efd9493da8594dc3c9bfedd2f169b645d0189f1fbdae43d5e1033277e4e676c"
+    },
+    {
+      "path": "src/components/PlanSummary.tsx",
+      "sha256": "986fae5c8c0c1ee3d3d46c2595af2ef0c191817c25187ac2e023039331389e3d"
+    },
+    {
+      "path": "src/components/ProductFeedbackCard.tsx",
+      "sha256": "b11758a80b2dd4e264306fa8189e776af7a60feade39170b273c387c0bb9be9b"
+    },
+    {
+      "path": "src/components/ProductQuality.tsx",
+      "sha256": "c45aba240290f70f98109b7523fccb1e09d7b46531f989eeb3970e4b021c9148"
+    },
+    {
+      "path": "src/components/ProductRatingStars.ios.tsx",
+      "sha256": "5d498038a78fb6cb1637afb1c23c391d0bc3cca0ce903b97f2d75310818d6b8a"
+    },
+    {
+      "path": "src/components/ProductRatingStars.tsx",
+      "sha256": "0aa754b037cbd0b3784eff7a2d8746c75195d144cbb7ce126346dea60c788e9d"
+    },
+    {
+      "path": "src/components/ProductRatingStars.types.ts",
+      "sha256": "da10a78d8b5c47339f42d8519b8e5363029bb3264eb8da3183e0ac1205b7a1ba"
+    },
+    {
+      "path": "src/components/ProductSuggestions.tsx",
+      "sha256": "1a69746c5470ab0577133be80f819deebd0e5fee37aefa580b8139725c2cf364"
+    },
+    {
+      "path": "src/components/ProgressiveImage.tsx",
+      "sha256": "be1d71800ab79c7dae7e4342931edec2bb48bd719a4e047d20a647b7c599a21c"
+    },
+    {
+      "path": "src/components/PromoStyle.ts",
+      "sha256": "ab23a481c5318b324e26cf5cc7e4444ea8ccecba1e4956a63ca09528d279873f"
+    },
+    {
+      "path": "src/components/RecentOrderHistory.tsx",
+      "sha256": "40a95d40fffcfa7222bf9f3264c7e24123a5451f0fd8b38541ccc7a0f77b6ae7"
+    },
+    {
+      "path": "src/components/RecentSearches.tsx",
+      "sha256": "b47529d8a1b8ba3dc909e9c4d9d14f07fdf34dd046a452a8aeb698dd137fa6ba"
+    },
+    {
+      "path": "src/components/RewardsCard.tsx",
+      "sha256": "05ef4b87f801c010e27d766e23bbbe5524375a63910c36df9c19e615f45e555e"
+    },
+    {
+      "path": "src/components/SampleFeedbackReminder.tsx",
+      "sha256": "2518200d7a59be0b7e478438abd4b334e7e3988056bd87824c379e6fcc1d2163"
+    },
+    {
+      "path": "src/components/ScreenState.tsx",
+      "sha256": "86760323105a5eabe88728479da8a6c57f5d962e184cb58c73887fe442b8af84"
+    },
+    {
+      "path": "src/components/SearchRequestState.tsx",
+      "sha256": "c1915b02d135a4f62d8798ee8a70dbd6eafd7720cee0b0a9f32bd69879b49ce0"
+    },
+    {
+      "path": "src/components/SeasonalCampaign.tsx",
+      "sha256": "fe75ea3f0c9c393ba1d2e4f75b96d02e0841aa9a42ba6a332585a427cfa5f7fe"
+    },
+    {
+      "path": "src/components/SheetHandle.tsx",
+      "sha256": "4c1e090c4b6bfcfbc2fd2e5f112955ab720ac73183c9ba599444a79b68d487a9"
+    },
+    {
+      "path": "src/components/SheetHandle.web.tsx",
+      "sha256": "bc6046a3a82b9150ea874c51507831c5bebce1a92e335d7af02bd4cc879fa89b"
+    },
+    {
+      "path": "src/components/SheetSurface.tsx",
+      "sha256": "0c75b0a1905f3c28ca1cc9d078562ac636510e40daa49999601ecebc4743a4c7"
+    },
+    {
+      "path": "src/components/SheetSurface.web.tsx",
+      "sha256": "1f200a626f46e89af41754f4500dad569e20445f432294c782edaefe95cd608e"
+    },
+    {
+      "path": "src/components/ShopBento.tsx",
+      "sha256": "a587b725b100cd41c9ffaff5a15a4d583aad8174f984f1262f7b8496e1b0f6d6"
+    },
+    {
+      "path": "src/components/ShoppingCartShortcut.tsx",
+      "sha256": "373a1a93efb32450b39cf56022624e66b9284c3d006ce5198e71305567c96af2"
+    },
+    {
+      "path": "src/components/SlidingTabs.tsx",
+      "sha256": "fc826891af56d55a1eb412187c28d5697d2702b81f229b579e8471897131e306"
+    },
+    {
+      "path": "src/components/SlidingTabs.web.tsx",
+      "sha256": "725461b4457b3cd0ae5716c0c24f5fc833fd981d694b0ff08d92f7c587811ec4"
+    },
+    {
+      "path": "src/components/SubscriptionCalendar.tsx",
+      "sha256": "a6a8b71714022979aec41833697a655f493b3a3f26d575e7859db9af5b05e99c"
+    },
+    {
+      "path": "src/components/SubscriptionEditor.tsx",
+      "sha256": "5f0a114581be15ae2805156410ae05463cafb9777a25047c28fb3f7ffc6b83e3"
+    },
+    {
+      "path": "src/components/SubscriptionNutrition.tsx",
+      "sha256": "0be23670f6af5e794f65b92872230398a0852f70fa7370e5240eb7a7100c2670"
+    },
+    {
+      "path": "src/components/SupportScreen.tsx",
+      "sha256": "8f58b8954f96b6f6fd8bb84e9613585f76c4af347aeabc1ba3abe117976097dc"
+    },
+    {
+      "path": "src/components/SwiggyComponents.tsx",
+      "sha256": "a1765e4e4c28ac11fe93ab975b963a60dd9cd826cfd7bc3ed0830dc864f6a664"
+    },
+    {
+      "path": "src/components/TabIndicator.tsx",
+      "sha256": "b154b31a58a114d67f5e9d0ffb819cbb2e761a855a2b6468b4a4c188b6c7af83"
+    },
+    {
+      "path": "src/components/TabLens.tsx",
+      "sha256": "aac375fb7f54b3d602c5684c2da3c2fa3f05afe865e344afbd4362e03d3130f6"
+    },
+    {
+      "path": "src/components/TaskNavigation.tsx",
+      "sha256": "77cf33f759f8ba6280205d14418618314187a1fed007df85453ff65275fd5d1c"
+    },
+    {
+      "path": "src/components/useDismissibleSheet.ts",
+      "sha256": "4be5683588c03bf3f7ceb463e5c518d54143cf567a9f6bb71695536ebcfda78d"
+    },
+    {
+      "path": "src/components/useOfferTime.ts",
+      "sha256": "1c5a2eef101da23500ef7a2f1cc8d3b5df956c8ae86c891aee1fc87a92b800f3"
+    },
+    {
+      "path": "src/components/VacationPlanner.tsx",
+      "sha256": "e381c9ab06efd03812d2b8043b32b7f5b05ac81096d42b92ad26b12126dce24e"
+    },
+    {
+      "path": "src/components/VipCelebration.tsx",
+      "sha256": "0b0b25f40de2f0ff6d73c1bb52d192c3b1d50a5a709f80a3d1803724f40b7f89"
+    },
+    {
+      "path": "src/components/VipPass.tsx",
+      "sha256": "841dd1ee382af70e953c2f0d8b730af01b86cdb8357c0b488610250923807dcd"
+    },
+    {
+      "path": "src/components/VipSavings.tsx",
+      "sha256": "37fb1642b6d4e5513fe60420829dfa0e9be3212516b82f2e41fa5ed0a8b0435b"
+    },
+    {
+      "path": "src/components/WalletBalanceCard.tsx",
+      "sha256": "6417cf4026f6174994b3cec102f90c6d0dbce4020235f8a8adf58137ee2d8f3d"
+    },
+    {
+      "path": "src/components/WalletTopUp.tsx",
+      "sha256": "3ba1c1b42bdd31acb02121ff9def44d21b8105166cdc7eb7a92c68c39dfdc853"
+    },
+    {
+      "path": "src/components/WelcomePager.tsx",
+      "sha256": "24b9c9de6d4b034caef39f5f225e028e3f2d5f317074dd3a9cb40ac86bb81f41"
+    },
+    {
+      "path": "src/components/WelcomeSetup.tsx",
+      "sha256": "194777bc4111001e5b50e11cba4ecb25f47e29234b8c357e06479d78399ff180"
+    },
+    {
+      "path": "src/components/Wellness.tsx",
+      "sha256": "6dfbe737d8623db5b9633dd4d69eeeef201ff92e2956bc0e83b7a507d38f37c4"
+    },
+    {
+      "path": "src/CountryDelightApp.tsx",
+      "sha256": "2defb5505aad5138b152aada63369aa0dfad2c5ae15fbde7153c5b616ea9f578"
+    },
+    {
+      "path": "src/data/product-feedback-demo.json",
+      "sha256": "99d71a5e07b4ca862d2d01016cab9ec72b202a64913098e7b3c8e8e4b908bb7d"
+    },
+    {
+      "path": "src/delightFeedback.ts",
+      "sha256": "6660f832b948d3415cc63436ec01da0c14deae2caa789fe69671fd53e616067b"
+    },
+    {
+      "path": "src/deliveryDates.ts",
+      "sha256": "135c073a9bda443d803cdf093990997d13c4e3975993f09e6bc8b9d85085a440"
+    },
+    {
+      "path": "src/feedbackContext.ts",
+      "sha256": "7dba4283d584d4182138a023763f8667d86c7447c8c413640c015aebce6c61fd"
+    },
+    {
+      "path": "src/feedbackPreview.ts",
+      "sha256": "d311365454c921177a04799448685fbad513c77cd7b4ad9e964f11d7e57defaa"
+    },
+    {
+      "path": "src/feedbackSubmission.ts",
+      "sha256": "4a7c8d9f716c3c28b5d817d66deb1cf733f3a277c82265c36c29ebafc59eaf45"
+    },
+    {
+      "path": "src/homeCollections.ts",
+      "sha256": "e753e4524fdea80e6bfa2c5a3f4f47679d0a7dcdcc4e40ceef83a19fbe781ebd"
+    },
+    {
+      "path": "src/milkOfferProgress.ts",
+      "sha256": "abae361d2b0af0c38a568fb1fcf5e66f71cdb2bfaacf8f8ba81a7ccb2a0f4d34"
+    },
+    {
+      "path": "src/milkPlans.ts",
+      "sha256": "01e6ecaf3d0b50b9f15101673f4814f8969b6b2aa7a9b7fdd47f46e88346ce73"
+    },
+    {
+      "path": "src/mockData.ts",
+      "sha256": "53564e469cca19b3aa2040efeefd5716b32b8aafe87bd24ecfe769b6b59305e9"
+    },
+    {
+      "path": "src/monthlyNutrition.ts",
+      "sha256": "cda0dcfdaf0646f970d9ae3d9324e4288f40fd354c1c02e3e9208f64ca403944"
+    },
+    {
+      "path": "src/offers.ts",
+      "sha256": "e1b33634b7caf3f715680207116583f4b028bea50b39f4e9ee24cd2df0b2f277"
+    },
+    {
+      "path": "src/orderPresentation.ts",
+      "sha256": "f896cb619da32994aeddfaf47fa9d88e384f89d9192f511164e828404fde0404"
+    },
+    {
+      "path": "src/productFeedback.ts",
+      "sha256": "b95b24d57afc0ebb2d6dc6f451da1c92334656dbe1394c7c8629856b41297cbe"
+    },
+    {
+      "path": "src/productImages.ts",
+      "sha256": "e8edf7d79e5d09af4bb3138c5c64359ad69eb980ee50914dd9f1a25e888de18f"
+    },
+    {
+      "path": "src/productNavigation.ts",
+      "sha256": "9edca6dffd0482a5cc54493329798992acb971e19a5bc618d120fb196b05dfac"
+    },
+    {
+      "path": "src/razorpay.ts",
+      "sha256": "92200ac17a037c9b36cc92ceb50ffea2f0ca3465f8d9c61c24d33b8bd8d51917"
+    },
+    {
+      "path": "src/rewards.ts",
+      "sha256": "623e9f9277718c60a69898051dfe4842cb64f18ad9889033dfd7972b028134af"
+    },
+    {
+      "path": "src/SafeCountryRoute.tsx",
+      "sha256": "4468f554ba170cb40aed1a1cd4e4f15878669b79301277ae837e8ff2f518e090"
+    },
+    {
+      "path": "src/shopping.ts",
+      "sha256": "e093069b6c281d1de8a8988aca412816a07cc851ba7a6bb2f29bf29a0d5d27ff"
+    },
+    {
+      "path": "src/store/useShared.ts",
+      "sha256": "de26200ff85980029d0fd315b071c5b66e46f08834cd4b5feaa6e602b80b01b2"
+    },
+    {
+      "path": "src/support.ts",
+      "sha256": "f6ad54b5bb00809ccae9ea526ef60b8d3f6f81624c954745d2bbfb96ee2e6fae"
+    },
+    {
+      "path": "src/theme.ts",
+      "sha256": "d7c1afd94cc2a90142d6f33305e512ab12d9cd07b52ed9274cf1cb112b50f978"
+    },
+    {
+      "path": "src/useOrderCancellation.ts",
+      "sha256": "5d04d5a7b9be2531eaff3e2d7e39c2479af0850f3c8ddda77f2f1fe74c1179a4"
+    },
+    {
+      "path": "src/walletRecharge.ts",
+      "sha256": "83e7541705361f2e6b14939c3f2e88bb3d8f9a55ef5076b2c2670a41a937d335"
+    },
+    {
+      "path": "src/wellness.ts",
+      "sha256": "f7e4022f5dd351d148d9593c3b97e3e4f4ce54b574df15f12575e553b4735bde"
+    }
+  ]
+}
