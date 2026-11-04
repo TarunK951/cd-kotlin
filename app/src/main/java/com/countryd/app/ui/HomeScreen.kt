@@ -89,7 +89,7 @@ fun HomeScreen(
             }
         }
         item { DeliveryOverview(state, vm, go) }
-        item { CampaignCarousel(s, state.products, go) }
+        item { CampaignCarousel(state.products, go) }
         item {
             if (connectedFeedback != null) {
                 connectedFeedback()

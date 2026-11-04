@@ -142,9 +142,8 @@ fun DeliveryOverview(state: CountryState, vm: CountryViewModel, go: (String) -> 
 }
 
 @Composable
-fun CampaignCarousel(session: Session, catalogue: List<Product>, go: (String) -> Unit) {
-    val enrolled = session.subscriptions.any { it.plan.offer != "none" && it.status != "Past" }
-    val slides = if (enrolled) listOf(1, 2, 3) else listOf(0, 1, 2, 3)
+fun CampaignCarousel(catalogue: List<Product>, go: (String) -> Unit) {
+    val slides = listOf(1, 2, 3)
     val pager = rememberPagerState(pageCount = { slides.size })
     val dragging by pager.interactionSource.collectIsDraggedAsState()
     var direction by remember { mutableIntStateOf(1) }

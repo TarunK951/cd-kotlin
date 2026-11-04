@@ -100,7 +100,7 @@ fun CountryApp(
         }
     }
     if (connected.customer != null) {
-        ConnectedFeedbackSheet(connected, connection)
+        ConnectedFeedbackSheet(connected, connection) { go("feedback-account") }
         ManualRatingSheet(connected, connection)
         ConnectedOrderConfirmation(connected, connection) { id ->
             go(if (id == null) "orders" else "server-order/$id")
@@ -115,12 +115,6 @@ fun CountryApp(
         if (route == "home" && connected.customer != null) {
             connection.state.first { !it.busy }
             connection.next()
-        }
-    }
-    LaunchedEffect(connected.openCart) {
-        if (connected.openCart) {
-            connection.consumeCartNavigation()
-            go("feedback-account")
         }
     }
     LaunchedEffect(showMilkOffer) {
@@ -222,7 +216,12 @@ fun CountryApp(
                 ) {
                     val showOffers =
                         route == "home" || route.startsWith("shop") || route == "protein"
-                    if (showOffers || s.cart.isNotEmpty()) {
+                    val liveShopping =
+                        connected.customer != null &&
+                            (route.startsWith("shop") ||
+                                route.startsWith("server-product/") ||
+                                route == "feedback-account")
+                    if (!liveShopping && (showOffers || s.cart.isNotEmpty())) {
                         Row(
                             Modifier.fillMaxWidth().padding(bottom = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -370,7 +369,21 @@ fun CountryApp(
                         }
                     ),
                 ) {
-                    ShopScreen(state, vm, ::go, it.arguments?.getString("category") ?: "all")
+                    val category = it.arguments?.getString("category") ?: "all"
+                    if (connected.customer != null) {
+                        ConnectedShop(
+                            connected,
+                            connection,
+                            category,
+                            { go("feedback-account") },
+                        ) { id ->
+                            go("server-product/$id")
+                        }
+                    } else ShopScreen(state, vm, ::go, category)
+                }
+                composable("server-product/{id}") { entry ->
+                    val id = entry.arguments?.getString("id").orEmpty()
+                    ConnectedProduct(connected, connection, id) { go("feedback-account") }
                 }
                 composable("protein") { ProteinScreen(state, vm, ::go) }
                 composable("subs") { SubscriptionsScreen(state, vm, ::go) }
@@ -623,7 +636,8 @@ private fun screenTitle(route: String): String =
                 "assistant" to "Delight assistant",
                 "information" to "About your nutrition & plans",
                 "feedback-samples" to "Sample deliveries",
-                "feedback-account" to "Buy again & feedback",
+                "feedback-account" to "Cart",
+                "server-product/{id}" to "Product details",
             )[route] ?: "Country Delight"
     }
 

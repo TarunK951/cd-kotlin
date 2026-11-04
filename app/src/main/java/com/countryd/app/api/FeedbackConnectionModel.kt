@@ -26,9 +26,10 @@ data class FeedbackConnection(
     val placedOrders: List<JsonObject> = emptyList(),
     val result: JsonObject? = null,
     val cart: JsonObject? = null,
-    val openCart: Boolean = false,
+    val addedItem: JsonObject? = null,
     val detail: JsonObject? = null,
     val products: List<JsonObject> = emptyList(),
+    val product: JsonObject? = null,
     val options: List<JsonObject> = emptyList(),
     val message: String = "",
     val error: String = "",
@@ -223,7 +224,7 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
         change { it.copy(detail = reply) }
     }
 
-    fun add(product: String, quantity: Int, date: String, feedbackId: Long) = run {
+    fun add(product: String, quantity: Int, date: String? = null, feedbackId: Long? = null) = run {
         val reply =
             call(
                     "/api/cart/items",
@@ -231,8 +232,8 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
                     buildJsonObject {
                         put("productId", product)
                         put("quantity", quantity)
-                        put("deliveryDate", date)
-                        put("feedbackId", feedbackId)
+                        if (date != null) put("deliveryDate", date)
+                        if (feedbackId != null) put("feedbackId", feedbackId)
                     },
                     true,
                 )
@@ -241,13 +242,13 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
             it.copy(
                 result = null,
                 cart = reply.obj("cart"),
-                openCart = true,
+                addedItem = reply.obj("item"),
                 message = reply.str("message"),
             )
         }
     }
 
-    fun consumeCartNavigation() = change { it.copy(openCart = false) }
+    fun dismissAddedItem() = change { it.copy(addedItem = null, message = "") }
 
     fun cart() = run {
         val cart = call("/api/cart", secure = true).jsonObject
@@ -341,6 +342,12 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
     fun products() = run {
         val products = call("/api/products").jsonArray.map { it.jsonObject }
         change { it.copy(products = products, options = emptyList()) }
+    }
+
+    fun product(id: String) = run {
+        val encoded = Uri.encode(id)
+        val product = call("/api/products/$encoded").jsonObject
+        change { it.copy(product = product) }
     }
 
     fun options(id: String) = run {

@@ -9,7 +9,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -333,12 +332,64 @@ private fun FeedbackProductImage(prompt: JsonObject) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionModel) {
+fun ConnectedFeedbackSheet(
+    state: FeedbackConnection,
+    model: FeedbackConnectionModel,
+    viewCart: () -> Unit,
+) {
     val result = state.result
     val detail = state.detail
-    if (result == null && detail == null) return
-    val form = result?.obj("issueForm")
-    if (result != null && form != null) {
+    val addedItem = state.addedItem
+    if (addedItem != null) {
+        FeedbackConfirmation(
+            "Added to cart",
+            model::dismissAddedItem,
+            viewCart = {
+                model.dismissAddedItem()
+                viewCart()
+            },
+        ) {
+            if (addedItem.str("source") == "FEEDBACK_BUY_AGAIN") {
+                Text(
+                    "Your feedback remains saved",
+                    color = Green,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            Text(
+                "${addedItem.str("productName")} added to your cart.",
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Text("Review your cart and check out when you’re ready.", color = Muted)
+            CountryCard {
+                FeedbackProductSummary(addedItem)
+                Text(
+                    "${addedItem.num("quantity")} × ${addedItem.str("unit")} · ₹${addedItem.str("lineTotal")}"
+                )
+                Text("Delivery: ${feedbackDate(addedItem.str("deliveryDate"))}", color = Muted)
+            }
+        }
+        return
+    }
+    if (detail != null) {
+        FeedbackConfirmation("Feedback saved", model::closeResult) {
+            Text("Thank you for telling us.", style = MaterialTheme.typography.titleLarge)
+            Text("Your feedback has been submitted to our quality team.", color = Muted)
+            CountryCard {
+                FeedbackProductSummary(detail)
+                Text("Your saved rating · ${detail.num("rating")} of 5")
+                FeedbackStars(detail.num("rating"))
+                detail.list("issues").forEach { Text(it.str("label")) }
+                detail.str("note").takeIf(String::isNotBlank)?.let { Text(it) }
+                if (detail.str("photoUrl").isBlank()) Text("No photo attached", color = Muted)
+                else FeedbackImage(detail.str("photoUrl"), "Submitted photo")
+            }
+        }
+        return
+    }
+    if (result == null) return
+    val form = result.obj("issueForm")
+    if (form != null) {
         Dialog(
             onDismissRequest = { if (!state.busy) model.closeResult() },
             properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -355,32 +406,90 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
         sheetGesturesEnabled = false,
     ) {
         ScreenBody {
-            when {
-                result != null ->
-                    key(result.num("feedbackId")) {
-                        result.obj("buyAgain")?.let {
-                            BuyAgainFields(result, it, state.busy, model)
-                        }
-                    }
-                detail != null -> {
-                    Text("Feedback submitted", style = MaterialTheme.typography.titleLarge)
-                    Text("${detail.str("productName")} · Rating: ${detail.num("rating")}")
-                    detail.list("issues").forEach { Text(it.str("label")) }
-                    FeedbackImage(detail.str("photoUrl"), "Submitted photo")
-                    detail.str("note").takeIf(String::isNotBlank)?.let { Text(it) }
-                    TextButton(
-                        onClick = { model.feedback(detail.num("feedbackId")) },
-                        enabled = !state.busy,
-                    ) {
-                        Text("Refresh submitted feedback")
-                    }
-                    PrimaryButton("Done", enabled = !state.busy) { model.closeResult() }
+            key(result.num("feedbackId")) {
+                result.obj("buyAgain")?.let { offer ->
+                    BuyAgainFields(result, offer, state.busy, model)
                 }
             }
-            ConnectionStatus(state)
+            ConnectionStatus(state.copy(message = ""))
         }
     }
 }
+
+@Composable
+private fun FeedbackConfirmation(
+    title: String,
+    close: () -> Unit,
+    viewCart: (() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Dialog(
+        onDismissRequest = close,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Surface(Modifier.fillMaxSize(), color = Color.White) {
+            Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = close) { Icon(CountryIcons.ChevronLeft, "Back") }
+                    Text(
+                        title,
+                        Modifier.weight(1f),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    IconButton(onClick = close) { Icon(CountryIcons.Close, "Close") }
+                }
+                Column(
+                    Modifier.weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Icon(
+                        CountryIcons.CircleCheck,
+                        null,
+                        Modifier.align(Alignment.CenterHorizontally).size(48.dp),
+                        tint = Green,
+                    )
+                    content()
+                }
+                if (viewCart != null)
+                    OutlinedButton(viewCart, Modifier.fillMaxWidth()) { Text("View cart") }
+                PrimaryButton(
+                    "Continue shopping",
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    onClick = close,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FeedbackStars(rating: Long) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        for (star in 1..5) {
+            Icon(
+                if (star <= rating) CountryIcons.StarFilled else CountryIcons.Star,
+                null,
+                Modifier.size(24.dp),
+                tint = if (star <= rating) Green else Muted,
+            )
+        }
+    }
+}
+
+private fun feedbackDate(date: String): String =
+    runCatching {
+            LocalDate.parse(date)
+                .format(
+                    java.time.format.DateTimeFormatter.ofPattern(
+                        "d MMM yyyy",
+                        java.util.Locale.ENGLISH,
+                    )
+                )
+        }
+        .getOrDefault(date)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -422,17 +531,7 @@ private fun IssueFields(
                 "Your rating · ${result.num("rating")} of 5",
                 style = MaterialTheme.typography.titleSmall,
             )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                for (star in 1..5) {
-                    Icon(
-                        if (star <= result.num("rating")) CountryIcons.StarFilled
-                        else CountryIcons.Star,
-                        null,
-                        Modifier.size(24.dp),
-                        tint = Green,
-                    )
-                }
-            }
+            FeedbackStars(result.num("rating"))
             Text("Sorry it wasn’t quite right.", style = MaterialTheme.typography.titleMedium)
             Text(form.str("question"), style = MaterialTheme.typography.bodyMedium, color = Muted)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -552,53 +651,78 @@ private fun BuyAgainFields(
         color = Muted,
     )
     result.obj("ratedProduct")?.let { FeedbackProductSummary(it) }
-    Text("${offer.str("productName")} · ${offer.str("unit")} · ₹${offer.str("price")}")
     Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            "Quantity · ₹${offer.str("price")} / pack",
+            Modifier.weight(1f),
+            style = MaterialTheme.typography.titleSmall,
+        )
         TextButton({ quantity-- }, enabled = !busy && quantity > 1) { Text("−") }
         Text("$quantity")
         TextButton({ quantity++ }, enabled = !busy && quantity < 20) { Text("+") }
     }
-    Text("Delivery date: $date")
-    Row(Modifier.horizontalScroll(rememberScrollState())) {
-        offer.list("quickDates").forEach { option ->
-            FilterChip(
-                date == option.str("date"),
-                { date = option.str("date") },
-                { Text(option.str("label")) },
-                enabled = !busy,
-            )
+    Text("Deliver on", style = MaterialTheme.typography.titleSmall)
+    val suggested = offer.str("suggestedDate")
+    val quickLabel =
+        offer
+            .list("quickDates")
+            .firstOrNull { it.str("date") == suggested }
+            ?.str("label")
+            .orEmpty()
+            .ifBlank { "Suggested date" }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(
+            onClick = { date = suggested },
+            enabled = !busy,
+            modifier = Modifier.weight(1f),
+            colors =
+                ButtonDefaults.outlinedButtonColors(
+                    containerColor = if (date == suggested) Mint else Color.Transparent
+                ),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(quickLabel)
+                Text(feedbackDate(suggested), style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        OutlinedButton(
+            enabled = !busy,
+            modifier = Modifier.weight(1f),
+            onClick = {
+                val current = LocalDate.parse(date)
+                DatePickerDialog(
+                        context,
+                        { _, year, month, day ->
+                            date = LocalDate.of(year, month + 1, day).toString()
+                        },
+                        current.year,
+                        current.monthValue - 1,
+                        current.dayOfMonth,
+                    )
+                    .apply {
+                        val zone = java.time.ZoneId.systemDefault()
+                        datePicker.minDate =
+                            LocalDate.parse(offer.str("minDate"))
+                                .atStartOfDay(zone)
+                                .toInstant()
+                                .toEpochMilli()
+                        datePicker.maxDate =
+                            LocalDate.parse(offer.str("maxDate"))
+                                .atStartOfDay(zone)
+                                .toInstant()
+                                .toEpochMilli()
+                    }
+                    .show()
+            },
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Choose date")
+                if (date != suggested)
+                    Text(feedbackDate(date), style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
-    TextButton(
-        enabled = !busy,
-        onClick = {
-            val current = LocalDate.parse(date)
-            DatePickerDialog(
-                    context,
-                    { _, year, month, day -> date = LocalDate.of(year, month + 1, day).toString() },
-                    current.year,
-                    current.monthValue - 1,
-                    current.dayOfMonth,
-                )
-                .apply {
-                    val zone = java.time.ZoneId.systemDefault()
-                    datePicker.minDate =
-                        LocalDate.parse(offer.str("minDate"))
-                            .atStartOfDay(zone)
-                            .toInstant()
-                            .toEpochMilli()
-                    datePicker.maxDate =
-                        LocalDate.parse(offer.str("maxDate"))
-                            .atStartOfDay(zone)
-                            .toInstant()
-                            .toEpochMilli()
-                }
-                .show()
-        },
-    ) {
-        Text("Choose another date")
-    }
-    PrimaryButton("Add to Buy again cart", enabled = !busy && date.isNotBlank()) {
+    PrimaryButton("Add to cart", enabled = !busy && date.isNotBlank()) {
         model.add(offer.str("productId"), quantity, date, result.num("feedbackId"))
     }
 }
@@ -617,11 +741,11 @@ fun ConnectedAccount(
     ScreenBody {
         Text(state.customer?.str("name").orEmpty(), style = MaterialTheme.typography.titleLarge)
         Text(state.customer?.str("phone").orEmpty())
-        Text("Buy again cart", style = MaterialTheme.typography.titleMedium)
+        Text("Your cart", style = MaterialTheme.typography.titleMedium)
         val cart = state.cart
         if (cart != null) {
             val items = cart.list("items")
-            if (items.isEmpty()) Text("Your Buy again cart is empty.")
+            if (items.isEmpty()) Text("Your cart is empty.")
             items.forEach { item ->
                 Text("${item.str("productName")} · ${item.num("quantity")} × ${item.str("unit")}")
                 Text("${item.str("deliveryDate")} · ₹${item.str("lineTotal")}")
@@ -677,7 +801,7 @@ fun ConnectedAccount(
 }
 
 @Composable
-private fun FeedbackImage(path: String, description: String, fallback: String? = null) {
+internal fun FeedbackImage(path: String, description: String, fallback: String? = null) {
     if (path.isBlank() && fallback == null) return
     val bitmap by
         produceState<androidx.compose.ui.graphics.ImageBitmap?>(null, path) {
