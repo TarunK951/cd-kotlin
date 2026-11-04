@@ -74,9 +74,9 @@ fun QuickOffers(
         modifier = modifier.fillMaxWidth().semantics { contentDescription = "Quick view offers" },
     ) {
         Row(
-            Modifier.heightIn(min = 48.dp).padding(horizontal = 14.dp, vertical = 7.dp),
+            Modifier.heightIn(min = 48.dp).padding(horizontal = 10.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
         ) {
             Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(

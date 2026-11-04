@@ -21,7 +21,12 @@ import com.countryd.app.data.*
 import com.countryd.app.domain.*
 
 @Composable
-fun HomeScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) {
+fun HomeScreen(
+    state: CountryState,
+    vm: CountryViewModel,
+    go: (String) -> Unit,
+    connectedFeedback: (@Composable () -> Unit)? = null,
+) {
     val s = state.session
     val products = state.products.filter { matchesPreference(it, s.goal.preference) }
     var freshTab by rememberSaveable { mutableStateOf("All fresh") }
@@ -85,6 +90,10 @@ fun HomeScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) 
         }
         item { DeliveryOverview(state, vm, go) }
         item {
+            if (connectedFeedback != null) {
+                connectedFeedback()
+                return@item
+            }
             val request =
                 (state.feedbackPrompt ?: feedbackRequests(s, state.products).firstOrNull())
                     ?.takeUnless { r -> s.feedback.any { it.request.id == r.id } }

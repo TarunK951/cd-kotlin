@@ -62,6 +62,10 @@ class ShoppingJourneyTest {
     }
 
     private fun completeOnboarding() {
+        compose.waitUntil(10_000) {
+            compose.onAllNodesWithText("Use local demo").fetchSemanticsNodes().isNotEmpty()
+        }
+        tap("Use local demo")
         compose.waitUntil(15000) {
             compose.onAllNodesWithText("Get started").fetchSemanticsNodes().isNotEmpty()
         }

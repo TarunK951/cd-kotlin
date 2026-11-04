@@ -20,12 +20,19 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.countryd.app.*
+import com.countryd.app.api.FeedbackConnectionModel
 import com.countryd.app.data.*
 import com.countryd.app.domain.*
+import kotlinx.coroutines.flow.first
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CountryApp(vm: CountryViewModel = viewModel()) {
+fun CountryApp(
+    vm: CountryViewModel = viewModel(),
+    connection: FeedbackConnectionModel = viewModel(),
+) {
+    val connected by connection.state.collectAsStateWithLifecycle()
+    var demo by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     val state by vm.state.collectAsStateWithLifecycle()
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
@@ -61,7 +68,14 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
         }
         return
     }
-    if (!s.loggedIn) {
+    if (connected.customer == null && !demo) {
+        ConnectedSignIn(connected, connection) {
+            demo = true
+            overlay = null
+        }
+        return
+    }
+    if (!s.loggedIn && connected.customer == null) {
         Onboarding(vm) {
             showMilkOffer = true
             overlay = null
@@ -87,6 +101,19 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                     restoreState = false
                 }
             }
+        }
+    }
+    if (connected.customer != null) ConnectedFeedbackSheet(connected, connection)
+    LaunchedEffect(connected.customer) {
+        if (connected.customer != null) {
+            demo = false
+            go("home")
+        }
+    }
+    LaunchedEffect(route, connected.customer) {
+        if (route == "home" && connected.customer != null) {
+            connection.state.first { !it.busy }
+            connection.next()
         }
     }
     LaunchedEffect(showMilkOffer) {
@@ -213,7 +240,7 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                                     contentColor = Color.White,
                                 ) {
                                     Row(
-                                        Modifier.heightIn(min = 48.dp).padding(horizontal = 12.dp),
+                                        Modifier.widthIn(min = 76.dp).heightIn(min = 48.dp).padding(horizontal = 9.dp, vertical = 4.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     ) {
@@ -315,7 +342,18 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                 popEnterTransition = { fadeIn(tween(motionDuration)) },
                 popExitTransition = { fadeOut(tween(motionDuration)) },
             ) {
-                composable("home") { HomeScreen(state, vm, ::go) }
+                composable("home") {
+                    val feedback: (@Composable () -> Unit)? =
+                        if (connected.customer != null) {
+                            {
+                                ConnectedHomeFeedback(connected, connection) {
+                                    go("feedback-account")
+                                }
+                            }
+                        } else null
+                    HomeScreen(state, vm, ::go, feedback)
+                }
+                composable("feedback-account") { ConnectedAccount(connected, connection) }
                 composable(
                     "shop?category={category}",
                     listOf(
@@ -550,6 +588,7 @@ private fun screenTitle(route: String): String =
                 "assistant" to "Delight assistant",
                 "information" to "About your nutrition & plans",
                 "feedback-samples" to "Sample deliveries",
+                "feedback-account" to "Buy again & feedback",
             )[route] ?: "Country Delight"
     }
 
