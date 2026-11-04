@@ -493,6 +493,7 @@ fun CountryApp(
                         subscribe,
                         openSubscriptions = { go("subs") },
                         chooseAddress = { go("server-addresses?pick=true") },
+                        openProduct = { go("server-product/$it") },
                     )
                 }
                 composable("protein") {

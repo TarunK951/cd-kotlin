@@ -318,7 +318,10 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
                 }
             }
             change { it.copy(prompt = prompt) }
-            if (refreshCatalogue) loadCatalogue()
+            if (refreshCatalogue) {
+                loadCatalogue()
+                refreshAfterWrite { loadBuyAgain() }
+            }
             loadCart()
             if (mutable.value.addresses == null) refreshAfterWrite { loadAddresses() }
         } finally {
@@ -405,6 +408,7 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
         val saved = saveRating(requireNotNull(draft.obj("ratedProduct")), rating)
         change { it.copy(result = saved) }
         onSaved(saved)
+        refreshAfterWrite { loadBuyAgain() }
     }
 
     fun closeResult() {

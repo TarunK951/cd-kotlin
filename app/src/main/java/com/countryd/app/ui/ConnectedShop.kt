@@ -267,6 +267,11 @@ internal fun ConnectedShop(
                     )
                 }
             }
+            if (homeFeedback != null && query.isBlank() && state.buyAgainRecommendations.isNotEmpty()) {
+                item {
+                    RatedRecommendations(state.buyAgainRecommendations, openProduct)
+                }
+            }
         }
     }
     PullToRefreshBox(
@@ -274,6 +279,34 @@ internal fun ConnectedShop(
         onRefresh = refreshHome ?: model::products,
         modifier = Modifier.fillMaxSize(),
     ) { catalogue() }
+}
+
+@Composable
+private fun RatedRecommendations(items: List<JsonObject>, openProduct: (String) -> Unit) {
+    val products = items.filter { it.str("productId").isNotBlank() }.distinctBy { it.str("productId") }
+    if (products.isEmpty()) return
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Recommended for you", style = MaterialTheme.typography.titleMedium)
+        Caption("Based on products you rated 4 or 5 stars.")
+        androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(products, key = { it.str("productId") }) { product ->
+                val name = product.str("productName")
+                OutlinedCard(
+                    onClick = { openProduct(Uri.encode(product.str("productId"))) },
+                    modifier = Modifier.width(150.dp),
+                ) {
+                    Column(
+                        Modifier.padding(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        FeedbackImage(product.str("imageUrl"), name)
+                        Text(name, style = MaterialTheme.typography.titleSmall)
+                        Caption("${product.str("unit")} · ₹${product.str("price")}")
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -399,6 +432,7 @@ internal fun ConnectedProduct(
     startInSubscription: Boolean,
     openSubscriptions: () -> Unit,
     chooseAddress: () -> Unit,
+    openProduct: (String) -> Unit,
 ) {
     var buyOpen by rememberSaveable(id) { mutableStateOf(false) }
     var buyQuantity by rememberSaveable(id) { mutableIntStateOf(1) }
@@ -478,6 +512,10 @@ internal fun ConnectedProduct(
                     }
                 )
                 ConnectedCatalogueStatus(state) { model.product(id) }
+                RatedRecommendations(
+                    state.buyAgainRecommendations.filterNot { it.str("productId").equals(id, ignoreCase = true) },
+                    openProduct,
+                )
             }
             Surface(shadowElevation = 2.dp) {
                 Row(

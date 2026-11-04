@@ -27,6 +27,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -687,8 +689,18 @@ private fun FeedbackStars(rating: Long) {
 private fun RatingChoices(rating: Int, enabled: Boolean, onSelect: (Int) -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         (1..5).forEach { stars ->
-            IconButton(onClick = { onSelect(stars) }, enabled = enabled) {
-                Icon(CountryIcons.Star, "Select $stars stars", tint = if (stars <= rating) Green else Muted)
+            val filled = stars <= rating
+            IconButton(
+                onClick = { onSelect(stars) },
+                enabled = enabled,
+                modifier = Modifier.semantics { selected = stars == rating },
+            ) {
+                Icon(
+                    if (filled) CountryIcons.StarFilled else CountryIcons.Star,
+                    "Select $stars stars",
+                    Modifier.size(24.dp),
+                    tint = if (filled) Green else Muted,
+                )
             }
         }
     }
@@ -749,9 +761,9 @@ private fun IssueFields(
             } else {
                 FeedbackStars(rating)
             }
-            val threeStars = result.num("rating") == 3L
+            val threeStars = rating == 3L
             Text(
-                when (result.num("rating")) {
+                when (rating) {
                     1L -> "We’re really sorry about this"
                     2L -> "Sorry, this fell short."
                     else -> "Good, but could be better."
@@ -760,7 +772,7 @@ private fun IssueFields(
             )
             Text(
                 if (threeStars) "What would have made it a 4 or 5? Pick all that apply."
-                else form.str("question"),
+                else form.str("question").ifBlank { "What went wrong? Pick all that apply." },
                 style = MaterialTheme.typography.bodyMedium,
                 color = Muted,
             )
