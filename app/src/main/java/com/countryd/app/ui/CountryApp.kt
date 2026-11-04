@@ -103,7 +103,13 @@ fun CountryApp(
             }
         }
     }
-    if (connected.customer != null) ConnectedFeedbackSheet(connected, connection)
+    if (connected.customer != null) {
+        ConnectedFeedbackSheet(connected, connection)
+        ManualRatingSheet(connected, connection)
+        ConnectedOrderConfirmation(connected, connection) { id ->
+            go(if (id == null) "orders" else "server-order/$id")
+        }
+    }
     LaunchedEffect(connected.customer) {
         if (connected.customer != null) {
             demo = false
@@ -240,7 +246,9 @@ fun CountryApp(
                                     contentColor = Color.White,
                                 ) {
                                     Row(
-                                        Modifier.widthIn(min = 76.dp).heightIn(min = 48.dp).padding(horizontal = 9.dp, vertical = 4.dp),
+                                        Modifier.widthIn(min = 76.dp)
+                                            .heightIn(min = 48.dp)
+                                            .padding(horizontal = 9.dp, vertical = 4.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     ) {
@@ -353,7 +361,9 @@ fun CountryApp(
                         } else null
                     HomeScreen(state, vm, ::go, feedback)
                 }
-                composable("feedback-account") { ConnectedAccount(connected, connection) }
+                composable("feedback-account") {
+                    ConnectedAccount(connected, connection) { go("orders") }
+                }
                 composable(
                     "shop?category={category}",
                     listOf(
@@ -367,7 +377,18 @@ fun CountryApp(
                 }
                 composable("protein") { ProteinScreen(state, vm, ::go) }
                 composable("subs") { SubscriptionsScreen(state, vm, ::go) }
-                composable("orders") { OrdersScreen(state, vm, ::go) }
+                composable("orders") {
+                    if (connected.customer != null) {
+                        ConnectedOrders(connected, connection) { go("server-order/$it") }
+                    } else OrdersScreen(state, vm, ::go)
+                }
+                composable(
+                    "server-order/{id}",
+                    listOf(navArgument("id") { type = NavType.LongType }),
+                ) { entry ->
+                    val id = requireNotNull(entry.arguments).getLong("id")
+                    ConnectedOrders(connected, connection, id)
+                }
                 composable("profile") { ProfileScreen(state, vm, ::go) { dialog = it } }
                 composable(
                     "product/{id}?mode={mode}",
@@ -573,6 +594,7 @@ private fun screenTitle(route: String): String =
             mapOf(
                 "subs" to "Your subscriptions",
                 "orders" to "Your orders",
+                "server-order/{id}" to "Order details",
                 "profile" to "More",
                 "cart" to "Your basket",
                 "checkout" to "Checkout",

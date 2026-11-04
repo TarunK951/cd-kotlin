@@ -20,6 +20,10 @@ data class FeedbackConnection(
     val otp: JsonObject? = null,
     val otpRequestCount: Int = 0,
     val prompt: JsonObject? = null,
+    val manualPrompt: JsonObject? = null,
+    val orders: List<JsonObject>? = null,
+    val order: JsonObject? = null,
+    val placedOrders: List<JsonObject> = emptyList(),
     val result: JsonObject? = null,
     val cart: JsonObject? = null,
     val detail: JsonObject? = null,
@@ -162,8 +166,9 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
         change { it.copy(prompt = reply.obj("prompt").takeIf { _ -> reply.flag("show") }) }
     }
 
-    fun answer(rating: Int?) = run {
-        val prompt = mutable.value.prompt ?: return@run
+    fun answer(rating: Int?, manual: Boolean = false) = run {
+        val prompt =
+            (if (manual) mutable.value.manualPrompt else mutable.value.prompt) ?: return@run
         val id = prompt.num("promptId")
         val reply =
             try {
@@ -175,12 +180,14 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
                     )
                     .jsonObject
             } catch (e: ApiFailure) {
-                if (e.status in setOf(404, 409)) change { it.copy(prompt = null) }
+                if (e.status in setOf(404, 409))
+                    change { if (manual) it.copy(manualPrompt = null) else it.copy(prompt = null) }
                 throw e
             }
         change {
             it.copy(
-                prompt = null,
+                prompt = if (manual) it.prompt else null,
+                manualPrompt = if (manual) null else it.manualPrompt,
                 result =
                     reply.takeIf { r -> r.str("nextStep") in setOf("BUY_AGAIN", "ISSUE_DETAILS") },
                 message = reply.str("message"),
@@ -258,6 +265,76 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
             }
         change { it.copy(cart = cart, message = "") }
     }
+
+    fun placeOrder(date: String? = null) = run {
+        val reply =
+            call(
+                    "/api/orders",
+                    "POST",
+                    date?.let { buildJsonObject { put("deliveryDate", it) } },
+                    true,
+                )
+                .jsonObject
+        val placed = reply.list("orders")
+        change { current ->
+            val remaining =
+                current.cart?.list("items").orEmpty().filterNot { line ->
+                    placed.any { it.str("deliveryDate") == line.str("deliveryDate") }
+                }
+            current.copy(
+                cart =
+                    current.cart?.let { cart ->
+                        JsonObject(
+                            cart +
+                                mapOf(
+                                    "items" to JsonArray(remaining),
+                                    "totalQuantity" to
+                                        JsonPrimitive(remaining.sumOf { it.num("quantity") }),
+                                    "totalAmount" to
+                                        JsonPrimitive(
+                                            remaining.sumOf {
+                                                it.str("lineTotal").toDoubleOrNull() ?: 0.0
+                                            }
+                                        ),
+                                )
+                        )
+                    },
+                placedOrders = placed,
+                message = reply.str("message"),
+            )
+        }
+    }
+
+    fun dismissOrderConfirmation() = change { it.copy(placedOrders = emptyList(), message = "") }
+
+    fun orders() = run {
+        val orders = call("/api/orders", secure = true).jsonArray.map { it.jsonObject }
+        change { it.copy(orders = orders) }
+    }
+
+    fun order(id: Long) = run {
+        val order = call("/api/orders/$id", secure = true).jsonObject
+        change { it.copy(order = order) }
+    }
+
+    fun rateNow(itemId: Long) = run {
+        val reply =
+            call(
+                    "/api/feedback-prompts/rate-now",
+                    "POST",
+                    buildJsonObject { put("orderItemId", itemId) },
+                    true,
+                )
+                .jsonObject
+        change {
+            it.copy(
+                manualPrompt = reply.obj("prompt").takeIf { _ -> reply.flag("show") },
+                message = "",
+            )
+        }
+    }
+
+    fun dismissManualPrompt() = change { it.copy(manualPrompt = null) }
 
     fun products() = run {
         val products = call("/api/products").jsonArray.map { it.jsonObject }

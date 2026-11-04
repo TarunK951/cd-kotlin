@@ -4,25 +4,25 @@ import android.app.DatePickerDialog
 import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.countryd.app.api.*
 import java.net.HttpURLConnection
@@ -126,70 +126,84 @@ fun ConnectedHomeFeedback(
 ) {
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        state.prompt?.let { prompt ->
-            val name = prompt.str("productName")
-            val subtitle = listOf(prompt.str("subtitle"), prompt.str("productUnit"))
-                .filter(String::isNotBlank).joinToString(" · ")
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                color = Color(0xFFF5F8F4),
-                border = BorderStroke(1.dp, Line),
-            ) {
-                Column(
-                    Modifier.padding(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        val photo = when (prompt.str("productId")) {
-                            "GHEE" -> "products/photos/ghee.jpg"
-                            "PANEER" -> "reference/paneer.jpg"
-                            "MILK" -> "products/photos/cow-milk.jpg"
-                            "DAHI" -> "products/photos/curd.jpg"
-                            "BREAD" -> "products/photos/bread.jpg"
-                            else -> null
-                        }
-                        FeedbackImage(prompt.str("imageUrl"), name, photo?.let { "assets/$it" })
-                        Column(Modifier.weight(1f)) {
-                            Text(name, style = MaterialTheme.typography.titleMedium)
-                            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Muted)
-                        }
-                        TextButton(
-                            onClick = { model.answer(null) },
-                            enabled = !state.busy,
-                            contentPadding = PaddingValues(horizontal = 4.dp),
-                        ) {
-                            Text(prompt.str("skipLabel").ifBlank { "Skip" }.uppercase(), maxLines = 1)
-                        }
-                    }
-                    Text(
-                        prompt.str("title"),
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center,
-                    )
-                    Row(Modifier.widthIn(max = 280.dp).fillMaxWidth()) {
-                        for (rating in prompt.num("ratingMin").toInt()..prompt.num("ratingMax").toInt()) {
-                            IconButton(
-                                onClick = { model.answer(rating) },
-                                enabled = !state.busy,
-                                modifier = Modifier.weight(1f),
-                            ) {
-                                Icon(CountryIcons.Star, "Rate $rating stars", Modifier.size(30.dp), tint = Muted)
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        state.prompt?.let { FeedbackRatingCard(it, state.busy) { rating -> model.answer(rating) } }
         ConnectionStatus(state)
         if (state.error.isNotBlank()) {
             TextButton(onClick = model::next, enabled = !state.busy) { Text("Retry feedback") }
         }
-        TextButton(onClick = open) { Text("Buy again cart", maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        TextButton(onClick = open) {
+            Text("Buy again cart", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+@Composable
+internal fun FeedbackRatingCard(prompt: JsonObject, busy: Boolean, answer: (Int?) -> Unit) {
+
+    val name = prompt.str("productName")
+    val subtitle =
+        listOf(prompt.str("subtitle"), prompt.str("productUnit"))
+            .filter(String::isNotBlank)
+            .joinToString(" · ")
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        color = Color(0xFFF5F8F4),
+        border = BorderStroke(1.dp, Line),
+    ) {
+        Column(
+            Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                val photo =
+                    when (prompt.str("productId")) {
+                        "GHEE" -> "products/photos/ghee.jpg"
+                        "PANEER" -> "reference/paneer.jpg"
+                        "MILK" -> "products/photos/cow-milk.jpg"
+                        "DAHI" -> "products/photos/curd.jpg"
+                        "BREAD" -> "products/photos/bread.jpg"
+                        else -> null
+                    }
+                FeedbackImage(prompt.str("imageUrl"), name, photo?.let { "assets/$it" })
+                Column(Modifier.weight(1f)) {
+                    Text(name, style = MaterialTheme.typography.titleMedium)
+                    Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Muted)
+                }
+                TextButton(
+                    onClick = { answer(null) },
+                    enabled = !busy,
+                    contentPadding = PaddingValues(horizontal = 4.dp),
+                ) {
+                    Text(prompt.str("skipLabel").ifBlank { "Skip" }.uppercase(), maxLines = 1)
+                }
+            }
+            Text(
+                prompt.str("title"),
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
+            )
+            Row(Modifier.widthIn(max = 280.dp).fillMaxWidth()) {
+                for (rating in prompt.num("ratingMin").toInt()..prompt.num("ratingMax").toInt()) {
+                    IconButton(
+                        onClick = { answer(rating) },
+                        enabled = !busy,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(
+                            CountryIcons.Star,
+                            "Rate $rating stars",
+                            Modifier.size(30.dp),
+                            tint = Muted,
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -342,7 +356,11 @@ private fun BuyAgainFields(
 }
 
 @Composable
-fun ConnectedAccount(state: FeedbackConnection, model: FeedbackConnectionModel) {
+fun ConnectedAccount(
+    state: FeedbackConnection,
+    model: FeedbackConnectionModel,
+    openOrders: () -> Unit,
+) {
     var product by rememberSaveable { mutableStateOf("") }
     LaunchedEffect(Unit) {
         model.state.first { !it.busy }
@@ -368,6 +386,18 @@ fun ConnectedAccount(state: FeedbackConnection, model: FeedbackConnectionModel) 
             }
             if (items.isNotEmpty()) Text("Total ₹${cart.str("totalAmount")}")
         }
+        if (cart != null && cart.list("items").isNotEmpty()) {
+            val dates = cart.list("items").map { it.str("deliveryDate") }.distinct()
+            PrimaryButton("Place order", enabled = !state.busy) { model.placeOrder() }
+            if (dates.size > 1) {
+                dates.forEach { date ->
+                    TextButton(onClick = { model.placeOrder(date) }, enabled = !state.busy) {
+                        Text("Order items for $date")
+                    }
+                }
+            }
+        }
+        TextButton(onClick = openOrders) { Text("My orders") }
         TextButton(onClick = model::cart, enabled = !state.busy) { Text("Refresh cart") }
         TextButton(
             onClick = {
