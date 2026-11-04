@@ -366,31 +366,34 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
     }
     val offer = result.obj("buyAgain") ?: return
     var reorderOpen by rememberSaveable(result.num("feedbackId")) { mutableStateOf(false) }
-    if (!reorderOpen) {
-        FeedbackConfirmation(
-            "Feedback saved",
-            model::closeResult,
-            buyAgain = { reorderOpen = true },
-        ) {
-            val name = state.customer?.str("name").orEmpty()
-            Text(
-                if (name.isBlank()) "Thanks for sharing!" else "Thanks for sharing, $name!",
-                style = MaterialTheme.typography.titleLarge,
-            )
-            Text("Your ${result.num("rating")}-star rating is saved.", color = Muted)
-            FeedbackStars(result.num("rating"))
-            result.obj("ratedProduct")?.let { product ->
-                CountryCard { FeedbackProductSummary(product) }
-            }
+    FeedbackConfirmation(
+        "Feedback saved",
+        { if (!reorderOpen) model.closeResult() },
+        buyAgain = { reorderOpen = true },
+    ) {
+        val name = state.customer?.str("name").orEmpty()
+        Text(
+            if (name.isBlank()) "Thanks for sharing!" else "Thanks for sharing, $name!",
+            style = MaterialTheme.typography.titleLarge,
+        )
+        Text("Your ${result.num("rating")}-star rating is saved.", color = Muted)
+        FeedbackStars(result.num("rating"))
+        result.obj("ratedProduct")?.let { product ->
+            CountryCard { FeedbackProductSummary(product) }
         }
-        return
     }
+    if (!reorderOpen) return
     ModalBottomSheet(
         onDismissRequest = { if (!state.busy) reorderOpen = false },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         sheetGesturesEnabled = false,
     ) {
-        ScreenBody {
+        Column(
+            Modifier.fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             key(result.num("feedbackId")) {
                 BuyAgainFields(result, offer, state.busy, model) { reorderOpen = false }
             }
@@ -428,20 +431,55 @@ private fun FeedbackConfirmation(
                         .padding(vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Icon(
-                        CountryIcons.CircleCheck,
-                        null,
-                        Modifier.align(Alignment.CenterHorizontally).size(48.dp),
-                        tint = Green,
-                    )
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Mint,
+                        shape = RoundedCornerShape(8.dp),
+                    ) {
+                        Row(
+                            Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            Icon(CountryIcons.CircleCheck, null, Modifier.size(15.dp), tint = Green)
+                            Text(
+                                "Feedback saved successfully",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Green,
+                            )
+                        }
+                    }
+                    Surface(
+                        modifier =
+                            Modifier.align(Alignment.CenterHorizontally)
+                                .padding(top = 10.dp)
+                                .size(62.dp),
+                        color = Mint,
+                        shape = RoundedCornerShape(50),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(CountryIcons.CircleCheck, null, Modifier.size(36.dp), tint = Green)
+                        }
+                    }
                     content()
                 }
-                if (buyAgain != null) PrimaryButton("Buy again", onClick = buyAgain)
-                PrimaryButton(
-                    "Continue shopping",
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    onClick = close,
-                )
+                Column(
+                    Modifier.padding(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    if (buyAgain != null) {
+                        PrimaryButton("Buy again", onClick = buyAgain)
+                        OutlinedButton(
+                            onClick = close,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                        ) {
+                            Text("Continue shopping")
+                        }
+                    } else {
+                        PrimaryButton("Continue shopping", onClick = close)
+                    }
+                }
             }
         }
     }
@@ -508,7 +546,14 @@ private fun IssueFields(
             Modifier.weight(1f).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            result.obj("ratedProduct")?.let { FeedbackProductSummary(it) }
+            result.obj("ratedProduct")?.let { product ->
+                FeedbackProductSummary(product)
+                Text(
+                    "Feedback stays with this delivery.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Muted,
+                )
+            }
             Text(
                 "Your rating · ${result.num("rating")} of 5",
                 style = MaterialTheme.typography.titleSmall,
@@ -540,20 +585,41 @@ private fun IssueFields(
                                 }
                         },
                         { Text(option.str("label"), style = MaterialTheme.typography.labelMedium) },
+                        leadingIcon =
+                            if (checked) {
+                                {
+                                    Icon(
+                                        CountryIcons.CircleCheck,
+                                        null,
+                                        Modifier.size(14.dp),
+                                        tint = Green,
+                                    )
+                                }
+                            } else null,
+                        colors =
+                            FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Mint,
+                                selectedLabelColor = Green,
+                            ),
                         shape = RoundedCornerShape(50),
                         enabled = !busy,
                     )
                 }
             }
             if (form.flag("noteAllowed")) {
+                Text("Anything else? (optional)", style = MaterialTheme.typography.titleSmall)
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it.take(form.num("noteMaxLength").toInt()) },
-                    label = { Text("Anything else? (optional)") },
                     placeholder = { Text("Tell us a little more…") },
                     minLines = 2,
                     textStyle = MaterialTheme.typography.bodySmall,
                     shape = RoundedCornerShape(12.dp),
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFFF5F8F4),
+                            unfocusedContainerColor = Color(0xFFF5F8F4),
+                        ),
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !busy,
                 )
@@ -563,13 +629,18 @@ private fun IssueFields(
                     onClick = { picker.launch("image/*") },
                     enabled = !busy,
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
                 ) {
-                    Text(if (photo == null) "Add a photo (optional)" else "Replace attached photo")
+                    Text(
+                        if (photo == null) "Add a photo (optional)" else "Replace attached photo",
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.labelMedium,
+                    )
                 }
                 if (photo != null)
                     TextButton(onClick = { photo = null }, enabled = !busy) { Text("Remove photo") }
                 Text(
-                    "One photo only. You can submit without a photo.",
+                    "One photo, up to 5 MB. JPEG, PNG, WebP or HEIC.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Muted,
                 )
@@ -585,6 +656,7 @@ private fun IssueFields(
                     disabledContentColor = Muted,
                     disabledContainerColor = Line,
                 ),
+            shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).heightIn(min = 48.dp),
         ) {
             Text("Submit feedback")
@@ -632,25 +704,48 @@ private fun BuyAgainFields(
     var date by rememberSaveable { mutableStateOf(offer.str("suggestedDate")) }
     val context = LocalContext.current
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("Buy again", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+        Text("Buy again", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
         IconButton(onClick = close, enabled = !busy) { Icon(CountryIcons.Close, "Close Buy again") }
     }
     Text(
-        "Feedback saved. Ordering again is optional.",
+        "Feedback saved. This optional order is separate.",
         style = MaterialTheme.typography.bodySmall,
         color = Muted,
     )
     result.obj("ratedProduct")?.let { FeedbackProductSummary(it) }
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         Text(
             "Quantity · ₹${offer.str("price")} / pack",
             Modifier.weight(1f),
             style = MaterialTheme.typography.titleSmall,
         )
-        TextButton({ quantity-- }, enabled = !busy && quantity > 1) { Text("−") }
-        Text("$quantity")
-        TextButton({ quantity++ }, enabled = !busy && quantity < 20) { Text("+") }
+        Surface(shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, Line)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(
+                    onClick = { quantity-- },
+                    enabled = !busy && quantity > 1,
+                    modifier = Modifier.width(40.dp),
+                    contentPadding = PaddingValues(0.dp),
+                ) {
+                    Text("−")
+                }
+                Text("$quantity", style = MaterialTheme.typography.titleSmall)
+                TextButton(
+                    onClick = { quantity++ },
+                    enabled = !busy && quantity < 20,
+                    modifier = Modifier.width(40.dp),
+                    contentPadding = PaddingValues(0.dp),
+                ) {
+                    Text("+")
+                }
+            }
+        }
     }
+    Text("Buy once", style = MaterialTheme.typography.bodySmall, color = Muted)
     Text("Deliver on", style = MaterialTheme.typography.titleSmall)
     val suggested = offer.str("suggestedDate")
     val quickLabel =
@@ -664,20 +759,30 @@ private fun BuyAgainFields(
         OutlinedButton(
             onClick = { date = suggested },
             enabled = !busy,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).heightIn(min = 54.dp),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, if (date == suggested) Green else Line),
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
             colors =
                 ButtonDefaults.outlinedButtonColors(
                     containerColor = if (date == suggested) Mint else Color.Transparent
                 ),
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(quickLabel)
+                Text(quickLabel, style = MaterialTheme.typography.titleSmall)
                 Text(feedbackDate(suggested), style = MaterialTheme.typography.bodySmall)
             }
         }
         OutlinedButton(
             enabled = !busy,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).heightIn(min = 54.dp),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, if (date != suggested) Green else Line),
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+            colors =
+                ButtonDefaults.outlinedButtonColors(
+                    containerColor = if (date != suggested) Mint else Color.Transparent
+                ),
             onClick = {
                 val current = LocalDate.parse(date)
                 DatePickerDialog(
@@ -706,7 +811,7 @@ private fun BuyAgainFields(
             },
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Choose date")
+                Text("Choose date", style = MaterialTheme.typography.titleSmall)
                 if (date != suggested)
                     Text(feedbackDate(date), style = MaterialTheme.typography.bodySmall)
             }
