@@ -122,6 +122,9 @@ private fun ConnectedOrderCard(
                 }
             }
         }
+        order.str("deliveryAddress").takeIf(String::isNotBlank)?.let {
+            Text(it, color = Muted, style = MaterialTheme.typography.bodySmall)
+        }
         order.list("items").forEach { item ->
             HorizontalDivider(color = Line)
             ConnectedOrderItem(item, busy, model)
@@ -159,6 +162,11 @@ private fun ConnectedOrderItem(item: JsonObject, busy: Boolean, model: FeedbackC
             TextButton(onClick = { model.rateNow(item.num("orderItemId")) }, enabled = !busy) {
                 Text("Rate now")
             }
+        feedback.str("status") == "ALREADY_REVIEWED" ->
+            Text(
+                "Previously rated ${feedback.num("rating")}★",
+                style = MaterialTheme.typography.bodySmall,
+            )
         feedback.str("status") == "RATED" ->
             TextButton(onClick = { model.feedback(feedback.num("feedbackId")) }, enabled = !busy) {
                 Text("Rated ${feedback.num("rating")}★")
@@ -212,6 +220,9 @@ internal fun ConnectedOrderConfirmation(
         orders.forEach { order ->
             CountryCard {
                 Text("Order #${order.num("orderId")}", style = MaterialTheme.typography.titleSmall)
+                order.str("deliveryAddress").takeIf(String::isNotBlank)?.let {
+                    Text(it, color = Muted, style = MaterialTheme.typography.bodySmall)
+                }
                 order.list("items").forEach { item ->
                     FeedbackProductSummary(item)
                     Text(

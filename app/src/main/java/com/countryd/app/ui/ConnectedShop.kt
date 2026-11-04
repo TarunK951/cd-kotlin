@@ -64,7 +64,10 @@ internal fun ConnectedShop(
                     Modifier.weight(1f),
                     style = MaterialTheme.typography.titleMedium,
                 )
-                TextButton(onClick = viewCart) { Text("View cart") }
+                val count = state.cartSummary?.num("totalQuantity") ?: 0
+                TextButton(onClick = viewCart) {
+                    Text(if (count > 0) "View cart · $count" else "View cart")
+                }
             }
         }
         OutlinedTextField(
@@ -117,6 +120,51 @@ internal fun ConnectedShop(
                             { selectedCategory = name },
                             { Text(name) },
                         )
+                }
+            }
+        }
+        if (state.buyAgainRecommendations.isNotEmpty() && query.isBlank()) {
+            Text("Order again", style = MaterialTheme.typography.titleMedium)
+            androidx.compose.foundation.lazy.LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                state.buyAgainRecommendations.forEach { item ->
+                    item(key = item.str("productId")) {
+                        OutlinedCard(Modifier.width(155.dp)) {
+                            Column(
+                                Modifier.padding(10.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                FeedbackImage(item.str("imageUrl"), item.str("productName"))
+                                Text(
+                                    item.str("productName"),
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                                Text(
+                                    "${item.str("unit")} · ₹${item.str("price")}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                                Text(
+                                    item.str("reason"),
+                                    color = Muted,
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                                TextButton(
+                                    onClick = {
+                                        model.add(
+                                            item.str("productId"),
+                                            1,
+                                            item.str("suggestedDate"),
+                                            item.num("feedbackId"),
+                                        )
+                                    },
+                                    enabled = !state.busy,
+                                ) {
+                                    Text("Order again")
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -189,6 +237,7 @@ internal fun ConnectedProduct(
                 }
             }
             PrimaryButton("Add to cart", enabled = !state.busy) { model.add(id, quantity) }
+            SubscribeAction(state, model, product)
         }
     }
 }

@@ -9,7 +9,6 @@ Provide a public endpoint such as GET /api/service-areas returning stable area I
 ## Reference behaviors requiring API support
 
 - Edit a saved rating. The current contract saves on star tap and rejects a second rating. Define an authenticated update operation and which rating edits reset issue details.
-- Reorder as a subscription. The connected cart places one-time orders. Provide a subscription endpoint or purchase mode with schedule, pricing and eligibility rules.
 - Provide the product code, order-specific delivery locality and usable product image URL on feedback prompts if these must appear in the delivery summary.
 - Provide a way to resume incomplete issue details after a rating is saved and the form is dismissed.
 

@@ -26,6 +26,12 @@ data class FeedbackConnection(
     val placedOrders: List<JsonObject> = emptyList(),
     val result: JsonObject? = null,
     val cart: JsonObject? = null,
+    val cartSummary: JsonObject? = null,
+    val cartRecommendations: List<JsonObject> = emptyList(),
+    val buyAgainRecommendations: List<JsonObject> = emptyList(),
+    val addresses: JsonObject? = null,
+    val selectedAddressId: Long? = null,
+    val subscriptions: JsonObject? = null,
     val cartNotice: String? = null,
     val detail: JsonObject? = null,
     val products: List<JsonObject> = emptyList(),
@@ -166,6 +172,8 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
         change { it.copy(prompt = null) }
         val reply = call("/api/feedback-prompts/next", secure = true).jsonObject
         change { it.copy(prompt = reply.obj("prompt").takeIf { _ -> reply.flag("show") }) }
+        val summary = call("/api/cart/summary", secure = true).jsonObject
+        change { it.copy(cartSummary = summary) }
     }
 
     fun answer(rating: Int?, manual: Boolean = false) = run {
@@ -192,7 +200,9 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
                 manualPrompt = if (manual) null else it.manualPrompt,
                 result =
                     reply
-                        .takeIf { r -> r.str("nextStep") in setOf("BUY_AGAIN", "ISSUE_DETAILS") }
+                        .takeIf { r ->
+                            r.str("nextStep") in setOf("BUY_AGAIN", "ISSUE_DETAILS", "THANK_YOU")
+                        }
                         ?.let { JsonObject(it + ("ratedProduct" to prompt)) },
                 message = reply.str("message"),
             )
@@ -246,13 +256,161 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
                 message = "",
             )
         }
+        refreshAfterWrite { refreshCartMetadata() }
     }
 
     fun clearCartNotice() = change { it.copy(cartNotice = null) }
 
+    private suspend fun refreshAfterWrite(refresh: suspend () -> Unit) {
+        try {
+            refresh()
+        } catch (error: ApiFailure) {
+            if (error.status == 401) throw error
+        } catch (_: java.io.IOException) {
+            // The write succeeded. A later screen refresh can reload ancillary data.
+        }
+    }
+
+    private suspend fun refreshCartMetadata() {
+        val summary = call("/api/cart/summary", secure = true).jsonObject
+        change { it.copy(cartSummary = summary) }
+        val pairs = call("/api/recommendations/for-cart", secure = true).jsonObject
+        change { it.copy(cartRecommendations = pairs.list("items")) }
+        loadBuyAgain()
+    }
+
+    private suspend fun loadBuyAgain() {
+        val reply = call("/api/recommendations/buy-again", secure = true).jsonObject
+        change { it.copy(buyAgainRecommendations = reply.list("items")) }
+    }
+
+    fun updateCartItem(id: Long, quantity: Int? = null, date: String? = null) = run {
+        val reply =
+            call(
+                    "/api/cart/items/$id",
+                    "PATCH",
+                    buildJsonObject {
+                        if (quantity != null) put("quantity", quantity)
+                        if (date != null) put("deliveryDate", date)
+                    },
+                    true,
+                )
+                .jsonObject
+        change { it.copy(cart = reply.obj("cart")) }
+        refreshAfterWrite { refreshCartMetadata() }
+    }
+
+    fun clearCart() = run {
+        val cart = call("/api/cart", "DELETE", secure = true).jsonObject
+        change { it.copy(cart = cart) }
+        refreshAfterWrite { refreshCartMetadata() }
+    }
+
+    private suspend fun loadAddresses() {
+        val reply = call("/api/addresses", secure = true).jsonObject
+        updateAddresses(reply)
+    }
+
+    private fun updateAddresses(reply: JsonObject) {
+        change { current ->
+            current.copy(
+                addresses = reply,
+                selectedAddressId =
+                    current.selectedAddressId?.takeIf { id ->
+                        reply.list("addresses").any { it.num("addressId") == id }
+                    },
+            )
+        }
+    }
+
+    fun addresses() = run { loadAddresses() }
+
+    fun selectAddress(id: Long) = change { it.copy(selectedAddressId = id) }
+
+    fun saveAddress(id: Long?, body: JsonObject) = run {
+        val saved =
+            call(
+                    if (id == null) "/api/addresses" else "/api/addresses/$id",
+                    if (id == null) "POST" else "PUT",
+                    body,
+                    true,
+                )
+                .jsonObject
+        val current = mutable.value.addresses
+        val savedId = saved.num("addressId")
+        val defaultId =
+            if (saved.flag("isDefault")) savedId else current?.num("defaultAddressId") ?: 0
+        val records =
+            current?.list("addresses").orEmpty().filterNot { it.num("addressId") == savedId } +
+                saved
+        updateAddresses(
+            buildJsonObject {
+                put("defaultAddressId", defaultId)
+                put(
+                    "addresses",
+                    JsonArray(
+                        records.map { address ->
+                            JsonObject(
+                                address +
+                                    ("isDefault" to
+                                        JsonPrimitive(address.num("addressId") == defaultId))
+                            )
+                        }
+                    ),
+                )
+            }
+        )
+        refreshAfterWrite { loadAddresses() }
+    }
+
+    fun defaultAddress(id: Long) = run {
+        updateAddresses(
+            call("/api/addresses/$id/default", "POST", buildJsonObject {}, true).jsonObject
+        )
+    }
+
+    fun deleteAddress(id: Long) = run {
+        updateAddresses(call("/api/addresses/$id", "DELETE", secure = true).jsonObject)
+    }
+
+    private suspend fun loadSubscriptions() {
+        val reply = call("/api/subscriptions", secure = true).jsonObject
+        change { it.copy(subscriptions = reply) }
+    }
+
+    fun subscriptions() = run {
+        loadSubscriptions()
+        loadAddresses()
+    }
+
+    fun createSubscription(body: JsonObject) = run {
+        val reply = call("/api/subscriptions", "POST", body, true).jsonObject
+        change { it.copy(cartNotice = reply.str("message").ifBlank { "Subscription created" }) }
+        refreshAfterWrite {
+            loadSubscriptions()
+            loadBuyAgain()
+        }
+    }
+
+    fun updateSubscription(id: Long, body: JsonObject) = run {
+        call("/api/subscriptions/$id", "PATCH", body, true)
+        refreshAfterWrite { loadSubscriptions() }
+    }
+
+    fun subscriptionAction(id: Long, action: String) = run {
+        if (action == "cancel") call("/api/subscriptions/$id", "DELETE", secure = true)
+        else call("/api/subscriptions/$id/$action", "POST", buildJsonObject {}, true)
+        refreshAfterWrite {
+            loadSubscriptions()
+            loadBuyAgain()
+        }
+    }
+
     fun cart() = run {
         val cart = call("/api/cart", secure = true).jsonObject
         change { it.copy(cart = cart) }
+        loadAddresses()
+        refreshCartMetadata()
     }
 
     fun remove(id: Long) = run {
@@ -267,6 +425,7 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
                 latest
             }
         change { it.copy(cart = cart, message = "") }
+        refreshAfterWrite { refreshCartMetadata() }
     }
 
     fun placeOrder(date: String? = null) = run {
@@ -274,7 +433,10 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
             call(
                     "/api/orders",
                     "POST",
-                    buildJsonObject { if (date != null) put("deliveryDate", date) },
+                    buildJsonObject {
+                        if (date != null) put("deliveryDate", date)
+                        mutable.value.selectedAddressId?.let { put("addressId", it) }
+                    },
                     true,
                 )
                 .jsonObject
@@ -306,6 +468,7 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
                 message = reply.str("message"),
             )
         }
+        refreshAfterWrite { refreshCartMetadata() }
     }
 
     fun dismissOrderConfirmation() = change { it.copy(placedOrders = emptyList(), message = "") }
@@ -342,6 +505,7 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
     fun products() = run {
         val products = call("/api/products").jsonArray.map { it.jsonObject }
         change { it.copy(products = products, options = emptyList()) }
+        if (token != null) loadBuyAgain()
     }
 
     fun product(id: String) = run {

@@ -177,7 +177,10 @@ fun CountryApp(
                             )
                         }
                         IconButton(onClick = { go("cart") }) {
-                            val count = connected.cart?.num("totalQuantity") ?: 0
+                            val count =
+                                connected.cartSummary?.num("totalQuantity")
+                                    ?: connected.cart?.num("totalQuantity")
+                                    ?: 0
                             BadgedBox(badge = { if (count > 0) Badge { Text(count.toString()) } }) {
                                 Icon(CountryIcons.ShoppingBag, "View cart")
                             }
@@ -392,7 +395,13 @@ fun CountryApp(
                     } else HomeScreen(state, vm, ::go)
                 }
                 composable("feedback-account") {
-                    ConnectedAccount(connected, connection) { go("orders") }
+                    ConnectedAccount(
+                        connected,
+                        connection,
+                        chooseAddress = { go("server-addresses?pick=true") },
+                    ) {
+                        go("orders")
+                    }
                 }
                 composable(
                     "shop?category={category}",
@@ -429,11 +438,33 @@ fun CountryApp(
                 composable("subs") {
                     if (connected.customer == null) SubscriptionsScreen(state, vm, ::go)
                     else
-                        ScreenBody {
-                            Text("My deliveries", style = MaterialTheme.typography.titleLarge)
-                            DeliveryTabs("My subscriptions") { if (it == "Orders") go("orders") }
-                            Text("Subscription management is unavailable.")
+                        ConnectedSubscriptions(
+                            connected,
+                            connection,
+                            { go("orders") },
+                            { go("shop") },
+                        )
+                }
+                composable(
+                    "server-addresses?pick={pick}",
+                    listOf(
+                        navArgument("pick") {
+                            type = NavType.BoolType
+                            defaultValue = false
                         }
+                    ),
+                ) { entry ->
+                    val selecting = entry.arguments?.getBoolean("pick") == true
+                    ConnectedAddresses(
+                        connected,
+                        connection,
+                        if (selecting)
+                            ({
+                                nav.popBackStack()
+                                Unit
+                            })
+                        else null,
+                    )
                 }
                 composable("orders") {
                     if (connected.customer != null) {
@@ -462,6 +493,9 @@ fun CountryApp(
                                     .joinToString(", ")
                             )
                             TextButton(onClick = { go("orders") }) { Text("My orders") }
+                            TextButton(onClick = { go("server-addresses") }) {
+                                Text("Saved addresses")
+                            }
                             TextButton(onClick = { dialog = "signout" }) { Text("Sign out") }
                         }
                 }
@@ -688,6 +722,7 @@ private fun screenTitle(route: String): String =
                 "information" to "About your nutrition & plans",
                 "feedback-samples" to "Sample deliveries",
                 "feedback-account" to "Cart",
+                "server-addresses?pick={pick}" to "Saved addresses",
                 "server-product/{id}" to "Product details",
             )[route] ?: "Country Delight"
     }

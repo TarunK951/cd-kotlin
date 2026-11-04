@@ -364,12 +364,12 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
         }
         return
     }
-    val offer = result.obj("buyAgain") ?: return
+    val offer = result.obj("buyAgain")
     var reorderOpen by rememberSaveable(result.num("feedbackId")) { mutableStateOf(false) }
     FeedbackConfirmation(
         "Feedback saved",
         { if (!reorderOpen) model.closeResult() },
-        buyAgain = { reorderOpen = true },
+        buyAgain = if (offer != null) ({ reorderOpen = true }) else null,
     ) {
         val name = state.customer?.str("name").orEmpty()
         Text(
@@ -382,7 +382,7 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
             CountryCard { FeedbackProductSummary(product) }
         }
     }
-    if (!reorderOpen) return
+    if (!reorderOpen || offer == null) return
     ModalBottomSheet(
         onDismissRequest = { if (!state.busy) reorderOpen = false },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -395,7 +395,7 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             key(result.num("feedbackId")) {
-                BuyAgainFields(result, offer, state.busy, model) { reorderOpen = false }
+                BuyAgainFields(result, offer, state, model) { reorderOpen = false }
             }
             ConnectionStatus(state.copy(message = ""))
         }
@@ -716,10 +716,21 @@ internal fun FeedbackProductSummary(prompt: JsonObject) {
 private fun BuyAgainFields(
     result: JsonObject,
     offer: JsonObject,
-    busy: Boolean,
+    state: FeedbackConnection,
     model: FeedbackConnectionModel,
     close: () -> Unit,
 ) {
+    val busy = state.busy
+    val productId = offer.str("productId")
+    val product =
+        state.products.firstOrNull { it.str("productId") == productId }
+            ?: state.product?.takeIf { it.str("productId") == productId }
+    LaunchedEffect(productId) {
+        if (product == null) {
+            model.state.first { !it.busy }
+            model.product(productId)
+        }
+    }
     var quantity by rememberSaveable {
         mutableIntStateOf(offer.num("defaultQuantity").toInt().coerceIn(1, 20))
     }
@@ -767,6 +778,7 @@ private fun BuyAgainFields(
             }
         }
     }
+    if (product != null) SubscribeAction(state, model, product)
     Text("Buy once", style = MaterialTheme.typography.bodySmall, color = Muted)
     Text("Deliver on", style = MaterialTheme.typography.titleSmall)
     val suggested = offer.str("suggestedDate")
@@ -848,6 +860,7 @@ private fun BuyAgainFields(
 fun ConnectedAccount(
     state: FeedbackConnection,
     model: FeedbackConnectionModel,
+    chooseAddress: () -> Unit,
     openOrders: () -> Unit,
 ) {
     LaunchedEffect(Unit) {
@@ -858,30 +871,44 @@ fun ConnectedAccount(
     val cart = state.cart
     val items = cart?.list("items").orEmpty()
     val orderTotal = "₹${cart?.str("totalAmount").orEmpty()}"
-    val location =
-        state.customer
-            ?.let { customer ->
-                listOf(customer.str("area"), customer.str("city"))
-                    .filter(String::isNotBlank)
-                    .joinToString(", ")
-            }
-            .orEmpty()
+    val addressId = state.selectedAddressId ?: state.addresses?.num("defaultAddressId")
+    val address =
+        state.addresses?.list("addresses")?.firstOrNull { it.num("addressId") == addressId }
+    val complete =
+        address != null &&
+            address.str("line1").isNotBlank() &&
+            address.str("pincode").matches(Regex("[0-9]{6}"))
+    val context = LocalContext.current
+    var confirmClear by rememberSaveable { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
         Column(
             Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            if (location.isNotBlank() && items.isNotEmpty()) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Icon(CountryIcons.Calendar, null, Modifier.size(18.dp), tint = Green)
-                    Column {
-                        Text("Deliver to", style = MaterialTheme.typography.titleSmall)
-                        Text(location, style = MaterialTheme.typography.bodySmall, color = Muted)
+            if (items.isNotEmpty()) {
+                CountryCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Deliver to", style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                address?.str("fullAddress")?.ifBlank { "Choose a delivery address" }
+                                    ?: "Choose a delivery address",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Muted,
+                            )
+                        }
+                        TextButton(onClick = chooseAddress, enabled = !state.busy) {
+                            Text(if (address == null) "Choose" else "Change")
+                        }
                     }
+                }
+                TextButton(
+                    onClick = { confirmClear = true },
+                    enabled = !state.busy,
+                    modifier = Modifier.align(Alignment.End),
+                ) {
+                    Text("Clear cart")
                 }
             }
             if (cart != null && items.isEmpty()) {
@@ -890,7 +917,8 @@ fun ConnectedAccount(
             }
 
             items.forEach { item ->
-                val quantity = item.num("quantity")
+                val quantity = item.num("quantity").toInt()
+                val id = item.num("cartItemId")
                 CountryCard {
                     Row(
                         Modifier.fillMaxWidth(),
@@ -906,31 +934,114 @@ fun ConnectedAccount(
                                 style = MaterialTheme.typography.titleSmall,
                             )
                             Text(
-                                "$quantity × ${item.str("unit")}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Muted,
-                            )
-                            Text(
-                                feedbackDate(item.str("deliveryDate")),
+                                item.str("unit"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Muted,
                             )
                         }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                "₹${item.str("lineTotal")}",
-                                style = MaterialTheme.typography.titleSmall,
-                            )
-                            IconButton(
-                                onClick = { model.remove(item.num("cartItemId")) },
+                        Text(
+                            "₹${item.str("lineTotal")}",
+                            style = MaterialTheme.typography.titleSmall,
+                        )
+                    }
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        TextButton(
+                            enabled = !state.busy,
+                            onClick = {
+                                val today = LocalDate.now()
+                                val min = today.plusDays(1)
+                                val max = today.plusDays(30)
+                                val initial =
+                                    runCatching { LocalDate.parse(item.str("deliveryDate")) }
+                                        .getOrDefault(min)
+                                        .coerceIn(min, max)
+                                val zone = java.time.ZoneId.systemDefault()
+                                DatePickerDialog(
+                                        context,
+                                        { _, year, month, day ->
+                                            val selected =
+                                                LocalDate.of(year, month + 1, day).toString()
+                                            if (selected != item.str("deliveryDate"))
+                                                model.updateCartItem(id, date = selected)
+                                        },
+                                        initial.year,
+                                        initial.monthValue - 1,
+                                        initial.dayOfMonth,
+                                    )
+                                    .apply {
+                                        datePicker.minDate =
+                                            min.atStartOfDay(zone).toInstant().toEpochMilli()
+                                        datePicker.maxDate =
+                                            max.atStartOfDay(zone).toInstant().toEpochMilli()
+                                    }
+                                    .show()
+                            },
+                        ) {
+                            Text(feedbackDate(item.str("deliveryDate")))
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            TextButton(
                                 enabled = !state.busy,
-                                modifier = Modifier.size(48.dp),
+                                onClick = {
+                                    if (quantity <= 1) model.remove(id)
+                                    else model.updateCartItem(id, quantity = quantity - 1)
+                                },
                             ) {
-                                Icon(
-                                    CountryIcons.Close,
-                                    "Remove ${item.str("productName")}",
-                                    Modifier.size(16.dp),
+                                Text("−")
+                            }
+                            Text(quantity.toString())
+                            TextButton(
+                                enabled = !state.busy && quantity < 20,
+                                onClick = { model.updateCartItem(id, quantity = quantity + 1) },
+                            ) {
+                                Text("+")
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (items.isNotEmpty() && state.cartRecommendations.isNotEmpty()) {
+                Text("Goes well with your cart", style = MaterialTheme.typography.titleMedium)
+                state.cartRecommendations.forEach { recommendation ->
+                    CountryCard {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                                FeedbackProductImage(recommendation)
+                            }
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    recommendation.str("productName"),
+                                    style = MaterialTheme.typography.titleSmall,
                                 )
+                                Text(
+                                    "${recommendation.str("unit")} · ₹${recommendation.str("price")}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                                Text(
+                                    recommendation.str("reason"),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Muted,
+                                )
+                            }
+                            TextButton(
+                                enabled = !state.busy,
+                                onClick = {
+                                    model.add(
+                                        recommendation.str("productId"),
+                                        1,
+                                        recommendation.str("suggestedDate").ifBlank { null },
+                                    )
+                                },
+                            ) {
+                                Text("Add")
                             }
                         }
                     }
@@ -949,7 +1060,10 @@ fun ConnectedAccount(
                 val dates = items.map { it.str("deliveryDate") }.distinct()
                 if (dates.size > 1) {
                     dates.forEach { date ->
-                        TextButton(onClick = { model.placeOrder(date) }, enabled = !state.busy) {
+                        TextButton(
+                            onClick = { if (complete) model.placeOrder(date) else chooseAddress() },
+                            enabled = !state.busy,
+                        ) {
                             Text("Order items for ${feedbackDate(date)}")
                         }
                     }
@@ -972,10 +1086,35 @@ fun ConnectedAccount(
                         Text(state.error, color = MaterialTheme.colorScheme.error)
                     }
                     BillRow("Order total", orderTotal, bold = true)
-                    PrimaryButton("Place order", enabled = !state.busy) { model.placeOrder() }
+                    PrimaryButton(
+                        if (complete) "Place order" else "Complete delivery address",
+                        enabled = !state.busy,
+                    ) {
+                        if (complete) model.placeOrder() else chooseAddress()
+                    }
                 }
             }
         }
+    }
+    if (confirmClear) {
+        AlertDialog(
+            onDismissRequest = { confirmClear = false },
+            title = { Text("Clear cart?") },
+            text = { Text("All items will be removed from your cart.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmClear = false
+                        model.clearCart()
+                    }
+                ) {
+                    Text("Clear cart")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmClear = false }) { Text("Keep items") }
+            },
+        )
     }
 }
 
