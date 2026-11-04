@@ -354,6 +354,6 @@ class CountryViewModel(application: Application) : AndroidViewModel(application)
     fun reset() {
         val deadline = state.value.session.offerEndsAt
         clearFeedbackPrompt()
-        update { Session(offerEndsAt = deadline) }
+        update { Session(offerEndsAt = deadline).withStarterCoins() }
     }
 }

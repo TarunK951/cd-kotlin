@@ -20,7 +20,10 @@ class CountryRepository(private val context: Context) {
     private val key = stringPreferencesKey("session")
     val session: Flow<Session> =
         context.countryDataStore.data
-            .map { prefs -> prefs[key]?.let { json.decodeFromString<Session>(it) } ?: Session() }
+            .map { prefs ->
+                val saved = prefs[key]?.let { json.decodeFromString<Session>(it) } ?: Session()
+                saved.withStarterCoins()
+            }
             .flowOn(Dispatchers.IO)
 
     suspend fun catalogue(): List<Product> =
@@ -32,7 +35,9 @@ class CountryRepository(private val context: Context) {
 
     suspend fun save(session: Session) =
         withContext(Dispatchers.IO) {
-            context.countryDataStore.edit { it[key] = json.encodeToString(session) }
+            context.countryDataStore.edit {
+                it[key] = json.encodeToString(session.withStarterCoins())
+            }
         }
 
     suspend fun feedbackSamples(): List<FeedbackRequest> =

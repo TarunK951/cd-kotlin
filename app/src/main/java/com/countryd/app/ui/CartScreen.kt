@@ -37,32 +37,54 @@ fun CartScreen(
             CountryCard {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    AssetImage(productImage(p), p.name, Modifier.size(64.dp))
+                    AssetImage(productImage(p), p.name, Modifier.size(44.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(p.name, fontWeight = FontWeight.SemiBold)
+                        Text(p.name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                         Caption(line.variant?.unit ?: p.unit)
-                        Caption(line.mode)
+                        val plan = line.plan
+                        if (plan != null) {
+                            Caption("Subscription · ${plan.frequency} · ${plan.startDate}")
+                        } else {
+                            Caption("One-time order")
+                            Text(
+                                money(lineTotal(line, p)),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                     }
-                    Text(money(lineTotal(line, p)), fontWeight = FontWeight.Bold)
+                    Quantity(line.qty, { vm.quantity(line.key, it - line.qty) }, minimum = 0)
                 }
                 if (line.addons.isNotEmpty()) Caption(line.addons.joinToString { it.name })
-                line.plan?.let {
-                    Caption("${it.frequency} · ${it.startDate} · ${it.slot}")
+                line.plan?.let { plan ->
                     val summary = packSummary(line)
-                    Caption("${summary.deliveries} deliveries · ${summary.freePacks} free packs")
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    TextButton({
-                        vm.update {
-                            it.copy(cart = it.cart.filterNot { old -> old.key == line.key })
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .background(Mint, RoundedCornerShape(10.dp))
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                "${summary.deliveries} delivery days",
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Caption("${line.qty} × ${line.variant?.unit ?: p.unit} / delivery")
+                            Caption("${summary.chargedPacks} paid packs · ${plan.slot}")
+                            if (summary.freePacks > 0) Caption("${summary.freePacks} free packs")
                         }
-                    }) {
-                        Text("Remove")
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                money(lineTotal(line, p)),
+                                color = Green,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Caption("Plan subtotal")
+                        }
                     }
-                    Spacer(Modifier.weight(1f))
-                    Quantity(line.qty, { vm.quantity(line.key, it - line.qty) }, minimum = 0)
                 }
             }
         }

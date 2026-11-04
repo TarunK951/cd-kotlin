@@ -58,13 +58,13 @@ fun CountryApp(
     val motionDuration = if (LocalReducedMotion.current) 0 else 180
     val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val s = state.session
-    if (state.loading) {
+    if (localShoppingTest && state.loading) {
         Box(Modifier.fillMaxSize().background(Color.White), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
         return
     }
-    if (state.products.isEmpty()) {
+    if (localShoppingTest && state.products.isEmpty()) {
         Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
             Text(state.error ?: "Catalogue unavailable")
         }
@@ -79,11 +79,18 @@ fun CountryApp(
         return
     }
     fun go(destination: String) {
+        if (connected.customer != null && destination == "cart") {
+            overlay = null
+            nav.navigate("feedback-account") { launchSingleTop = true }
+            return
+        }
         if (
             destination in
-                setOf("addresses", "wishlist", "offers", "vip", "routine", "cart", "vacation")
+                setOf("addresses", "wishlist", "offers", "vip", "routine", "cart", "vacation") ||
+                (destination == "wallet" && overlay == "cart")
         ) {
-            returnToCart = overlay == "cart" && destination in setOf("offers", "addresses")
+            returnToCart =
+                overlay == "cart" && destination in setOf("offers", "addresses", "wallet")
             if (destination == "cart" && overlay != "cart") cartState.removeState("cart")
             overlay = destination
         } else {
@@ -151,28 +158,45 @@ fun CountryApp(
                         "Country Delight",
                         Modifier.size(38.dp, 35.dp),
                     )
-                    Column(Modifier.weight(1f).clickable { go("addresses") }) {
-                        Text(
-                            "Deliver to ${s.address?.label ?: "Home"}",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(
-                            s.address?.display ?: "Add address",
-                            fontSize = 10.sp,
-                            color = Muted,
-                            maxLines = 1,
-                        )
+                    val customer = connected.customer
+                    if (customer != null) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Deliver to", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                listOf(customer.str("area"), customer.str("city"))
+                                    .filter(String::isNotBlank)
+                                    .joinToString(", "),
+                                fontSize = 11.sp,
+                                color = Muted,
+                            )
+                        }
+                        IconButton(onClick = { go("cart") }) {
+                            Icon(CountryIcons.ShoppingBag, "View cart")
+                        }
+                    } else {
+                        Column(Modifier.weight(1f).clickable { go("addresses") }) {
+                            Text(
+                                "Deliver to ${s.address?.label ?: "Home"}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Text(
+                                s.address?.display ?: "Add address",
+                                fontSize = 10.sp,
+                                color = Muted,
+                                maxLines = 1,
+                            )
+                        }
+                        OutlinedButton(
+                            { go("wallet") },
+                            contentPadding = PaddingValues(10.dp, 6.dp),
+                            shape = RoundedCornerShape(20.dp),
+                        ) {
+                            Icon(CountryIcons.Wallet, null, Modifier.size(16.dp))
+                            Text(money(s.wallet), fontSize = 11.sp)
+                        }
+                        IconButton({ go("wishlist") }) { Icon(CountryIcons.Heart, "Open wishlist") }
                     }
-                    OutlinedButton(
-                        { go("wallet") },
-                        contentPadding = PaddingValues(10.dp, 6.dp),
-                        shape = RoundedCornerShape(20.dp),
-                    ) {
-                        Icon(CountryIcons.Wallet, null, Modifier.size(16.dp))
-                        Text(money(s.wallet), fontSize = 11.sp)
-                    }
-                    IconButton({ go("wishlist") }) { Icon(CountryIcons.Heart, "Open wishlist") }
                 }
             else if (
                 route == "profile" ||
@@ -216,12 +240,7 @@ fun CountryApp(
                 ) {
                     val showOffers =
                         route == "home" || route.startsWith("shop") || route == "protein"
-                    val liveShopping =
-                        connected.customer != null &&
-                            (route.startsWith("shop") ||
-                                route.startsWith("server-product/") ||
-                                route == "feedback-account")
-                    if (!liveShopping && (showOffers || s.cart.isNotEmpty())) {
+                    if (connected.customer == null && (showOffers || s.cart.isNotEmpty())) {
                         Row(
                             Modifier.fillMaxWidth().padding(bottom = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -351,11 +370,17 @@ fun CountryApp(
                 popExitTransition = { fadeOut(tween(motionDuration)) },
             ) {
                 composable("home") {
-                    val feedback: (@Composable () -> Unit)? =
-                        if (connected.customer != null) {
-                            { ConnectedHomeFeedback(connected, connection) }
-                        } else null
-                    HomeScreen(state, vm, ::go, feedback)
+                    if (connected.customer != null) {
+                        ConnectedShop(
+                            connected,
+                            connection,
+                            "all",
+                            { go("cart") },
+                            homeFeedback = { ConnectedHomeFeedback(connected, connection) },
+                        ) { id ->
+                            go("server-product/$id")
+                        }
+                    } else HomeScreen(state, vm, ::go)
                 }
                 composable("feedback-account") {
                     ConnectedAccount(connected, connection) { go("orders") }
@@ -383,10 +408,24 @@ fun CountryApp(
                 }
                 composable("server-product/{id}") { entry ->
                     val id = entry.arguments?.getString("id").orEmpty()
-                    ConnectedProduct(connected, connection, id) { go("feedback-account") }
+                    ConnectedProduct(connected, connection, id)
                 }
-                composable("protein") { ProteinScreen(state, vm, ::go) }
-                composable("subs") { SubscriptionsScreen(state, vm, ::go) }
+                composable("protein") {
+                    if (connected.customer == null) ProteinScreen(state, vm, ::go)
+                    else
+                        ConnectedShop(connected, connection, "protein", { go("cart") }) { id ->
+                            go("server-product/$id")
+                        }
+                }
+                composable("subs") {
+                    if (connected.customer == null) SubscriptionsScreen(state, vm, ::go)
+                    else
+                        ScreenBody {
+                            Text("My deliveries", style = MaterialTheme.typography.titleLarge)
+                            DeliveryTabs("My subscriptions") { if (it == "Orders") go("orders") }
+                            Text("Subscription management is unavailable.")
+                        }
+                }
                 composable("orders") {
                     if (connected.customer != null) {
                         ConnectedOrders(connected, connection, openSubscriptions = { go("subs") }) {
@@ -403,17 +442,19 @@ fun CountryApp(
                 }
                 composable("profile") {
                     val customer = connected.customer
-                    val profile =
-                        if (customer == null) state
-                        else
-                            state.copy(
-                                session =
-                                    state.session.copy(
-                                        name = customer.str("name"),
-                                        phone = customer.str("phone"),
-                                    )
+                    if (customer == null) ProfileScreen(state, vm, ::go) { dialog = it }
+                    else
+                        ScreenBody {
+                            Text(customer.str("name"), style = MaterialTheme.typography.titleLarge)
+                            Text(customer.str("phone"))
+                            Text(
+                                listOf(customer.str("area"), customer.str("city"))
+                                    .filter(String::isNotBlank)
+                                    .joinToString(", ")
                             )
-                    ProfileScreen(profile, vm, ::go) { dialog = it }
+                            TextButton(onClick = { go("orders") }) { Text("My orders") }
+                            TextButton(onClick = { dialog = "signout" }) { Text("Sign out") }
+                        }
                 }
                 composable(
                     "product/{id}?mode={mode}",
@@ -552,6 +593,7 @@ fun CountryApp(
                 when (destination) {
                     "addresses" -> AddressesScreen(state, vm)
                     "wishlist" -> WishlistScreen(state, vm, ::go)
+                    "wallet" -> WalletScreen(state, vm)
                     "offers" -> OffersScreen(state, vm, ::go)
                     "vip" -> VipScreen(state)
                     "routine" -> RoutineScreen(state, vm) { overlay = null }

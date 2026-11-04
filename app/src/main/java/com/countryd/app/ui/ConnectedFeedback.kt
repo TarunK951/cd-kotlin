@@ -733,38 +733,70 @@ fun ConnectedAccount(
     model: FeedbackConnectionModel,
     openOrders: () -> Unit,
 ) {
-    var product by rememberSaveable { mutableStateOf("") }
     LaunchedEffect(Unit) {
         model.state.first { !it.busy }
         model.cart()
     }
+    val items = state.cart?.list("items").orEmpty()
     ScreenBody {
-        Text(state.customer?.str("name").orEmpty(), style = MaterialTheme.typography.titleLarge)
-        Text(state.customer?.str("phone").orEmpty())
-        Text("Your cart", style = MaterialTheme.typography.titleMedium)
-        val cart = state.cart
-        if (cart != null) {
-            val items = cart.list("items")
-            if (items.isEmpty()) Text("Your cart is empty.")
-            items.forEach { item ->
-                Text("${item.str("productName")} · ${item.num("quantity")} × ${item.str("unit")}")
-                Text("${item.str("deliveryDate")} · ₹${item.str("lineTotal")}")
-                TextButton(
-                    onClick = { model.remove(item.num("cartItemId")) },
-                    enabled = !state.busy,
+        val customer = state.customer
+        if (customer != null) {
+            Text(
+                listOf(customer.str("area"), customer.str("city"))
+                    .filter(String::isNotBlank)
+                    .joinToString(", "),
+                color = Muted,
+            )
+        }
+        if (state.cart != null && items.isEmpty()) Text("Your cart is empty.")
+        items.forEach { item ->
+            val quantity = item.num("quantity")
+            CountryCard {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text("Remove")
+                    FeedbackProductImage(item)
+                    Column(Modifier.weight(1f)) {
+                        Text(item.str("productName"), style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            "$quantity × ${item.str("unit")}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Muted,
+                        )
+                        Text(
+                            feedbackDate(item.str("deliveryDate")),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Muted,
+                        )
+                    }
+                    IconButton(
+                        onClick = { model.remove(item.num("cartItemId")) },
+                        enabled = !state.busy,
+                    ) {
+                        Icon(
+                            CountryIcons.Close,
+                            if (quantity == 1L) "Remove item" else "Remove cart line",
+                            Modifier.size(16.dp),
+                        )
+                    }
                 }
             }
-            if (items.isNotEmpty()) Text("Total ₹${cart.str("totalAmount")}")
         }
-        if (cart != null && cart.list("items").isNotEmpty()) {
-            val dates = cart.list("items").map { it.str("deliveryDate") }.distinct()
+        if (items.isNotEmpty()) {
+            CountryCard {
+                Text("Bill summary", style = MaterialTheme.typography.titleMedium)
+                items.forEach { item ->
+                    BillRow(item.str("productName"), "₹${item.str("lineTotal")}")
+                }
+                BillRow("Order total", "₹${state.cart?.str("totalAmount").orEmpty()}")
+            }
             PrimaryButton("Place order", enabled = !state.busy) { model.placeOrder() }
+            val dates = items.map { it.str("deliveryDate") }.distinct()
             if (dates.size > 1) {
                 dates.forEach { date ->
                     TextButton(onClick = { model.placeOrder(date) }, enabled = !state.busy) {
-                        Text("Order items for $date")
+                        Text("Order items for ${feedbackDate(date)}")
                     }
                 }
             }
@@ -773,30 +805,6 @@ fun ConnectedAccount(
         if (state.error.isNotBlank()) Text(state.error, color = MaterialTheme.colorScheme.error)
         TextButton(onClick = openOrders) { Text("My orders") }
         TextButton(onClick = model::cart, enabled = !state.busy) { Text("Refresh cart") }
-        TextButton(
-            onClick = {
-                product = ""
-                model.products()
-            },
-            enabled = !state.busy,
-        ) {
-            Text("Load feedback products")
-        }
-        state.products.forEach { item ->
-            TextButton(
-                onClick = {
-                    product = item.str("productId")
-                    model.options(product)
-                },
-                enabled = !state.busy,
-            ) {
-                Text(item.str("name"))
-            }
-            if (product == item.str("productId") && !state.busy) {
-                state.options.forEach { Text(it.str("label")) }
-            }
-        }
-        TextButton(onClick = model::logout, enabled = !state.busy) { Text("Sign out") }
     }
 }
 

@@ -19,12 +19,10 @@ import com.countryd.app.*
 @Composable
 fun CartExtras(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) {
     val session = state.session
-    val eligible =
-        state.products.filter { product -> session.cart.none { it.productId == product.id } }
     val subscribed =
         session.subscriptions.filter { it.status != "Past" }.map { it.productId }.toSet()
     val repeat =
-        eligible.filter { product ->
+        state.products.filter { product ->
             product.id !in subscribed &&
                 session.orders.any { order ->
                     order.status == "Delivered" &&
@@ -97,8 +95,10 @@ fun CartExtras(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) 
             when (active) {
                 "Buy again" -> repeat
                 "Price drops" ->
-                    eligible.sortedByDescending { (it.mrp - it.price) / it.mrp.coerceAtLeast(1.0) }
-                else -> eligible
+                    state.products.sortedByDescending {
+                        (it.mrp - it.price) / it.mrp.coerceAtLeast(1.0)
+                    }
+                else -> state.products
             }
         if (picks.isEmpty()) Caption("Products from your orders will appear here.")
         else ProductShelf(picks.take(6), session, vm, go)

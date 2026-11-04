@@ -233,6 +233,8 @@ data class FeedbackPhotoMetadata(
     val fileSize: Long? = null,
 )
 
+private const val STARTER_COINS = 1_500
+
 @Serializable
 data class Session(
     val offerEndsAt: Long = System.currentTimeMillis() + 3600000L,
@@ -251,7 +253,8 @@ data class Session(
     val wallet: Double = 0.0,
     val transactions: List<WalletTransaction> = emptyList(),
     val autoPay: AutoPay = AutoPay(),
-    val points: Int = 0,
+    val points: Int = STARTER_COINS,
+    val starterCoinsGranted: Boolean = false,
     val pointsEarned: Int = 0,
     val pointsRedeemed: Int = 0,
     val coupon: String = "",
@@ -275,3 +278,7 @@ data class Session(
     val vipActive
         get() = vipExpiresAt > System.currentTimeMillis()
 }
+
+internal fun Session.withStarterCoins(): Session =
+    if (starterCoinsGranted) this
+    else copy(points = maxOf(points, STARTER_COINS), starterCoinsGranted = true)

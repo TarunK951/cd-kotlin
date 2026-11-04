@@ -137,6 +137,7 @@ fun CheckoutScreen(
                                     "DELIGHT10 requires a ₹200 basket. Other codes are unavailable in this preview."
                             )
                     }
+                if (embedded) CartExtras(state, vm, go)
                 Text(
                     "Use your balance",
                     fontSize = 15.sp,
@@ -162,35 +163,9 @@ fun CheckoutScreen(
                         Modifier.weight(1f),
                     )
                 }
-                if (wallet && s.wallet < bill.total)
-                    CountryCard(color = Mint) {
-                        Text("Add ${money(bill.total-s.wallet)} to cover this order")
-                        TextButton({ go("wallet") }) { Text("Top up wallet") }
-                    }
-                CountryCard {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Nutrition")
-                            val known =
-                                s.cart.mapNotNull { line ->
-                                    state.products
-                                        .find { it.id == line.productId }
-                                        ?.let { product ->
-                                            packNutrients(
-                                                product.id,
-                                                line.variant?.unit ?: product.unit,
-                                                line.qty,
-                                            )
-                                        }
-                                }
-                            Caption(
-                                if (known.isEmpty()) "Values unavailable"
-                                else
-                                    "${grams(known.sumOf { it.protein })} protein · ${grams(known.sumOf { it.fiber })} fibre"
-                            )
-                        }
-                        TextButton({ go("nutrition") }) { Text("Details") }
-                    }
+                TextButton(onClick = { go("wallet") }) { Text("Recharge wallet") }
+                if (wallet && s.wallet < bill.total) {
+                    Caption("Add ${money(bill.total - s.wallet)} to cover this order")
                 }
                 Bill(bill, tip, title = "Bill summary") {
                     s.cart.forEach { line ->
@@ -200,7 +175,6 @@ fun CheckoutScreen(
                     }
                     if (s.vipActive) BillRow("Delight VIP pass · Free", "₹0")
                 }
-                if (embedded) CartExtras(state, vm, go)
                 if (error.isNotEmpty()) Text(error, color = MaterialTheme.colorScheme.error)
             }
         }
@@ -211,7 +185,7 @@ fun CheckoutScreen(
             ) {
                 BillRow("Order total", money(bill.total), bold = true)
                 PrimaryButton("Place order", enabled = s.address != null) {
-                    if (bill.walletUsed > 0 && bill.toPay == 0.0) placeOrder() else payment = true
+                    if (bill.toPay == 0.0) placeOrder() else payment = true
                 }
             }
         }

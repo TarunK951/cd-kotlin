@@ -17,6 +17,7 @@ internal fun ConnectedShop(
     model: FeedbackConnectionModel,
     category: String,
     viewCart: () -> Unit,
+    homeFeedback: (@Composable () -> Unit)? = null,
     openProduct: (String) -> Unit,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
@@ -35,9 +36,12 @@ internal fun ConnectedShop(
             "dals" -> "Staples"
             else -> null
         }
+    var selectedCategory by
+        rememberSaveable(category) { mutableStateOf(matchingCategory.orEmpty()) }
     val products =
         state.products.filter {
-            (matchingCategory == null || it.str("category") == matchingCategory) &&
+            (selectedCategory.isBlank() || it.str("category") == selectedCategory) &&
+                (category != "protein" || it.str("category") in setOf("Dairy", "Eggs")) &&
                 (category != "milk" || it.str("productId") == "MILK") &&
                 (it.str("name").contains(query.trim(), ignoreCase = true) ||
                     it.str("category").contains(query.trim(), ignoreCase = true))
@@ -58,6 +62,38 @@ internal fun ConnectedShop(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
+        if (homeFeedback != null) {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Fresh essentials", style = MaterialTheme.typography.headlineSmall)
+                    Text("Browse products for your next delivery.", color = Muted)
+                }
+            }
+            homeFeedback()
+        }
+        Text("Shop by category", style = MaterialTheme.typography.titleMedium)
+        androidx.compose.foundation.lazy.LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            val categories =
+                state.products
+                    .map { it.str("category") }
+                    .filter(String::isNotBlank)
+                    .distinct()
+                    .sorted()
+            item {
+                FilterChip(selectedCategory.isBlank(), { selectedCategory = "" }, { Text("All") })
+            }
+            categories.forEach { name ->
+                item(key = name) {
+                    FilterChip(
+                        selectedCategory == name,
+                        { selectedCategory = name },
+                        { Text(name) },
+                    )
+                }
+            }
+        }
         ConnectedCatalogueStatus(state, model::products)
         if (!state.busy && state.error.isBlank() && products.isEmpty()) Text("No products found.")
         products.forEach { product ->
@@ -74,7 +110,9 @@ internal fun ConnectedShop(
                         Text(name, style = MaterialTheme.typography.titleMedium)
                         Text("${product.str("unit")} · ₹${product.str("price")}", color = Muted)
                     }
-                    TextButton(onClick = { model.add(id, 1) }, enabled = !state.busy) { Text("Add") }
+                    TextButton(onClick = { model.add(id, 1) }, enabled = !state.busy) {
+                        Text("Add")
+                    }
                 }
             }
         }
@@ -86,7 +124,6 @@ internal fun ConnectedProduct(
     state: FeedbackConnection,
     model: FeedbackConnectionModel,
     id: String,
-    viewCart: () -> Unit,
 ) {
     var quantity by rememberSaveable(id) { mutableIntStateOf(1) }
     LaunchedEffect(id) {
@@ -95,7 +132,6 @@ internal fun ConnectedProduct(
     }
     val product = state.product?.takeIf { it.str("productId").equals(id, ignoreCase = true) }
     ScreenBody {
-        TextButton(onClick = viewCart) { Text("View cart") }
         ConnectedCatalogueStatus(state) { model.product(id) }
         if (product != null) {
             FeedbackImage(product.str("imageUrl"), product.str("name"))
