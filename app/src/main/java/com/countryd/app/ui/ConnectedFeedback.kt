@@ -364,16 +364,35 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
         }
         return
     }
+    val offer = result.obj("buyAgain") ?: return
+    var reorderOpen by rememberSaveable(result.num("feedbackId")) { mutableStateOf(false) }
+    if (!reorderOpen) {
+        FeedbackConfirmation(
+            "Feedback saved",
+            model::closeResult,
+            buyAgain = { reorderOpen = true },
+        ) {
+            val name = state.customer?.str("name").orEmpty()
+            Text(
+                if (name.isBlank()) "Thanks for sharing!" else "Thanks for sharing, $name!",
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Text("Your ${result.num("rating")}-star rating is saved.", color = Muted)
+            FeedbackStars(result.num("rating"))
+            result.obj("ratedProduct")?.let { product ->
+                CountryCard { FeedbackProductSummary(product) }
+            }
+        }
+        return
+    }
     ModalBottomSheet(
-        onDismissRequest = { if (!state.busy) model.closeResult() },
+        onDismissRequest = { if (!state.busy) reorderOpen = false },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         sheetGesturesEnabled = false,
     ) {
         ScreenBody {
             key(result.num("feedbackId")) {
-                result.obj("buyAgain")?.let { offer ->
-                    BuyAgainFields(result, offer, state.busy, model)
-                }
+                BuyAgainFields(result, offer, state.busy, model) { reorderOpen = false }
             }
             ConnectionStatus(state.copy(message = ""))
         }
@@ -384,6 +403,7 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
 private fun FeedbackConfirmation(
     title: String,
     close: () -> Unit,
+    buyAgain: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Dialog(
@@ -416,6 +436,7 @@ private fun FeedbackConfirmation(
                     )
                     content()
                 }
+                if (buyAgain != null) PrimaryButton("Buy again", onClick = buyAgain)
                 PrimaryButton(
                     "Continue shopping",
                     modifier = Modifier.padding(vertical = 8.dp),
@@ -493,8 +514,17 @@ private fun IssueFields(
                 style = MaterialTheme.typography.titleSmall,
             )
             FeedbackStars(result.num("rating"))
-            Text("Sorry it wasn’t quite right.", style = MaterialTheme.typography.titleMedium)
-            Text(form.str("question"), style = MaterialTheme.typography.bodyMedium, color = Muted)
+            val threeStars = result.num("rating") == 3L
+            Text(
+                if (threeStars) "Good, but could be better." else "Sorry it wasn’t quite right.",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                if (threeStars) "What would have made it a 4 or 5? Pick all that apply."
+                else form.str("question"),
+                style = MaterialTheme.typography.bodyMedium,
+                color = Muted,
+            )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 form.list("options").forEach { option ->
                     val code = option.str("code")
@@ -594,6 +624,7 @@ private fun BuyAgainFields(
     offer: JsonObject,
     busy: Boolean,
     model: FeedbackConnectionModel,
+    close: () -> Unit,
 ) {
     var quantity by rememberSaveable {
         mutableIntStateOf(offer.num("defaultQuantity").toInt().coerceIn(1, 20))
@@ -602,9 +633,7 @@ private fun BuyAgainFields(
     val context = LocalContext.current
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text("Buy again", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-        IconButton(onClick = model::closeResult, enabled = !busy) {
-            Icon(CountryIcons.Close, "Close Buy again")
-        }
+        IconButton(onClick = close, enabled = !busy) { Icon(CountryIcons.Close, "Close Buy again") }
     }
     Text(
         "Feedback saved. Ordering again is optional.",

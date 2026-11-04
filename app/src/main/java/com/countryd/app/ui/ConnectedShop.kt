@@ -2,14 +2,19 @@ package com.countryd.app.ui
 
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.countryd.app.api.*
 import kotlinx.coroutines.flow.first
@@ -43,7 +48,9 @@ internal fun ConnectedShop(
         rememberSaveable(category) { mutableStateOf(matchingCategory.orEmpty()) }
     val products =
         state.products.filter {
-            (selectedCategory.isBlank() || it.str("category") == selectedCategory) &&
+            (selectedCategory.isBlank() ||
+                it.str("category") == selectedCategory ||
+                (selectedCategory == "Milk" && it.str("productId") == "MILK")) &&
                 (category != "protein" || it.str("category") in setOf("Dairy", "Eggs")) &&
                 (category != "milk" || it.str("productId") == "MILK") &&
                 (it.str("name").contains(query.trim(), ignoreCase = true) ||
@@ -69,16 +76,7 @@ internal fun ConnectedShop(
             shape = RoundedCornerShape(16.dp),
         )
         if (homeFeedback != null) {
-            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Mint)) {
-                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Fresh essentials", style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        "Browse products for your next delivery.",
-                        color = Muted,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            }
+            LiveHomeBanners()
             homeFeedback()
         }
         Text("Shop by category", style = MaterialTheme.typography.titleMedium)
@@ -91,16 +89,34 @@ internal fun ConnectedShop(
                     .filter(String::isNotBlank)
                     .distinct()
                     .sorted()
+            val homeOrder = listOf("Milk", "Dairy", "Eggs", "Bakery", "Staples", "Beverages")
+            val displayed =
+                if (homeFeedback == null) categories
+                else
+                    homeOrder.filter { name ->
+                        name in categories ||
+                            (name == "Milk" && state.products.any { it.str("productId") == "MILK" })
+                    } + categories.filterNot { it in homeOrder }
             item {
-                FilterChip(selectedCategory.isBlank(), { selectedCategory = "" }, { Text("All") })
-            }
-            categories.forEach { name ->
-                item(key = name) {
+                if (homeFeedback != null)
+                    HomeCategoryTile("All", selectedCategory.isBlank()) { selectedCategory = "" }
+                else
                     FilterChip(
-                        selectedCategory == name,
-                        { selectedCategory = name },
-                        { Text(name) },
+                        selectedCategory.isBlank(),
+                        { selectedCategory = "" },
+                        { Text("All") },
                     )
+            }
+            displayed.forEach { name ->
+                item(key = name) {
+                    if (homeFeedback != null)
+                        HomeCategoryTile(name, selectedCategory == name) { selectedCategory = name }
+                    else
+                        FilterChip(
+                            selectedCategory == name,
+                            { selectedCategory = name },
+                            { Text(name) },
+                        )
                 }
             }
         }
@@ -183,5 +199,74 @@ private fun ConnectedCatalogueStatus(state: FeedbackConnection, retry: () -> Uni
     if (state.error.isNotBlank()) {
         Text(state.error, color = MaterialTheme.colorScheme.error)
         TextButton(onClick = retry, enabled = !state.busy) { Text("Retry") }
+    }
+}
+
+@Composable
+private fun LiveHomeBanners() {
+    val banners =
+        listOf(
+            "banner-fresh-essentials-normalized.png" to "Fresh essentials",
+            "banner-high-protein-clean.png" to "Everyday protein",
+        )
+    val pager = rememberPagerState { banners.size }
+    HorizontalPager(pager, pageSpacing = 8.dp) { index ->
+        val (art, title) = banners[index]
+        Box(Modifier.fillMaxWidth().height(155.dp).clip(RoundedCornerShape(16.dp))) {
+            AssetImage("assets/generated/$art", null, Modifier.fillMaxSize(), ContentScale.Crop)
+            Surface(
+                modifier = Modifier.align(Alignment.BottomStart).padding(10.dp),
+                shape = RoundedCornerShape(10.dp),
+                color = Color.White,
+            ) {
+                Text(
+                    title,
+                    Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+            }
+        }
+    }
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
+    ) {
+        banners.indices.forEach { index ->
+            Surface(
+                Modifier.size(6.dp),
+                shape = RoundedCornerShape(50),
+                color = if (index == pager.currentPage) Green else Line,
+            ) {}
+        }
+    }
+}
+
+@Composable
+private fun HomeCategoryTile(name: String, selected: Boolean, onClick: () -> Unit) {
+    val art =
+        when (name) {
+            "Bakery" -> "bakery"
+            "Beverages" -> "fruits"
+            "Milk" -> "milk"
+            "Dairy" -> "dairy"
+            "Eggs" -> "eggs"
+            "Staples" -> "grains"
+            else -> "milk"
+        }
+    Column(
+        Modifier.width(68.dp).clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        AssetImage(
+            "assets/categories/$art.png",
+            null,
+            Modifier.size(64.dp, 53.dp).clip(RoundedCornerShape(12.dp)),
+            ContentScale.Crop,
+        )
+        Text(
+            name,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (selected) Green else Ink,
+        )
     }
 }
