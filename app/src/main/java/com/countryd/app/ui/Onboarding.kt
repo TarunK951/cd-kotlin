@@ -6,15 +6,20 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.*
@@ -403,17 +408,20 @@ fun Onboarding(vm: CountryViewModel, onComplete: () -> Unit = {}) {
 
 @Composable
 fun EntryField(label: String, value: String, onChange: (String) -> Unit, numeric: Boolean = false) {
+    val focus = LocalFocusManager.current
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         OutlinedTextField(
             value,
             onChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().semantics { contentDescription = label },
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
+            keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }),
             keyboardOptions =
                 KeyboardOptions(
-                    keyboardType = if (numeric) KeyboardType.Number else KeyboardType.Text
+                    imeAction = ImeAction.Done,
+                    keyboardType = if (numeric) KeyboardType.Number else KeyboardType.Text,
                 ),
         )
     }

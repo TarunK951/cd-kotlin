@@ -19,6 +19,7 @@ fun AddressesScreen(state: CountryState, vm: CountryViewModel) {
     var showForm by remember { mutableStateOf(false) }
     var name by rememberSaveable { mutableStateOf(state.session.name) }
     var label by rememberSaveable { mutableStateOf("Home") }
+    var customLabel by rememberSaveable { mutableStateOf("") }
     var house by rememberSaveable { mutableStateOf("") }
     var locality by rememberSaveable { mutableStateOf("") }
     var pin by rememberSaveable { mutableStateOf("") }
@@ -40,7 +41,8 @@ fun AddressesScreen(state: CountryState, vm: CountryViewModel) {
                     TextButton({
                         editing = a
                         name = a.name
-                        label = a.label
+                        label = if (a.label in listOf("Home", "Work")) a.label else "Other"
+                        customLabel = if (label == "Other") a.label else ""
                         house = a.house
                         locality = a.locality
                         pin = a.pincode
@@ -67,6 +69,9 @@ fun AddressesScreen(state: CountryState, vm: CountryViewModel) {
         if (!showForm)
             PrimaryButton("Add address") {
                 editing = null
+                label = "Home"
+                customLabel = ""
+                error = ""
                 house = ""
                 locality = ""
                 pin = ""
@@ -75,6 +80,7 @@ fun AddressesScreen(state: CountryState, vm: CountryViewModel) {
         if (showForm) {
             Heading(if (editing == null) "Add address" else "Edit address")
             Options(listOf("Home", "Work", "Other"), label) { label = it }
+            if (label == "Other") EntryField("Address name", customLabel, { customLabel = it })
             EntryField("Full name", name, { name = it })
             EntryField("Flat / Street / Building", house, { house = it })
             EntryField("Locality", locality, { locality = it })
@@ -84,6 +90,9 @@ fun AddressesScreen(state: CountryState, vm: CountryViewModel) {
                 error =
                     when {
                         pin == "000000" -> "Delivery is unavailable for this postcode."
+                        label == "Other" && customLabel.trim().isEmpty() ->
+                            "Give this address a name."
+                        locality.trim().length < 3 -> "Enter a locality with at least 3 characters."
                         name.trim().length < 2 -> "Enter your full name."
                         house.trim().length < 2 -> "Add your flat, street and building."
                         !Regex("[1-9][0-9]{5}").matches(pin) -> "Enter a valid 6-digit postcode."
@@ -93,7 +102,7 @@ fun AddressesScreen(state: CountryState, vm: CountryViewModel) {
                     vm.saveAddress(
                         Address(
                             editing?.id ?: UUID.randomUUID().toString(),
-                            label,
+                            if (label == "Other") customLabel.trim() else label,
                             name.trim(),
                             house.trim(),
                             locality.trim(),

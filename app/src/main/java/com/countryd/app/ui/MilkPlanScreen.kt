@@ -79,13 +79,14 @@ fun PlanScreen(
     var plan by remember {
         mutableStateOf(
             Plan(
+                slot = "7–8 AM",
                 offer =
                     if (
                         initialOffer == "welcome" &&
                             state.session.subscriptions.any { it.plan.offer == "welcome" }
                     )
                         "none"
-                    else initialOffer
+                    else initialOffer,
             )
         )
     }
@@ -101,12 +102,17 @@ fun PlanScreen(
             }
         }
         Heading("Choose your plan")
-        val planLabels = linkedMapOf(
-            "welcome" to "Welcome 4 + 3",
-            "weekly" to "Weekly offer",
-            "monthly" to "Monthly offer",
-            "none" to "Custom plan",
-        ).filterKeys { it != "welcome" || state.session.subscriptions.none { sub -> sub.plan.offer == "welcome" } }
+        val planLabels =
+            linkedMapOf(
+                    "welcome" to "Welcome 4 + 3",
+                    "weekly" to "Weekly offer",
+                    "monthly" to "Monthly offer",
+                    "none" to "Custom plan",
+                )
+                .filterKeys {
+                    it != "welcome" ||
+                        state.session.subscriptions.none { sub -> sub.plan.offer == "welcome" }
+                }
         Options(planLabels.values.toList(), planLabels[plan.offer].orEmpty()) { label ->
             plan = plan.copy(offer = planLabels.entries.first { it.value == label }.key)
         }
@@ -118,7 +124,7 @@ fun PlanScreen(
             Text("Packs per delivery", Modifier.weight(1f))
             Quantity(qty, { qty = it }, maximum = 9)
         }
-        ScheduleEditor(plan) { plan = it }
+        MilkScheduleEditor(plan) { plan = it }
         CountryCard(color = Mint) {
             Heading("Your plan estimate")
             BillRow("Scheduled deliveries", "${packs.deliveries}")
@@ -200,4 +206,71 @@ fun DateOptions(selected: String, onSelect: (String) -> Unit) {
             )
         }
     }
+}
+
+@Composable
+fun MilkScheduleEditor(plan: Plan, onChange: (Plan) -> Unit) {
+    var weekdays by remember { mutableStateOf(setOf(1, 3, 5)) }
+    fun schedule(
+        frequency: String = plan.frequency,
+        start: String = plan.startDate,
+        days: Set<Int> = weekdays,
+    ) {
+        val dates =
+            if (frequency == "Custom") customDeliveryDates(LocalDate.parse(start), days)
+            else emptyList()
+        onChange(
+            plan.copy(
+                frequency = frequency,
+                startDate = dates.firstOrNull() ?: start,
+                dates = dates,
+                slot = "7–8 AM",
+            )
+        )
+    }
+    Heading("Delivery schedule")
+    Options(listOf("Daily", "Alternate days", "Custom"), plan.frequency) {
+        schedule(frequency = it)
+    }
+    Caption("Start date")
+    DateOptions(plan.startDate) { schedule(start = it) }
+    if (plan.frequency == "Custom") {
+        Heading("Custom days")
+        Caption(
+            if (weekdays.isEmpty()) "Pick at least one day"
+            else
+                "Every " +
+                    weekdays.sorted().joinToString(", ") {
+                        java.time.DayOfWeek.of(it)
+                            .name
+                            .take(3)
+                            .lowercase()
+                            .replaceFirstChar(Char::uppercase)
+                    }
+        )
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            (1..7).forEach { day ->
+                FilterChip(
+                    day in weekdays,
+                    {
+                        weekdays = if (day in weekdays) weekdays - day else weekdays + day
+                        schedule(days = weekdays)
+                    },
+                    label = {
+                        Text(
+                            java.time.DayOfWeek.of(day)
+                                .name
+                                .take(3)
+                                .lowercase()
+                                .replaceFirstChar(Char::uppercase)
+                        )
+                    },
+                )
+            }
+        }
+    }
+    Caption("Morning slot · 7–8 AM")
 }

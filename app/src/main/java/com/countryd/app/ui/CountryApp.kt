@@ -30,6 +30,7 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
     var dialog by remember { mutableStateOf<String?>(null) }
     var overlay by remember { mutableStateOf<String?>(null) }
     var showMilkOffer by remember { mutableStateOf(false) }
+    val motionDuration = if (LocalReducedMotion.current) 0 else 180
     val s = state.session
     if (state.loading) {
         Box(Modifier.fillMaxSize().background(Color.White), contentAlignment = Alignment.Center) {
@@ -209,7 +210,8 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                                     val selected =
                                         route == r ||
                                             (r.startsWith("shop") && route.startsWith("shop")) ||
-                                            (r == "subs" && route in listOf("orders", "calendar"))
+                                            (r == "subs" &&
+                                                (route == "orders" || route.startsWith("calendar")))
                                     Column(
                                         Modifier.weight(1f)
                                             .heightIn(min = 56.dp)
@@ -263,10 +265,10 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
             NavHost(
                 nav,
                 "home",
-                enterTransition = { fadeIn(tween(180)) },
-                exitTransition = { fadeOut(tween(180)) },
-                popEnterTransition = { fadeIn(tween(180)) },
-                popExitTransition = { fadeOut(tween(180)) },
+                enterTransition = { fadeIn(tween(motionDuration)) },
+                exitTransition = { fadeOut(tween(motionDuration)) },
+                popEnterTransition = { fadeIn(tween(motionDuration)) },
+                popExitTransition = { fadeOut(tween(motionDuration)) },
             ) {
                 composable("home") { HomeScreen(state, vm, ::go) }
                 composable(
@@ -284,8 +286,18 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                 composable("subs") { SubscriptionsScreen(state, vm, ::go) }
                 composable("orders") { OrdersScreen(state, vm, ::go) }
                 composable("profile") { ProfileScreen(state, vm, ::go) { dialog = it } }
-                composable("product/{id}") {
-                    ProductScreen(state, vm, ::go, it.arguments?.getString("id").orEmpty())
+                composable(
+                    "product/{id}?mode={mode}",
+                    listOf(
+                        navArgument("mode") {
+                            type = NavType.StringType
+                            defaultValue = "Once"
+                        }
+                    ),
+                ) {
+                    val id = it.arguments?.getString("id").orEmpty()
+                    val mode = it.arguments?.getString("mode").orEmpty()
+                    key(id, mode) { ProductScreen(state, vm, ::go, id, mode) }
                 }
                 composable("milk-offer") { MilkOffersScreen(state, ::go) }
                 composable(
@@ -306,10 +318,20 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                     OrderScreen(state, vm, ::go, it.arguments?.getString("id").orEmpty())
                 }
                 composable("wallet") { WalletScreen(state, vm) }
-                composable("calendar") { CalendarScreen(state, vm, ::go) }
+                composable(
+                    "calendar?date={date}",
+                    listOf(
+                        navArgument("date") {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        }
+                    ),
+                ) { entry ->
+                    CalendarScreen(state, vm, ::go, entry.arguments?.getString("date").orEmpty())
+                }
                 composable("addresses") { AddressesScreen(state, vm) }
                 composable("wishlist") { WishlistScreen(state, vm, ::go) }
-                composable("offers") { OffersScreen(state, ::go) }
+                composable("offers") { OffersScreen(state, vm, ::go) }
                 composable("vip") { VipScreen(state) }
                 composable("nutrition") { NutritionScreen(state, ::go) }
                 composable("routine") { RoutineScreen(state, vm) }
@@ -377,7 +399,7 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                 when (destination) {
                     "addresses" -> AddressesScreen(state, vm)
                     "wishlist" -> WishlistScreen(state, vm, ::go)
-                    "offers" -> OffersScreen(state, ::go)
+                    "offers" -> OffersScreen(state, vm, ::go)
                     "vip" -> VipScreen(state)
                     "routine" -> RoutineScreen(state, vm) { overlay = null }
                     "cart" -> CartScreen(state, vm, ::go)
@@ -424,6 +446,7 @@ private fun screenTitle(route: String): String =
         route.startsWith("order/") -> "Your order"
         route.startsWith("edit-sub/") -> "Edit subscription"
         route.startsWith("feedback/") -> "Product feedback"
+        route.startsWith("calendar") -> "Delivery calendar"
         route.startsWith("support") -> "Help & support"
         else ->
             mapOf(
@@ -437,7 +460,7 @@ private fun screenTitle(route: String): String =
                 "calendar" to "Delivery calendar",
                 "addresses" to "Your addresses",
                 "wishlist" to "Your wishlist",
-                "offers" to "Offers for you",
+                "offers" to "Your offers",
                 "vip" to "Your VIP pass",
                 "nutrition" to "Your nutrition",
                 "routine" to "Your routine",

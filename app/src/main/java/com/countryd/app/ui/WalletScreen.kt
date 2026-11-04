@@ -172,11 +172,14 @@ fun WalletScreen(state: CountryState, vm: CountryViewModel) {
                     Heading("Processing payment")
                     Caption("Please wait while we confirm your demo recharge.")
                 } else {
-                    Box(
-                        Modifier.size(64.dp).background(Mint, CircleShape),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("✓", fontSize = 32.sp, color = Green)
+                    Box(contentAlignment = Alignment.TopCenter) {
+                        PaymentBurst(Modifier.matchParentSize())
+                        Box(
+                            Modifier.size(64.dp).background(Mint, CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("✓", fontSize = 32.sp, color = Green)
+                        }
                     }
                     Heading("Payment done")
                     Caption("₹$credited added to your wallet, including any bonus.")

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
@@ -17,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.countryd.app.*
 import com.countryd.app.data.*
 import com.countryd.app.domain.*
@@ -73,7 +73,12 @@ fun FeedbackPrompt(request: FeedbackRequest, vm: CountryViewModel, go: (String) 
 
 @Composable
 fun FeedbackSamplesScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) {
-    ScreenBody {
+    ScreenBody { FeedbackSampleCards(state, vm, go) }
+}
+
+@Composable
+fun FeedbackSampleCards(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Heading("Sample deliveries")
         Caption(
             "Try product feedback with these five delivered items. Samples never populate your order history."

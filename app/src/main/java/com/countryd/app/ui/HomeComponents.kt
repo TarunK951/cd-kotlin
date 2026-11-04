@@ -24,23 +24,32 @@ import java.time.LocalDate
 import kotlinx.coroutines.delay
 
 @Composable
-fun DeliveryOverview(state: CountryState, go: (String) -> Unit) {
-    var expanded by rememberSaveable { mutableStateOf(true) }
+fun DeliveryOverview(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) {
+    val expanded = state.session.nextDeliveryExpanded
+    fun toggleExpanded() = vm.update { it.copy(nextDeliveryExpanded = !it.nextDeliveryExpanded) }
     var selected by rememberSaveable { mutableStateOf(LocalDate.now().plusDays(1).toString()) }
     val selectedDate = LocalDate.parse(selected)
     val subs = state.session.subscriptions.filter { scheduledOn(it, selectedDate) }
     val orders =
         state.session.orders.filter { it.deliveryDate == selected && it.status != "Cancelled" }
+    val unsatisfiedSubs =
+        subs.filter { sub ->
+            orders.none { order -> order.items.any { it.subscriptionId == sub.id } }
+        }
+    val benefits =
+        state.session.subscriptions.map {
+            deliveryBenefits(it, state.session.orders, LocalDate.now())
+        }
     CountryCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f).clickable { expanded = !expanded }) {
+            Column(Modifier.weight(1f).clickable { toggleExpanded() }) {
                 Text("Next delivery", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 Caption(
                     if (subs.isEmpty() && orders.isEmpty()) "Nothing scheduled yet"
-                    else "${subs.size+orders.size} deliveries scheduled"
+                    else "${unsatisfiedSubs.size+orders.size} deliveries scheduled"
                 )
             }
-            IconButton({ expanded = !expanded }) {
+            IconButton({ toggleExpanded() }) {
                 Icon(
                     if (expanded) CountryIcons.ChevronUp else CountryIcons.ChevronDown,
                     "Expand delivery dates",
@@ -71,20 +80,21 @@ fun DeliveryOverview(state: CountryState, go: (String) -> Unit) {
                     Text("Swipe for more dates", fontSize = 10.sp, color = Muted)
                 }
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    items((1L..28L).map { LocalDate.now().plusDays(it) }) { date ->
+                    items((1L..14L).map { LocalDate.now().plusDays(it) }) { date ->
                         val count =
                             state.session.subscriptions.count { scheduledOn(it, date) } +
                                 state.session.orders.count {
                                     it.deliveryDate == date.toString() && it.status != "Cancelled"
                                 }
+                        val free = benefits.any { week -> week.any { it.date == date && it.free } }
                         Column(
                             Modifier.width(40.dp)
                                 .background(
-                                    if (selected == date.toString() && count > 0) Mint
-                                    else Color(0xFFF3F3F3),
+                                    if (free) Color(0xFFFFF2C9)
+                                    else if (count > 0) Mint else Color(0xFFF3F3F3),
                                     RoundedCornerShape(10.dp),
                                 )
-                                .clickable { selected = date.toString() }
+                                .clickable { go("calendar?date=$date") }
                                 .padding(vertical = 5.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
@@ -131,8 +141,8 @@ fun DeliveryOverview(state: CountryState, go: (String) -> Unit) {
 }
 
 @Composable
-fun CampaignCarousel(session: Session, go: (String) -> Unit) {
-    val enrolled = session.subscriptions.any { it.plan.offer == "welcome" && it.status != "Past" }
+fun CampaignCarousel(session: Session, catalogue: List<Product>, go: (String) -> Unit) {
+    val enrolled = session.subscriptions.any { it.plan.offer != "none" && it.status != "Past" }
     val slides = if (enrolled) listOf(1, 2, 3) else listOf(0, 1, 2, 3)
     val pager = rememberPagerState(pageCount = { slides.size })
     val dragging by pager.interactionSource.collectIsDraggedAsState()
@@ -155,6 +165,14 @@ fun CampaignCarousel(session: Session, go: (String) -> Unit) {
         modifier = Modifier.fillMaxWidth().height(224.dp),
     ) { page ->
         val index = slides[page]
+        if (index == 0) {
+            MilkCampaignCard { go("milk-offer") }
+            return@HorizontalPager
+        }
+        if (index == 1) {
+            FreshFindsCampaign(catalogue) { go("shop?category=fruits") }
+            return@HorizontalPager
+        }
         val title =
             listOf(
                 "3 days on us.",
@@ -212,7 +230,7 @@ fun CampaignCarousel(session: Session, go: (String) -> Unit) {
                     Modifier.align(Alignment.BottomEnd).width(175.dp).height(190.dp),
                 )
             Column(
-                Modifier.padding(16.dp).width(190.dp),
+                Modifier.padding(start = 18.dp, top = 18.dp).fillMaxWidth(.57f),
                 verticalArrangement = Arrangement.spacedBy(5.dp),
             ) {
                 Text(
@@ -222,8 +240,8 @@ fun CampaignCarousel(session: Session, go: (String) -> Unit) {
                         "MORNING FAVOURITES",
                         "EVERYDAY SAVINGS",
                     )[index],
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 8.sp,
+                    fontWeight = FontWeight.Bold,
                     color = Color.White,
                 )
                 if (index == 0)
@@ -249,16 +267,29 @@ fun CampaignCarousel(session: Session, go: (String) -> Unit) {
                     fontSize = 12.sp,
                     color = Color.White,
                 )
+                if (index > 0)
+                    Text(
+                        if (index == 2) "Breakfast" else "Offers",
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White,
+                    )
+            }
+            Box(
+                Modifier.align(Alignment.BottomEnd)
+                    .padding(end = 14.dp, bottom = 10.dp)
+                    .background(
+                        if (index == 0) Color(0xFFFFE7A3) else Color.White,
+                        RoundedCornerShape(7.dp),
+                    )
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
                 Text(
-                    listOf(
-                        "Explore offer ›",
-                        "Shop fruits ›",
-                        "Shop breakfast ›",
-                        "Explore offers ›",
-                    )[index],
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White,
+                    listOf("Explore offer", "Shop fruits", "Shop breakfast", "Explore offers")[
+                        index] + " ↗",
+                    color = if (index == 0) Color(0xFF25472F) else Color(0xFF174E39),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
                 )
             }
             Row(
@@ -281,20 +312,71 @@ fun CampaignCarousel(session: Session, go: (String) -> Unit) {
 
 @Composable
 fun MilkRow(state: CountryState, go: (String) -> Unit) {
-    CountryCard(color = Mint) {
-        SectionHeading("Milk, your way") { go("milk-offer") }
-        Caption("Fresh milk on the days you choose.")
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    if (state.session.subscriptions.any { it.status != "Past" && it.plan.offer != "none" }) return
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        MilkCampaignCard { go("milk-offer") }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             state.products
-                .filter { it.id in listOf("p1", "p3", "p4") }
+                .filter { it.id in listOf("p1", "p3") }
                 .forEach { p ->
                     Column(
-                        Modifier.weight(1f).clickable { go("milk-plan/${p.id}?offer=welcome") },
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                        Modifier.weight(1f)
+                            .background(Color.White, RoundedCornerShape(18.dp))
+                            .border(1.dp, Line, RoundedCornerShape(18.dp))
+                            .padding(12.dp)
                     ) {
-                        AssetImage(productImage(p), p.name, Modifier.height(78.dp).fillMaxWidth())
-                        Text(p.name, fontSize = 11.sp)
-                        Caption(money(p.price))
+                        Column(
+                            Modifier.fillMaxWidth().clickable {
+                                go("product/${p.id}?mode=Subscribe")
+                            }
+                        ) {
+                            Column(
+                                Modifier.fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFFFAFCFA))
+                                    .border(
+                                        BorderStroke(
+                                            1.dp,
+                                            if (p.id == "p1") Color(0xFF149BC0)
+                                            else Color(0xFFD88938),
+                                        ),
+                                        RoundedCornerShape(12.dp),
+                                    ),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text(
+                                    if (p.id == "p1") "COW MILK" else "BUFFALO MILK",
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color =
+                                        if (p.id == "p1") Color(0xFF087E9B) else Color(0xFFA45C20),
+                                    modifier = Modifier.padding(top = 8.dp),
+                                )
+                                AssetImage(
+                                    productImage(p),
+                                    p.name,
+                                    Modifier.fillMaxWidth().height(142.dp).padding(vertical = 8.dp),
+                                )
+                            }
+                            Text(
+                                p.name.removePrefix("Pure "),
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(top = 12.dp),
+                                maxLines = 1,
+                            )
+                            Text("${p.unit} per delivery", fontSize = 10.sp, color = Muted)
+                        }
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(money(p.price), fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            TextButton({ go("product/${p.id}?mode=Subscribe") }) {
+                                Text("+ Add", fontSize = 11.sp, color = Green)
+                            }
+                        }
                     }
                 }
         }

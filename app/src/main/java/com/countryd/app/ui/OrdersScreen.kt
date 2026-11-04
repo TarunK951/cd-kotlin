@@ -19,17 +19,25 @@ fun OrdersScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit
     ScreenBody {
         Text("My deliveries", fontSize = 24.sp, fontWeight = FontWeight.Bold)
         DeliveryTabs("Orders") { if (it == "My subscriptions") go("subs") }
-        Options(listOf("All", "Upcoming", "Delivered", "Cancelled"), filter) { filter = it }
+        Options(listOf("All", "In Progress", "Delivered"), filter) { filter = it }
         val orders =
             state.session.orders.filter {
                 when (filter) {
-                    "Upcoming" -> it.status !in listOf("Delivered", "Cancelled")
+                    "In Progress" -> it.status !in listOf("Delivered", "Cancelled")
                     "Delivered",
                     "Cancelled" -> it.status == filter
                     else -> true
                 }
             }
-        if (orders.isEmpty())
+        if (
+            orders.isEmpty() &&
+                state.session.orders.isEmpty() &&
+                state.session.subscriptions.isEmpty() &&
+                filter != "In Progress"
+        ) {
+            Caption("5 sample deliveries")
+            FeedbackSampleCards(state, vm, go)
+        } else if (orders.isEmpty())
             EmptyState(
                 "No orders yet",
                 "Your placed orders and receipts will appear here.",
@@ -118,20 +126,7 @@ fun OrderScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit,
             Text(order.status, fontWeight = FontWeight.Bold)
             Caption("${order.slot}\n${order.address}")
         }
-        val steps = listOf("Order Placed", "Quality Tested", "Out for Delivery", "Delivered")
-        if (order.status != "Cancelled")
-            CountryCard {
-                Heading("Delivery progress")
-                steps.forEachIndexed { i, label ->
-                    Text(
-                        "${if(i<=steps.indexOf(order.status))"●" else "○"}  $label",
-                        color = if (i <= steps.indexOf(order.status)) Green else Muted,
-                    )
-                }
-                Caption(
-                    "Progress reflects saved demo state. Live delivery tracking is not connected."
-                )
-            }
+        if (order.status != "Cancelled") DeliveryProgressCard(order)
         CountryCard {
             Heading("Manage this order")
             PrimaryButton("Get help with this order") { go("support?order=${order.id}") }

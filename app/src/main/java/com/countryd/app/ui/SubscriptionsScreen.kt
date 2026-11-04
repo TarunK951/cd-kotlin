@@ -39,7 +39,7 @@ fun SubscriptionsScreen(state: CountryState, vm: CountryViewModel, go: (String) 
                 Text("+ Add", fontSize = 13.sp)
             }
         }
-        DeliveryOverview(state, go)
+        DeliveryOverview(state, vm, go)
         ScheduledNutrition(state, go)
         Row(
             Modifier.fillMaxWidth()

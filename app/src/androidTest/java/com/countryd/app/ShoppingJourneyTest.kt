@@ -37,6 +37,7 @@ class ShoppingJourneyTest {
             compose.onAllNodes(hasText(text, substring = substring) and hasClickAction()).onLast()
         if (scroll) node.performScrollTo()
         node.performClick()
+        compose.waitForIdle()
     }
 
     private fun screenshot(name: String) {
@@ -51,7 +52,9 @@ class ShoppingJourneyTest {
                 )
                 .apply { mkdirs() }
         instrumentation.uiAutomation.takeScreenshot().let { bitmap ->
-            File(directory, "$name.png").outputStream().use {
+            val prefix =
+                InstrumentationRegistry.getArguments().getString("screenshotPrefix").orEmpty()
+            File(directory, "$prefix$name.png").outputStream().use {
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
             }
             bitmap.recycle()
@@ -133,6 +136,8 @@ class ShoppingJourneyTest {
         compose.onNodeWithText("Cow Milk").performClick()
         compose.onNodeWithText("Subscribe").performClick()
         tap("Set up my plan", true)
+        tap("Custom", true)
+        compose.onNodeWithText("Custom days").assertExists()
         screenshot("milk-plan")
         compose
             .onNode(hasText("Add plan", substring = true) and hasClickAction())
@@ -162,6 +167,111 @@ class ShoppingJourneyTest {
     }
 
     @Test
+    fun offerCardsUnlockGiftAndRejectInvalidCoupon() {
+        completeOnboarding()
+        tap("Home")
+        compose.onNodeWithContentDescription("Quick view offers").performClick()
+        compose.onNodeWithText("Your offers").assertExists()
+        compose.onNodeWithContentDescription("Coupon code").performTextInput("WRONG")
+        compose.onNodeWithContentDescription("Coupon code").performImeAction()
+        activity.onActivity {
+            it.getSystemService(android.view.inputmethod.InputMethodManager::class.java)
+                .hideSoftInputFromWindow(it.window.decorView.windowToken, 0)
+        }
+        tap("Apply", true)
+        compose.onNodeWithText("This code is not available. Try DELIGHT10.").assertExists()
+        compose
+            .onAllNodes(hasText("Add") and hasClickAction())
+            .onFirst()
+            .performScrollTo()
+            .performClick()
+        compose.onAllNodesWithText("1 free pack unlocked").onFirst().assertExists()
+        screenshot("offer-cards")
+        compose.onNodeWithContentDescription("Close Your offers").performClick()
+        tap("View cart", substring = true)
+        compose.onNodeWithText("Fresh Curd · Free gift").performScrollTo().assertExists()
+        screenshot("basket-gift")
+    }
+
+    @Test
+    fun featuredMilkCardOpensSubscriptionProductDetails() {
+        completeOnboarding()
+        tap("Home")
+        compose.onAllNodes(hasScrollToIndexAction()).onFirst().performScrollToNode(hasText("COW MILK", ignoreCase = false))
+        screenshot("featured-milk-cards")
+        compose.onNodeWithText("COW MILK", ignoreCase = false).performClick()
+        compose.onNodeWithText("Set up my plan").assertExists()
+    }
+
+    @Test
+    fun mainScreenAndAccountSheetInventory() {
+        completeOnboarding()
+        tap("Home")
+        screenshot("inventory-home")
+        tap("Protein")
+        screenshot("inventory-protein")
+        tap("Subs")
+        screenshot("inventory-subs-empty")
+        tap("More")
+        screenshot("inventory-account")
+        tap("Delivery calendar", true)
+        screenshot("inventory-calendar")
+        tap("More")
+        tap("Wishlist", true)
+        screenshot("inventory-wishlist")
+        compose.onNodeWithContentDescription("Close Your wishlist").performClick()
+        tap("Delivery address", true)
+        screenshot("inventory-addresses")
+        compose.onNodeWithContentDescription("Close Your addresses").performClick()
+        tap("Delight VIP pass", true)
+        screenshot("inventory-vip")
+        compose.onNodeWithContentDescription("Close Your VIP pass").performClick()
+        tap("Food preferences & protein goal", true)
+        screenshot("inventory-routine")
+    }
+
+    @Test
+    fun supportSamplesFollowupAndResolutionPersist() {
+        completeOnboarding()
+        tap("More")
+        tap("Help & support", true)
+        compose.onNodeWithText("Choose an order").assertExists()
+        screenshot("support-help")
+        tap("My requests", substring = true)
+        tap("View request", true)
+        screenshot("support-request")
+        compose
+            .onNode(hasSetTextAction() and hasContentDescription("Add a follow-up"))
+            .performScrollTo()
+            .performTextInput("Please check delivery time.")
+        activity.onActivity {
+            it.getSystemService(android.view.inputmethod.InputMethodManager::class.java)
+                .hideSoftInputFromWindow(it.window.decorView.windowToken, 0)
+        }
+        tap("Save follow-up", true)
+        tap("Resolved", true)
+        tap("Resolved")
+        compose.onAllNodesWithText("Missing delivery").onFirst().assertExists()
+        compose.waitForIdle()
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val saved = runBlocking {
+            withTimeout(10000) {
+                CountryRepository(context).session.first { session ->
+                    session.requests.any {
+                        it.topic == "Missing delivery" && it.status == "Resolved"
+                    }
+                }
+            }
+        }
+        Assert.assertTrue(
+            saved.requests
+                .first { it.topic == "Missing delivery" }
+                .messages
+                .any { it.text == "Please check delivery time." }
+        )
+    }
+
+    @Test
     fun productFeedbackKeepsItsRequestAndRevisionInTheOutbox() {
         completeOnboarding()
         tap("More")
@@ -177,6 +287,7 @@ class ShoppingJourneyTest {
                 .hideSoftInputFromWindow(it.window.decorView.windowToken, 0)
         }
         tap("Save feedback", true)
+        compose.waitForIdle()
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val saved = runBlocking {
             withTimeout(10000) {

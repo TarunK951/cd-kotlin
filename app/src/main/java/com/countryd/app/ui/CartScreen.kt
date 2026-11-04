@@ -56,6 +56,22 @@ fun CartScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) 
                     }
                 }
             }
+            freeGiftLines(s, state.products).forEach { gift ->
+                val product = state.products.first { it.id == gift.line.productId }
+                CountryCard(color = Mint) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        AssetImage(productImage(product), product.name, Modifier.size(44.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("${product.name} · Free gift")
+                            Caption("${gift.line.qty} × ${product.unit}")
+                        }
+                        Text("FREE", color = Green, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
             TextButton({ go("offers") }) { Text("View offers & free gifts ›") }
             CountryCard(color = Mint) {
                 Caption("Fresh picks to complete your basket")

@@ -19,9 +19,19 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun CalendarScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) {
+fun CalendarScreen(
+    state: CountryState,
+    vm: CountryViewModel,
+    go: (String) -> Unit,
+    initialDate: String = "",
+) {
     val today = LocalDate.now()
-    var selected by rememberSaveable { mutableStateOf(today.plusDays(1).toString()) }
+    var selected by rememberSaveable {
+        mutableStateOf(
+            initialDate.takeIf { runCatching { LocalDate.parse(it) }.isSuccess }
+                ?: today.plusDays(1).toString()
+        )
+    }
     var monthText by rememberSaveable {
         mutableStateOf(YearMonth.from(LocalDate.parse(selected)).toString())
     }

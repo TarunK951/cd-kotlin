@@ -20,11 +20,19 @@ import com.countryd.app.data.*
 import com.countryd.app.domain.*
 
 @Composable
-fun ProductScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit, id: String) {
+fun ProductScreen(
+    state: CountryState,
+    vm: CountryViewModel,
+    go: (String) -> Unit,
+    id: String,
+    initialMode: String = "Once",
+) {
     val product = state.products.find { it.id == id } ?: return
     var variant by remember { mutableStateOf(product.defaultVariant) }
     var quantity by rememberSaveable { mutableIntStateOf(1) }
-    var mode by rememberSaveable { mutableStateOf("Buy once") }
+    var mode by rememberSaveable {
+        mutableStateOf(if (initialMode == "Subscribe") "Subscribe" else "Buy once")
+    }
     var addons by remember { mutableStateOf(setOf<String>()) }
     var information by rememberSaveable { mutableStateOf(false) }
     var nutrition by rememberSaveable { mutableStateOf(false) }

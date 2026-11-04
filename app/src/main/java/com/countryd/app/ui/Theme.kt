@@ -146,7 +146,7 @@ fun PrimaryButton(
     val pressed by interactions.collectIsPressedAsState()
     val scale by
         animateFloatAsState(
-            if (pressed) .98f else 1f,
+            if (pressed && !LocalReducedMotion.current) .98f else 1f,
             tween(if (pressed) 85 else 150, easing = LinearOutSlowInEasing),
             label = "source press scale",
         )

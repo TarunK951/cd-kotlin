@@ -53,7 +53,7 @@ fun HomeScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) 
                 TextButton({ go("vip") }) { Text("VIP", color = Color(0xFF8A5A00)) }
             }
         }
-        item { DeliveryOverview(state, go) }
+        item { DeliveryOverview(state, vm, go) }
         item {
             val request =
                 (state.feedbackPrompt ?: feedbackRequests(s, state.products).firstOrNull())
@@ -68,7 +68,7 @@ fun HomeScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) 
                 state.sampleRequests.firstOrNull()?.let { FeedbackPrompt(it, vm, go) }
         }
 
-        item { CampaignCarousel(s, go) }
+        item { CampaignCarousel(s, state.products, go) }
         item {
             Text("Shop by category", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(10.dp))
