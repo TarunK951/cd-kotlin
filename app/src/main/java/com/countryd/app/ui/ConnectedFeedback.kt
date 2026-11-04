@@ -376,9 +376,17 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
             if (name.isBlank()) "Thanks for sharing!" else "Thanks for sharing, $name!",
             style = MaterialTheme.typography.titleLarge,
         )
-        Text("Your ${result.num("rating")}-star rating is saved.", color = Muted)
-        FeedbackStars(result.num("rating"))
-        result.obj("ratedProduct")?.let { product ->
+        val rating = result.num("rating")
+        val product = result.obj("ratedProduct")
+        val productName = product?.str("productName").orEmpty()
+        val thanks = if (rating >= 4 && productName.isNotBlank()) {
+            " We’re glad you enjoyed your $productName."
+        } else {
+            ""
+        }
+        Text("Your ${rating}-star rating is saved.$thanks", color = Muted)
+        FeedbackStars(rating)
+        product?.let {
             CountryCard { FeedbackProductSummary(product) }
         }
     }
