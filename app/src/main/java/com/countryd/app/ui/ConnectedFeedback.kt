@@ -27,6 +27,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.countryd.app.api.*
 import java.net.HttpURLConnection
 import java.net.URL
@@ -335,17 +337,23 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
     val result = state.result
     val detail = state.detail
     if (result == null && detail == null) return
+    val form = result?.obj("issueForm")
+    if (result != null && form != null) {
+        Dialog(
+            onDismissRequest = { if (!state.busy) model.closeResult() },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            Surface(Modifier.fillMaxSize(), color = Color.White) {
+                key(result.num("feedbackId")) { IssueFields(result, form, state, model) }
+            }
+        }
+        return
+    }
     ModalBottomSheet(
         onDismissRequest = { if (!state.busy) model.closeResult() },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         sheetGesturesEnabled = false,
     ) {
-        if (result != null && result.obj("issueForm") != null) {
-            key(result.num("feedbackId")) {
-                IssueFields(result, requireNotNull(result.obj("issueForm")), state, model)
-            }
-            return@ModalBottomSheet
-        }
         ScreenBody {
             when {
                 result != null ->
@@ -390,9 +398,17 @@ private fun IssueFields(
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
             if (it != null) photo = it
         }
-    Column(Modifier.fillMaxWidth().fillMaxHeight(0.86f).imePadding().padding(horizontal = 16.dp)) {
+    Column(Modifier.fillMaxSize().imePadding().padding(horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Share feedback", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+            IconButton(onClick = model::closeResult, enabled = !busy) {
+                Icon(CountryIcons.ChevronLeft, "Back")
+            }
+            Text(
+                "Share feedback",
+                Modifier.weight(1f),
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
+            )
             IconButton(onClick = model::closeResult, enabled = !busy) {
                 Icon(CountryIcons.Close, "Close feedback")
             }
@@ -402,8 +418,11 @@ private fun IssueFields(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             result.obj("ratedProduct")?.let { FeedbackProductSummary(it) }
-            Text("Your rating · ${result.num("rating")} of 5")
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                "Your rating · ${result.num("rating")} of 5",
+                style = MaterialTheme.typography.titleSmall,
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 for (star in 1..5) {
                     Icon(
                         if (star <= result.num("rating")) CountryIcons.StarFilled
@@ -414,7 +433,8 @@ private fun IssueFields(
                     )
                 }
             }
-            Text(form.str("question"), style = MaterialTheme.typography.titleMedium)
+            Text("Sorry it wasn’t quite right.", style = MaterialTheme.typography.titleMedium)
+            Text(form.str("question"), style = MaterialTheme.typography.bodyMedium, color = Muted)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 form.list("options").forEach { option ->
                     val code = option.str("code")
@@ -429,7 +449,8 @@ private fun IssueFields(
                                     else -> listOf(code)
                                 }
                         },
-                        { Text(option.str("label")) },
+                        { Text(option.str("label"), style = MaterialTheme.typography.labelMedium) },
+                        shape = RoundedCornerShape(50),
                         enabled = !busy,
                     )
                 }
@@ -441,6 +462,8 @@ private fun IssueFields(
                     label = { Text("Anything else? (optional)") },
                     placeholder = { Text("Tell us a little more…") },
                     minLines = 2,
+                    textStyle = MaterialTheme.typography.bodySmall,
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !busy,
                 )
@@ -467,10 +490,21 @@ private fun IssueFields(
         Button(
             onClick = { model.issues(result.num("feedbackId"), selected, note, photo) },
             enabled = !busy && selected.size >= form.num("minSelections"),
+            colors =
+                ButtonDefaults.buttonColors(
+                    disabledContentColor = Muted,
+                    disabledContainerColor = Line,
+                ),
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).heightIn(min = 48.dp),
         ) {
             Text("Submit feedback")
         }
+        Text(
+            "Your rating is saved. Optional details are sent when you submit.",
+            style = MaterialTheme.typography.bodySmall,
+            color = Muted,
+            modifier = Modifier.padding(bottom = 10.dp),
+        )
     }
 }
 
