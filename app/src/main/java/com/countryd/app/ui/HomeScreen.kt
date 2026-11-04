@@ -50,7 +50,37 @@ fun HomeScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) 
                         Text("Search fresh groceries", color = Muted, fontSize = 12.sp)
                     }
                 }
-                TextButton({ go("vip") }) { Text("VIP", color = Color(0xFF8A5A00)) }
+                Surface(
+                    onClick = { go("vip") },
+                    color = Color.Transparent,
+                    shape = RoundedCornerShape(24.dp),
+                ) {
+                    Row(
+                        Modifier.height(48.dp)
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(Color(0xFFD8AD4A), Color(0xFFFFF2BE), Color(0xFFE8BB54))
+                                ),
+                                RoundedCornerShape(24.dp),
+                            )
+                            .padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Icon(
+                            CountryIcons.Crown,
+                            null,
+                            Modifier.size(16.dp),
+                            tint = Color(0xFF67430D),
+                        )
+                        Text(
+                            "VIP",
+                            color = Color(0xFF67430D),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
             }
         }
         item { DeliveryOverview(state, vm, go) }

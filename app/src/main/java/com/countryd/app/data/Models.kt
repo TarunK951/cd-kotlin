@@ -244,6 +244,7 @@ data class Session(
     val vipExpiresAt: Long = 0,
     val vipSaved: Double = 0.0,
     val cart: List<CartLine> = emptyList(),
+    val orderBag: Boolean = false,
     val wishlist: Set<String> = emptySet(),
     val orders: List<Order> = emptyList(),
     val subscriptions: List<Subscription> = emptyList(),

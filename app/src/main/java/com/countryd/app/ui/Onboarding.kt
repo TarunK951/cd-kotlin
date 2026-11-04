@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.*
 import com.countryd.app.CountryViewModel
+import com.countryd.app.R
 import com.countryd.app.data.Address
 import java.util.UUID
 import kotlinx.coroutines.delay
@@ -74,8 +75,8 @@ fun Onboarding(vm: CountryViewModel, onComplete: () -> Unit = {}) {
         Modifier.fillMaxSize().background(Color(0xFFFCFEFC)).safeDrawingPadding().imePadding()
     ) {
         val width = minOf(maxWidth, 430.dp)
-        AssetImage(
-            "native-art/footer-hills.png",
+        Image(
+            androidx.compose.ui.res.painterResource(R.drawable.ic_footer_hills),
             null,
             Modifier.align(Alignment.BottomCenter).width(width).height(width * 70 / 390),
         )

@@ -42,6 +42,7 @@ fun DeliveryOverview(state: CountryState, vm: CountryViewModel, go: (String) -> 
         }
     CountryCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(CountryIcons.Bike, null, Modifier.padding(end = 10.dp).size(22.dp), tint = Green)
             Column(Modifier.weight(1f).clickable { toggleExpanded() }) {
                 Text("Next delivery", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 Caption(

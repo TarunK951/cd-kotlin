@@ -9,7 +9,6 @@ const root=path.resolve(__dirname,'..');
  const dir=path.join(root,'app/src/main/assets/native-art');fs.mkdirSync(dir,{recursive:true});
  const shot=async(name,h)=>{await p.locator(`svg[viewBox="0 0 390 ${h}"]`).first().locator('..').screenshot({path:path.join(dir,name+'.png')});await p.screenshot({path:path.join(root,'migration','source-'+name+'.png')});};
  await p.getByText('Get started',{exact:true}).waitFor();await shot('welcome',330);
- await p.locator('svg[viewBox="0 0 390 70"]').first().locator('..').screenshot({path:path.join(dir,'footer-hills.png')});
  await p.getByText('Get started',{exact:true}).click();await shot('mobile',262);
  await p.getByRole('button',{name:'Continue',exact:true}).click();await shot('otp',296);
  await p.getByRole('button',{name:'Verify & continue',exact:true}).click();await shot('address',236);

@@ -16,7 +16,12 @@ import com.countryd.app.domain.*
 import kotlinx.coroutines.delay
 
 @Composable
-fun QuickOffers(session: Session, catalogue: List<Product>, onClick: () -> Unit) {
+fun QuickOffers(
+    session: Session,
+    catalogue: List<Product>,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -66,10 +71,7 @@ fun QuickOffers(session: Session, catalogue: List<Product>, onClick: () -> Unit)
         shape = RoundedCornerShape(26.dp),
         color = Color.White,
         border = BorderStroke(1.dp, Line),
-        modifier =
-            Modifier.fillMaxWidth().padding(bottom = 6.dp).semantics {
-                contentDescription = "Quick view offers"
-            },
+        modifier = modifier.fillMaxWidth().semantics { contentDescription = "Quick view offers" },
     ) {
         Row(
             Modifier.heightIn(min = 48.dp).padding(horizontal = 14.dp, vertical = 7.dp),
@@ -87,10 +89,22 @@ fun QuickOffers(session: Session, catalogue: List<Product>, onClick: () -> Unit)
                 Icon(CountryIcons.Tag, null, tint = Green, modifier = Modifier.size(15.dp))
             }
             Column(Modifier.weight(1f)) {
-                Text(title, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                Text(subtitle, fontSize = 11.sp, color = Muted)
+                Text(
+                    title,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
+                Text(
+                    subtitle,
+                    fontSize = 11.sp,
+                    color = Muted,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
             }
-            Text("⌃", color = Green)
+            Icon(CountryIcons.ChevronUp, null, Modifier.size(16.dp), tint = Green)
         }
     }
 }

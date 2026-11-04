@@ -252,18 +252,21 @@ fun AssetImage(
 ) {
     val context = LocalContext.current
     val bitmap by
-        produceState<ImageBitmap?>(imageCache.get(path), path) {
-            if (value == null)
-                value =
-                    withContext(Dispatchers.IO) {
-                        runCatching {
-                                context.assets.open(path).use {
-                                    BitmapFactory.decodeStream(it)?.asImageBitmap()
+        key(path) {
+            produceState<ImageBitmap?>(imageCache.get(path), path) {
+                value = imageCache.get(path)
+                if (value == null)
+                    value =
+                        withContext(Dispatchers.IO) {
+                            runCatching {
+                                    context.assets.open(path).use {
+                                        BitmapFactory.decodeStream(it)?.asImageBitmap()
+                                    }
                                 }
-                            }
-                            .getOrNull()
-                            ?.also { imageCache.put(path, it) }
-                    }
+                                .getOrNull()
+                                ?.also { imageCache.put(path, it) }
+                        }
+            }
         }
     bitmap?.let { Image(BitmapPainter(it), description, modifier, contentScale = scale) }
         ?: Spacer(modifier)

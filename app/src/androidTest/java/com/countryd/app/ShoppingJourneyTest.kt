@@ -67,7 +67,10 @@ class ShoppingJourneyTest {
         }
         screenshot("welcome")
         tap("Get started")
+        compose.onNodeWithText("Sign in").assertDoesNotExist()
+        screenshot("login-mobile")
         tap("Continue")
+        screenshot("login-otp")
         tap("Verify & continue")
         tap("Continue")
         tap("Unlock my free VIP")
@@ -98,7 +101,6 @@ class ShoppingJourneyTest {
         compose.onAllNodesWithText("Cow Milk").onFirst().assertExists()
         compose
             .onNode(hasText("Continue to checkout", substring = true) and hasClickAction())
-            .performScrollTo()
             .performClick()
         compose.onAllNodes(isToggleable()).onLast().performScrollTo().performClick()
         compose
@@ -145,7 +147,6 @@ class ShoppingJourneyTest {
             .performClick()
         compose
             .onNode(hasText("Continue to checkout", substring = true) and hasClickAction())
-            .performScrollTo()
             .performClick()
         compose
             .onNode(hasText("Place demo order", substring = true) and hasClickAction())
@@ -188,16 +189,35 @@ class ShoppingJourneyTest {
         compose.onAllNodesWithText("1 free pack unlocked").onFirst().assertExists()
         screenshot("offer-cards")
         compose.onNodeWithContentDescription("Close Your offers").performClick()
-        tap("View cart", substring = true)
+        compose.onNodeWithContentDescription("View cart").performClick()
         compose.onNodeWithText("Fresh Curd · Free gift").performScrollTo().assertExists()
         screenshot("basket-gift")
+        compose
+            .onNodeWithContentDescription("Add a free carry bag")
+            .performScrollTo()
+            .performClick()
+            .assertIsOn()
+        tap("Price drops", true)
+        tap("Buy again", true)
+        screenshot("cart-extras")
+        tap("Continue to checkout", substring = true)
+        tap("Instructions", true)
+        compose.onNodeWithText("Delivery instructions").assertExists()
+        tap("Tip", true)
+        compose.onNodeWithText("Thank your delivery partner").assertExists()
+        tap("Delivery", true)
+        compose.onNodeWithText("Morning slot").assertExists()
+        screenshot("checkout-preferences")
     }
 
     @Test
     fun featuredMilkCardOpensSubscriptionProductDetails() {
         completeOnboarding()
         tap("Home")
-        compose.onAllNodes(hasScrollToIndexAction()).onFirst().performScrollToNode(hasText("COW MILK", ignoreCase = false))
+        compose
+            .onAllNodes(hasScrollToIndexAction())
+            .onFirst()
+            .performScrollToNode(hasText("COW MILK", ignoreCase = false))
         screenshot("featured-milk-cards")
         compose.onNodeWithText("COW MILK", ignoreCase = false).performClick()
         compose.onNodeWithText("Set up my plan").assertExists()

@@ -16,6 +16,7 @@ import java.time.LocalDate
 fun CheckoutScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) {
     val s = state.session
     var date by rememberSaveable { mutableStateOf(LocalDate.now().plusDays(1).toString()) }
+    var preference by rememberSaveable { mutableStateOf("Delivery") }
     var slot by rememberSaveable { mutableStateOf("Morning, 6:00 – 7:00 AM") }
     var tip by rememberSaveable { mutableDoubleStateOf(0.0) }
     var points by rememberSaveable { mutableStateOf(false) }
@@ -45,37 +46,79 @@ fun CheckoutScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Un
             Text(s.address?.display ?: "Choose a delivery address")
             TextButton({ go("addresses") }) { Text("Change address ›") }
         }
-        Heading("Delivery date")
-        DateOptions(date) { date = it }
-        Heading("Morning slot")
-        Options(listOf("Morning, 6:00 – 7:00 AM", "Morning, 7:00 – 8:00 AM"), slot) { slot = it }
-        Heading("Delivery instructions")
-        listOf("No bell, please", "Leave at the door", "Leave with security", "Hand it to me")
-            .forEach { label ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        label in instructions,
-                        { instructions = if (it) instructions + label else instructions - label },
+        CountryCard {
+            Heading("Delivery preferences")
+            Row(Modifier.fillMaxWidth()) {
+                listOf(
+                        "Delivery" to CountryIcons.Calendar,
+                        "Tip" to CountryIcons.Heart,
+                        "Instructions" to CountryIcons.FileText,
                     )
-                    Text(label)
+                    .forEach { (label, icon) ->
+                        FilterChip(
+                            selected = preference == label,
+                            onClick = { preference = label },
+                            modifier = Modifier.weight(1f),
+                            label = { Text(label, fontSize = 11.sp) },
+                            leadingIcon = { Icon(icon, null, Modifier.size(14.dp)) },
+                        )
+                    }
+            }
+            if (preference == "Delivery") {
+                Heading("Delivery date")
+                DateOptions(date) { date = it }
+                Heading("Morning slot")
+                Options(listOf("Morning, 6:00 – 7:00 AM", "Morning, 7:00 – 8:00 AM"), slot) {
+                    slot = it
                 }
             }
-        Heading("Thank your delivery partner")
-        Options(
-            listOf("No tip", "₹10", "₹20", "₹30", "₹50"),
-            if (tip == 0.0) "No tip" else "₹${tip.toInt()}",
-        ) {
-            tip = it.removePrefix("₹").toDoubleOrNull() ?: 0.0
+            if (preference == "Instructions") {
+                Heading("Delivery instructions")
+                listOf(
+                        "No bell, please",
+                        "Leave at the door",
+                        "Leave with security",
+                        "Hand it to me",
+                    )
+                    .forEach { label ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                label in instructions,
+                                {
+                                    instructions =
+                                        if (it) instructions + label else instructions - label
+                                },
+                            )
+                            Icon(CountryIcons.FileText, null, Modifier.size(16.dp), tint = Green)
+                            Text(label, Modifier.padding(start = 8.dp))
+                        }
+                    }
+            }
+            if (preference == "Tip") {
+                Heading("Thank your delivery partner")
+                Options(
+                    listOf("No tip", "₹10", "₹20", "₹30", "₹50"),
+                    if (tip == 0.0) "No tip" else "₹${tip.toInt()}",
+                ) {
+                    tip = it.removePrefix("₹").toDoubleOrNull() ?: 0.0
+                }
+            }
         }
         CountryCard {
-            OutlinedTextField(
-                coupon,
-                { coupon = it.uppercase() },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Coupon code") },
-                singleLine = true,
-            )
-            TextButton({ vm.update { it.copy(coupon = coupon) } }) { Text("Apply code") }
+            Heading("Apply coupon")
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                OutlinedTextField(
+                    coupon,
+                    { coupon = it.uppercase() },
+                    modifier = Modifier.weight(1f),
+                    label = { Text("Coupon code") },
+                    singleLine = true,
+                )
+                TextButton({ vm.update { it.copy(coupon = coupon) } }) { Text("Apply") }
+            }
             if (s.coupon.isNotEmpty())
                 Caption(
                     if (s.coupon == "DELIGHT10" && items >= 200) "DELIGHT10 applied"
@@ -118,7 +161,15 @@ fun CheckoutScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Un
             confirmButton = {
                 TextButton({
                     payment = false
-                    val id = vm.checkout(date, slot, tip, instructions, points, wallet)
+                    val id =
+                        vm.checkout(
+                            date,
+                            slot,
+                            tip,
+                            if (s.orderBag) instructions + "Add a carry bag" else instructions,
+                            points,
+                            wallet,
+                        )
                     if (id != null) complete = id
                     else error = "Check your address, basket and delivery date."
                 }) {

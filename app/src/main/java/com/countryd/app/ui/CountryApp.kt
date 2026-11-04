@@ -169,36 +169,55 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                 Column(
                     Modifier.navigationBarsPadding().padding(horizontal = 12.dp, vertical = 4.dp)
                 ) {
-                    if (route == "home" || route.startsWith("shop") || route == "protein")
-                        QuickOffers(s, state.products) { go("offers") }
-                    AnimatedVisibility(s.cart.isNotEmpty() && route != "cart") {
-                        Surface(
-                            onClick = { go("cart") },
-                            color = Green,
-                            shape = RoundedCornerShape(18.dp),
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    val showOffers =
+                        route == "home" || route.startsWith("shop") || route == "protein"
+                    if (showOffers || s.cart.isNotEmpty()) {
+                        Row(
+                            Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            Row(
-                                Modifier.padding(14.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    "${s.cart.sumOf { it.qty }} items",
-                                    color = Color.White,
-                                    modifier = Modifier.weight(1f),
-                                )
-                                Text(
-                                    money(
-                                        s.cart.sumOf { l ->
-                                            lineTotal(
-                                                l,
-                                                state.products.first { it.id == l.productId },
+                            if (showOffers)
+                                QuickOffers(s, state.products, Modifier.weight(1f)) { go("offers") }
+                            else Spacer(Modifier.weight(1f))
+                            if (s.cart.isNotEmpty()) {
+                                val count = s.cart.sumOf { it.qty }
+                                val subtotal =
+                                    s.cart.sumOf { line ->
+                                        lineTotal(
+                                            line,
+                                            state.products.first { it.id == line.productId },
+                                        )
+                                    }
+                                Surface(
+                                    onClick = { go("cart") },
+                                    shape = RoundedCornerShape(24.dp),
+                                    color = Green,
+                                    contentColor = Color.White,
+                                ) {
+                                    Row(
+                                        Modifier.heightIn(min = 48.dp).padding(horizontal = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Icon(
+                                            CountryIcons.ShoppingBag,
+                                            "View cart",
+                                            Modifier.size(18.dp),
+                                        )
+                                        Column {
+                                            Text(
+                                                money(subtotal),
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold,
+                                            )
+                                            Text(
+                                                if (count == 1) "1 item" else "$count items",
+                                                fontSize = 10.sp,
                                             )
                                         }
-                                    ),
-                                    color = Color.White,
-                                )
-                                Text("  View cart ›", color = Color.White)
+                                    }
+                                }
                             }
                         }
                     }
@@ -212,7 +231,7 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                             modifier = Modifier.weight(1f),
                             border = BorderStroke(1.dp, Line),
                         ) {
-                            Row(Modifier.fillMaxWidth()) {
+                            Row(Modifier.fillMaxWidth().padding(4.dp)) {
                                 tabs.forEach { (r, label, icon) ->
                                     val selected =
                                         route == r ||
@@ -221,7 +240,7 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                                                 (route == "orders" || route.startsWith("calendar")))
                                     Column(
                                         Modifier.weight(1f)
-                                            .heightIn(min = 56.dp)
+                                            .heightIn(min = 52.dp)
                                             .background(
                                                 if (selected) Mint else Color.Transparent,
                                                 RoundedCornerShape(22.dp),

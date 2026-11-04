@@ -79,6 +79,9 @@ object CountryIcons {
     val Repeat: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_repeat)
 
+    val Bike: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_bike)
+
     val Bell: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_bell)
 
