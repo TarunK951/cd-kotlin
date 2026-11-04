@@ -9,7 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -31,6 +33,7 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
     var overlay by remember { mutableStateOf<String?>(null) }
     var showMilkOffer by remember { mutableStateOf(false) }
     val motionDuration = if (LocalReducedMotion.current) 0 else 180
+    val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val s = state.session
     if (state.loading) {
         Box(Modifier.fillMaxSize().background(Color.White), contentAlignment = Alignment.Center) {
@@ -158,7 +161,11 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                 )
         },
         bottomBar = {
-            if (route !in listOf("checkout", "payment") && !route.startsWith("feedback/")) {
+            if (
+                !keyboardVisible &&
+                    route !in listOf("checkout", "payment") &&
+                    !route.startsWith("feedback/")
+            ) {
                 Column(
                     Modifier.navigationBarsPadding().padding(horizontal = 12.dp, vertical = 4.dp)
                 ) {
@@ -228,13 +235,14 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                                     ) {
                                         Icon(
                                             icon,
-                                            label,
+                                            null,
                                             Modifier.size(21.dp),
                                             tint = if (selected) Green else Muted,
                                         )
                                         Text(
                                             label,
                                             fontSize = 10.sp,
+                                            textAlign = TextAlign.Center,
                                             color = Ink,
                                             fontWeight =
                                                 if (selected) FontWeight.SemiBold
@@ -248,7 +256,7 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                             onClick = { go("assistant") },
                             shape = RoundedCornerShape(28.dp),
                             color = Mint,
-                            modifier = Modifier.size(56.dp),
+                            modifier = Modifier.size(48.dp),
                         ) {
                             AssetImage(
                                 "assets/generated/assistant-2026/delight-guide.png",
@@ -261,7 +269,7 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
             }
         },
     ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding).imePadding()) {
+        Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding()) {
             NavHost(
                 nav,
                 "home",
