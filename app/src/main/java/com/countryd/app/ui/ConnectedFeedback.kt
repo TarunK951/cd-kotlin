@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +38,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 @Composable
 fun ConnectedSignIn(state: FeedbackConnection, model: FeedbackConnectionModel) {
@@ -366,9 +369,12 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
     }
     val offer = result.obj("buyAgain")
     var reorderOpen by rememberSaveable(result.num("feedbackId")) { mutableStateOf(false) }
+    val draft = rememberSaveableStateHolder()
+    var subscriptionDate by rememberSaveable(result.num("feedbackId")) { mutableStateOf("") }
+    var subscriptionFailed by rememberSaveable(result.num("feedbackId")) { mutableStateOf(false) }
     FeedbackConfirmation(
         "Feedback saved",
-        { if (!reorderOpen) model.closeResult() },
+        { if (!reorderOpen && subscriptionDate.isEmpty()) model.closeResult() },
         buyAgain = if (offer != null) ({ reorderOpen = true }) else null,
     ) {
         val name = state.customer?.str("name").orEmpty()
@@ -390,6 +396,29 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
             CountryCard { FeedbackProductSummary(product) }
         }
     }
+    if (subscriptionDate.isNotEmpty()) {
+        FeedbackConfirmation(
+            title = if (subscriptionFailed) "Subscription failed" else "Subscription confirmed",
+            close = model::closeResult,
+            successMessage = if (subscriptionFailed) "Your feedback remains saved. You can try again."
+                else "Your feedback remains saved",
+            failed = subscriptionFailed,
+            backToChoice = {
+                subscriptionDate = ""
+                reorderOpen = true
+            },
+        ) {
+            Text(
+                if (subscriptionFailed) "Subscription failed" else "Thank you for subscribing!",
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Text(feedbackDate(subscriptionDate), color = Muted)
+            result.obj("ratedProduct")?.let { product ->
+                CountryCard { FeedbackProductSummary(product) }
+            }
+        }
+        return
+    }
     if (!reorderOpen || offer == null) return
     ModalBottomSheet(
         onDismissRequest = { if (!state.busy) reorderOpen = false },
@@ -403,7 +432,17 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             key(result.num("feedbackId")) {
-                BuyAgainFields(result, offer, state, model) { reorderOpen = false }
+                draft.SaveableStateProvider("reorder") {
+                    BuyAgainFields(
+                        result, offer, state, model,
+                        close = { reorderOpen = false },
+                        subscriptionResult = { date, failed ->
+                            subscriptionDate = date
+                            subscriptionFailed = failed
+                            reorderOpen = false
+                        },
+                    )
+                }
             }
             ConnectionStatus(state.copy(message = ""))
         }
@@ -417,8 +456,13 @@ internal fun FeedbackConfirmation(
     buyAgain: (() -> Unit)? = null,
     successMessage: String = "Feedback saved successfully",
     viewOrders: (() -> Unit)? = null,
+    failed: Boolean = false,
+    backToChoice: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val accent = if (failed) MaterialTheme.colorScheme.error else Green
+    val badge = if (failed) MaterialTheme.colorScheme.errorContainer else Mint
+    val statusIcon = if (failed) CountryIcons.Close else CountryIcons.CircleCheck
     Dialog(
         onDismissRequest = close,
         properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -443,7 +487,7 @@ internal fun FeedbackConfirmation(
                 ) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        color = Mint,
+                        color = badge,
                         shape = RoundedCornerShape(8.dp),
                     ) {
                         Row(
@@ -451,11 +495,11 @@ internal fun FeedbackConfirmation(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
-                            Icon(CountryIcons.CircleCheck, null, Modifier.size(15.dp), tint = Green)
+                            Icon(statusIcon, null, Modifier.size(15.dp), tint = accent)
                             Text(
                                 successMessage,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Green,
+                                color = accent,
                             )
                         }
                     }
@@ -464,11 +508,11 @@ internal fun FeedbackConfirmation(
                             Modifier.align(Alignment.CenterHorizontally)
                                 .padding(top = 10.dp)
                                 .size(62.dp),
-                        color = Mint,
+                        color = badge,
                         shape = RoundedCornerShape(50),
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Icon(CountryIcons.CircleCheck, null, Modifier.size(36.dp), tint = Green)
+                            Icon(statusIcon, null, Modifier.size(36.dp), tint = accent)
                         }
                     }
                     content()
@@ -490,6 +534,11 @@ internal fun FeedbackConfirmation(
                         }
                     } else {
                         PrimaryButton("Continue shopping", onClick = close)
+                    }
+                    if (backToChoice != null) {
+                        OutlinedButton(backToChoice, Modifier.fillMaxWidth()) {
+                            Text("Back to subscription choice")
+                        }
                     }
                 }
             }
@@ -727,6 +776,7 @@ private fun BuyAgainFields(
     state: FeedbackConnection,
     model: FeedbackConnectionModel,
     close: () -> Unit,
+    subscriptionResult: (String, Boolean) -> Unit,
 ) {
     val busy = state.busy
     val productId = offer.str("productId")
@@ -743,6 +793,15 @@ private fun BuyAgainFields(
         mutableIntStateOf(offer.num("defaultQuantity").toInt().coerceIn(1, 20))
     }
     var date by rememberSaveable { mutableStateOf(offer.str("suggestedDate")) }
+    var subscription by rememberSaveable { mutableStateOf(false) }
+    var submitting by remember { mutableStateOf(false) }
+    LaunchedEffect(submitting) {
+        if (submitting) {
+            val response = model.state.first { !it.busy }
+            submitting = false
+            subscriptionResult(date, response.error.isNotBlank())
+        }
+    }
     val context = LocalContext.current
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text("Buy again", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
@@ -777,7 +836,7 @@ private fun BuyAgainFields(
                 Text("$quantity", style = MaterialTheme.typography.titleSmall)
                 TextButton(
                     onClick = { quantity++ },
-                    enabled = !busy && quantity < 20,
+                    enabled = !busy && quantity < if (subscription) 10 else 20,
                     modifier = Modifier.width(40.dp),
                     contentPadding = PaddingValues(0.dp),
                 ) {
@@ -786,8 +845,25 @@ private fun BuyAgainFields(
             }
         }
     }
-    if (product != null) SubscribeAction(state, model, product)
-    Text("Buy once", style = MaterialTheme.typography.bodySmall, color = Muted)
+    if (product?.flag("subscribable") == true) {
+        Text("How do you want it?", style = MaterialTheme.typography.titleSmall)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = subscription,
+                onClick = { subscription = true; quantity = quantity.coerceAtMost(10) },
+                label = { Text("Subscription") },
+                enabled = !busy,
+                modifier = Modifier.weight(1f),
+            )
+            FilterChip(
+                selected = !subscription,
+                onClick = { subscription = false },
+                label = { Text("Buy Once") },
+                enabled = !busy,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
     Text("Deliver on", style = MaterialTheme.typography.titleSmall)
     val suggested = offer.str("suggestedDate")
     val quickLabel =
@@ -859,8 +935,20 @@ private fun BuyAgainFields(
             }
         }
     }
-    PrimaryButton("Add to cart", enabled = !busy && date.isNotBlank()) {
-        model.add(offer.str("productId"), quantity, date, result.num("feedbackId"))
+    PrimaryButton(
+        if (subscription) "Order Now" else "Add to cart",
+        enabled = !busy && !submitting && date.isNotBlank(),
+    ) {
+        if (subscription) {
+            model.createSubscription(buildJsonObject {
+                put("productId", productId)
+                put("quantity", quantity)
+                put("startDate", date)
+            })
+            submitting = true
+        } else {
+            model.add(productId, quantity, date, result.num("feedbackId"))
+        }
     }
 }
 
