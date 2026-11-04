@@ -1,12 +1,15 @@
 package com.countryd.app.ui
 
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.countryd.app.api.*
 import kotlinx.coroutines.flow.first
@@ -47,13 +50,15 @@ internal fun ConnectedShop(
                     it.str("category").contains(query.trim(), ignoreCase = true))
         }
     ScreenBody {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                "Shop fresh groceries",
-                Modifier.weight(1f),
-                style = MaterialTheme.typography.titleLarge,
-            )
-            TextButton(onClick = viewCart) { Text("View cart") }
+        if (homeFeedback == null) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "Shop fresh groceries",
+                    Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                TextButton(onClick = viewCart) { Text("View cart") }
+            }
         }
         OutlinedTextField(
             query,
@@ -61,12 +66,17 @@ internal fun ConnectedShop(
             label = { Text("Search products") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
         )
         if (homeFeedback != null) {
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp)) {
-                    Text("Fresh essentials", style = MaterialTheme.typography.headlineSmall)
-                    Text("Browse products for your next delivery.", color = Muted)
+            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Mint)) {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Fresh essentials", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Browse products for your next delivery.",
+                        color = Muted,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                 }
             }
             homeFeedback()
@@ -99,18 +109,32 @@ internal fun ConnectedShop(
         products.forEach { product ->
             val id = product.str("productId")
             val name = product.str("name")
-            Card(onClick = { openProduct(Uri.encode(id)) }, modifier = Modifier.fillMaxWidth()) {
+            OutlinedCard(
+                onClick = { openProduct(Uri.encode(id)) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.outlinedCardColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, Line),
+                shape = RoundedCornerShape(16.dp),
+            ) {
                 Row(
-                    Modifier.fillMaxWidth().padding(12.dp),
+                    Modifier.fillMaxWidth().padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     FeedbackImage(product.str("imageUrl"), name)
                     Column(Modifier.weight(1f)) {
-                        Text(name, style = MaterialTheme.typography.titleMedium)
-                        Text("${product.str("unit")} · ₹${product.str("price")}", color = Muted)
+                        Text(name, style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            "${product.str("unit")} · ₹${product.str("price")}",
+                            color = Muted,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
                     }
-                    TextButton(onClick = { model.add(id, 1) }, enabled = !state.busy) {
+                    OutlinedButton(
+                        onClick = { model.add(id, 1) },
+                        enabled = !state.busy,
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                    ) {
                         Text("Add")
                     }
                 }

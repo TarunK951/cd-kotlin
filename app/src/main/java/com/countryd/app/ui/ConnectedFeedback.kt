@@ -332,45 +332,9 @@ private fun FeedbackProductImage(prompt: JsonObject) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConnectedFeedbackSheet(
-    state: FeedbackConnection,
-    model: FeedbackConnectionModel,
-    viewCart: () -> Unit,
-) {
+fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionModel) {
     val result = state.result
     val detail = state.detail
-    val addedItem = state.addedItem
-    if (addedItem != null) {
-        FeedbackConfirmation(
-            "Added to cart",
-            model::dismissAddedItem,
-            viewCart = {
-                model.dismissAddedItem()
-                viewCart()
-            },
-        ) {
-            if (addedItem.str("source") == "FEEDBACK_BUY_AGAIN") {
-                Text(
-                    "Your feedback remains saved",
-                    color = Green,
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
-            Text(
-                "${addedItem.str("productName")} added to your cart.",
-                style = MaterialTheme.typography.titleLarge,
-            )
-            Text("Review your cart and check out when you’re ready.", color = Muted)
-            CountryCard {
-                FeedbackProductSummary(addedItem)
-                Text(
-                    "${addedItem.num("quantity")} × ${addedItem.str("unit")} · ₹${addedItem.str("lineTotal")}"
-                )
-                Text("Delivery: ${feedbackDate(addedItem.str("deliveryDate"))}", color = Muted)
-            }
-        }
-        return
-    }
     if (detail != null) {
         FeedbackConfirmation("Feedback saved", model::closeResult) {
             Text("Thank you for telling us.", style = MaterialTheme.typography.titleLarge)
@@ -420,7 +384,6 @@ fun ConnectedFeedbackSheet(
 private fun FeedbackConfirmation(
     title: String,
     close: () -> Unit,
-    viewCart: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Dialog(
@@ -453,8 +416,6 @@ private fun FeedbackConfirmation(
                     )
                     content()
                 }
-                if (viewCart != null)
-                    OutlinedButton(viewCart, Modifier.fillMaxWidth()) { Text("View cart") }
                 PrimaryButton(
                     "Continue shopping",
                     modifier = Modifier.padding(vertical = 8.dp),
@@ -737,74 +698,128 @@ fun ConnectedAccount(
         model.state.first { !it.busy }
         model.cart()
     }
-    val items = state.cart?.list("items").orEmpty()
-    ScreenBody {
-        val customer = state.customer
-        if (customer != null) {
-            Text(
+
+    val cart = state.cart
+    val items = cart?.list("items").orEmpty()
+    val orderTotal = "₹${cart?.str("totalAmount").orEmpty()}"
+    val location =
+        state.customer
+            ?.let { customer ->
                 listOf(customer.str("area"), customer.str("city"))
                     .filter(String::isNotBlank)
-                    .joinToString(", "),
-                color = Muted,
-            )
-        }
-        if (state.cart != null && items.isEmpty()) Text("Your cart is empty.")
-        items.forEach { item ->
-            val quantity = item.num("quantity")
-            CountryCard {
+                    .joinToString(", ")
+            }
+            .orEmpty()
+
+    Column(Modifier.fillMaxSize()) {
+        Column(
+            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (location.isNotBlank() && items.isNotEmpty()) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    FeedbackProductImage(item)
-                    Column(Modifier.weight(1f)) {
-                        Text(item.str("productName"), style = MaterialTheme.typography.titleSmall)
-                        Text(
-                            "$quantity × ${item.str("unit")}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Muted,
-                        )
-                        Text(
-                            feedbackDate(item.str("deliveryDate")),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Muted,
-                        )
-                    }
-                    IconButton(
-                        onClick = { model.remove(item.num("cartItemId")) },
-                        enabled = !state.busy,
-                    ) {
-                        Icon(
-                            CountryIcons.Close,
-                            if (quantity == 1L) "Remove item" else "Remove cart line",
-                            Modifier.size(16.dp),
-                        )
+                    Icon(CountryIcons.Calendar, null, Modifier.size(18.dp), tint = Green)
+                    Column {
+                        Text("Deliver to", style = MaterialTheme.typography.titleSmall)
+                        Text(location, style = MaterialTheme.typography.bodySmall, color = Muted)
                     }
                 }
+            }
+            if (cart != null && items.isEmpty()) {
+                Text("Your cart is empty.", style = MaterialTheme.typography.titleMedium)
+                TextButton(onClick = openOrders) { Text("My orders") }
+            }
+
+            items.forEach { item ->
+                val quantity = item.num("quantity")
+                CountryCard {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Box(Modifier.size(56.dp), contentAlignment = Alignment.Center) {
+                            FeedbackProductImage(item)
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                item.str("productName"),
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                            Text(
+                                "$quantity × ${item.str("unit")}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Muted,
+                            )
+                            Text(
+                                feedbackDate(item.str("deliveryDate")),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Muted,
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                "₹${item.str("lineTotal")}",
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                            IconButton(
+                                onClick = { model.remove(item.num("cartItemId")) },
+                                enabled = !state.busy,
+                                modifier = Modifier.size(48.dp),
+                            ) {
+                                Icon(
+                                    CountryIcons.Close,
+                                    "Remove ${item.str("productName")}",
+                                    Modifier.size(16.dp),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (items.isNotEmpty()) {
+                CountryCard {
+                    Text("Bill summary", style = MaterialTheme.typography.titleMedium)
+                    items.forEach { item ->
+                        BillRow(item.str("productName"), "₹${item.str("lineTotal")}")
+                    }
+                    HorizontalDivider()
+                    BillRow("Order total", orderTotal, bold = true)
+                }
+                val dates = items.map { it.str("deliveryDate") }.distinct()
+                if (dates.size > 1) {
+                    dates.forEach { date ->
+                        TextButton(onClick = { model.placeOrder(date) }, enabled = !state.busy) {
+                            Text("Order items for ${feedbackDate(date)}")
+                        }
+                    }
+                }
+            }
+            if (items.isEmpty() && state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if (items.isEmpty() && state.error.isNotBlank()) {
+                Text(state.error, color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = model::cart, enabled = !state.busy) { Text("Retry") }
             }
         }
         if (items.isNotEmpty()) {
-            CountryCard {
-                Text("Bill summary", style = MaterialTheme.typography.titleMedium)
-                items.forEach { item ->
-                    BillRow(item.str("productName"), "₹${item.str("lineTotal")}")
-                }
-                BillRow("Order total", "₹${state.cart?.str("totalAmount").orEmpty()}")
-            }
-            PrimaryButton("Place order", enabled = !state.busy) { model.placeOrder() }
-            val dates = items.map { it.str("deliveryDate") }.distinct()
-            if (dates.size > 1) {
-                dates.forEach { date ->
-                    TextButton(onClick = { model.placeOrder(date) }, enabled = !state.busy) {
-                        Text("Order items for ${feedbackDate(date)}")
+            Surface(color = Color.White) {
+                Column(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+                    if (state.error.isNotBlank()) {
+                        Text(state.error, color = MaterialTheme.colorScheme.error)
                     }
+                    BillRow("Order total", orderTotal, bold = true)
+                    PrimaryButton("Place order", enabled = !state.busy) { model.placeOrder() }
                 }
             }
         }
-        if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-        if (state.error.isNotBlank()) Text(state.error, color = MaterialTheme.colorScheme.error)
-        TextButton(onClick = openOrders) { Text("My orders") }
-        TextButton(onClick = model::cart, enabled = !state.busy) { Text("Refresh cart") }
     }
 }
 

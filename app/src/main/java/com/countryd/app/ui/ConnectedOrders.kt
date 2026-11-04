@@ -3,9 +3,13 @@ package com.countryd.app.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.countryd.app.api.*
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.JsonObject
 
@@ -33,27 +37,24 @@ internal fun ConnectedOrders(
             if (orderId == null) state.orders
             else state.order?.takeIf { it.num("orderId") == orderId }?.let(::listOf)
         if (orders?.isEmpty() == true) Text("No orders yet.")
-        orders.orEmpty().forEach { order ->
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        "Order #${order.num("orderId")}",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        "${order.str("deliveryDate")} · ${order.str("status").lowercase().replaceFirstChar { it.uppercase() }}"
-                    )
-                    order.list("items").forEach { item ->
-                        ConnectedOrderItem(item, state.busy, model)
-                    }
-                    Text("Order total ₹${order.str("totalAmount")}")
-                    if (orderId == null) {
-                        TextButton(onClick = { openOrder(order.num("orderId")) }) {
-                            Text("View order")
-                        }
-                    }
-                }
+        if (orderId == null) {
+            val entries = orders.orEmpty()
+            val scheduled =
+                entries.filter { it.str("status").equals("SCHEDULED", ignoreCase = true) }
+            val delivered =
+                entries.filter { it.str("status").equals("DELIVERED", ignoreCase = true) }
+            val cancelled =
+                entries.filter { it.str("status").equals("CANCELLED", ignoreCase = true) }
+            val other = entries - scheduled.toSet() - delivered.toSet() - cancelled.toSet()
+            OrderSection("Scheduled", scheduled, state.busy, model, openOrder)
+            if (delivered.isNotEmpty() || cancelled.isNotEmpty()) {
+                Text("Past orders", style = MaterialTheme.typography.titleLarge)
+                OrderSection("Delivered", delivered, state.busy, model, openOrder)
+                OrderSection("Cancelled", cancelled, state.busy, model, openOrder)
             }
+            OrderSection("Other orders", other, state.busy, model, openOrder)
+        } else {
+            orders?.singleOrNull()?.let { order -> ConnectedOrderCard(order, state.busy, model) }
         }
         if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         if (state.message.isNotBlank() && state.result == null && state.detail == null)
@@ -64,10 +65,94 @@ internal fun ConnectedOrders(
 }
 
 @Composable
+private fun OrderSection(
+    title: String,
+    orders: List<JsonObject>,
+    busy: Boolean,
+    model: FeedbackConnectionModel,
+    openOrder: (Long) -> Unit,
+) {
+    if (orders.isEmpty()) return
+    Text(title, style = MaterialTheme.typography.titleMedium)
+    orders.forEach { order ->
+        ConnectedOrderCard(order, busy, model) { openOrder(order.num("orderId")) }
+    }
+}
+
+@Composable
+private fun ConnectedOrderCard(
+    order: JsonObject,
+    busy: Boolean,
+    model: FeedbackConnectionModel,
+    viewOrder: (() -> Unit)? = null,
+) {
+    val status = order.str("status")
+    val statusLabel =
+        status.lowercase(Locale.ROOT).replace('_', ' ').replaceFirstChar {
+            it.titlecase(Locale.ROOT)
+        }
+    val date = order.str("deliveryDate")
+    val formattedDate =
+        runCatching {
+                LocalDate.parse(date)
+                    .format(DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.ENGLISH))
+            }
+            .getOrDefault(date)
+    CountryCard {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text("Order #${order.num("orderId")}", style = MaterialTheme.typography.titleMedium)
+                Text(formattedDate, color = Muted, style = MaterialTheme.typography.bodySmall)
+            }
+            if (statusLabel.isNotBlank()) {
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = if (status == "CANCELLED") Line else Mint,
+                ) {
+                    Text(
+                        statusLabel,
+                        Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                        color = if (status == "CANCELLED") Muted else Green,
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                }
+            }
+        }
+        order.list("items").forEach { item ->
+            HorizontalDivider(color = Line)
+            ConnectedOrderItem(item, busy, model)
+        }
+        HorizontalDivider(color = Line)
+        BillRow("Order total", "₹${order.str("totalAmount")}")
+        if (viewOrder != null) {
+            OutlinedButton(onClick = viewOrder, modifier = Modifier.fillMaxWidth()) {
+                Text("View order")
+            }
+        }
+    }
+}
+
+@Composable
 private fun ConnectedOrderItem(item: JsonObject, busy: Boolean, model: FeedbackConnectionModel) {
-    HorizontalDivider()
-    Text(item.str("productName"), style = MaterialTheme.typography.titleSmall)
-    Text("${item.num("quantity")} × ${item.str("unit")} · ₹${item.str("lineTotal")}")
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(item.str("productName"), style = MaterialTheme.typography.titleSmall)
+            Text(
+                "${item.num("quantity")} × ${item.str("unit")}",
+                color = Muted,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+        Text("₹${item.str("lineTotal")}", style = MaterialTheme.typography.titleSmall)
+    }
     val feedback = item.obj("feedback") ?: return
     when {
         feedback.flag("canRateNow") ->
@@ -109,10 +194,10 @@ internal fun ConnectedOrderConfirmation(
             TextButton(
                 onClick = {
                     model.dismissOrderConfirmation()
-                    open(orders.singleOrNull()?.num("orderId"))
+                    open(null)
                 }
             ) {
-                Text(if (orders.size == 1) "View order" else "View orders")
+                Text("View orders")
             }
         },
         dismissButton = { TextButton(onClick = model::dismissOrderConfirmation) { Text("Done") } },

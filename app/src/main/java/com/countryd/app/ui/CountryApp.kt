@@ -21,6 +21,7 @@ import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.countryd.app.*
 import com.countryd.app.api.FeedbackConnectionModel
+import com.countryd.app.api.num
 import com.countryd.app.api.str
 import com.countryd.app.data.*
 import com.countryd.app.domain.*
@@ -107,7 +108,7 @@ fun CountryApp(
         }
     }
     if (connected.customer != null) {
-        ConnectedFeedbackSheet(connected, connection) { go("feedback-account") }
+        ConnectedFeedbackSheet(connected, connection)
         ManualRatingSheet(connected, connection)
         ConnectedOrderConfirmation(connected, connection) { id ->
             go(if (id == null) "orders" else "server-order/$id")
@@ -142,7 +143,14 @@ fun CountryApp(
             Triple("profile", "More", CountryIcons.More),
         )
     val main = route == "home" || route == "protein"
+    val cartSnackbar = remember { SnackbarHostState() }
+    LaunchedEffect(connected.cartNotice) {
+        val notice = connected.cartNotice ?: return@LaunchedEffect
+        cartSnackbar.showSnackbar(notice, duration = SnackbarDuration.Short)
+        connection.clearCartNotice()
+    }
     Scaffold(
+        snackbarHost = { SnackbarHost(cartSnackbar) },
         containerColor = Canvas,
         topBar = {
             if (main)
@@ -171,7 +179,10 @@ fun CountryApp(
                             )
                         }
                         IconButton(onClick = { go("cart") }) {
-                            Icon(CountryIcons.ShoppingBag, "View cart")
+                            val count = connected.cart?.num("totalQuantity") ?: 0
+                            BadgedBox(badge = { if (count > 0) Badge { Text(count.toString()) } }) {
+                                Icon(CountryIcons.ShoppingBag, "View cart")
+                            }
                         }
                     } else {
                         Column(Modifier.weight(1f).clickable { go("addresses") }) {

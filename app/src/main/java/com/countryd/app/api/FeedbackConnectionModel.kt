@@ -26,7 +26,7 @@ data class FeedbackConnection(
     val placedOrders: List<JsonObject> = emptyList(),
     val result: JsonObject? = null,
     val cart: JsonObject? = null,
-    val addedItem: JsonObject? = null,
+    val cartNotice: String? = null,
     val detail: JsonObject? = null,
     val products: List<JsonObject> = emptyList(),
     val product: JsonObject? = null,
@@ -242,13 +242,13 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
             it.copy(
                 result = null,
                 cart = reply.obj("cart"),
-                addedItem = reply.obj("item"),
-                message = reply.str("message"),
+                cartNotice = reply.str("message").ifBlank { "Added to cart" },
+                message = "",
             )
         }
     }
 
-    fun dismissAddedItem() = change { it.copy(addedItem = null, message = "") }
+    fun clearCartNotice() = change { it.copy(cartNotice = null) }
 
     fun cart() = run {
         val cart = call("/api/cart", secure = true).jsonObject
