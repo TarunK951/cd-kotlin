@@ -167,6 +167,7 @@ internal fun FeedbackRatingCard(prompt: JsonObject, busy: Boolean, answer: (Int?
                         "MILK" -> "products/photos/cow-milk.jpg"
                         "DAHI" -> "products/photos/curd.jpg"
                         "BREAD" -> "products/photos/bread.jpg"
+                        "ATTA" -> "categories/grains.png"
                         else -> null
                     }
                 FeedbackImage(prompt.str("imageUrl"), name, photo?.let { "assets/$it" })
@@ -397,6 +398,8 @@ fun ConnectedAccount(
                 }
             }
         }
+        if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+        if (state.error.isNotBlank()) Text(state.error, color = MaterialTheme.colorScheme.error)
         TextButton(onClick = openOrders) { Text("My orders") }
         TextButton(onClick = model::cart, enabled = !state.busy) { Text("Refresh cart") }
         TextButton(
@@ -422,7 +425,6 @@ fun ConnectedAccount(
                 state.options.forEach { Text(it.str("label")) }
             }
         }
-        ConnectionStatus(state)
         TextButton(onClick = model::logout, enabled = !state.busy) { Text("Sign out") }
     }
 }

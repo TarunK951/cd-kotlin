@@ -271,7 +271,7 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
             call(
                     "/api/orders",
                     "POST",
-                    date?.let { buildJsonObject { put("deliveryDate", it) } },
+                    buildJsonObject { if (date != null) put("deliveryDate", date) },
                     true,
                 )
                 .jsonObject
