@@ -240,12 +240,11 @@ private fun ConnectionStatus(state: FeedbackConnection) {
 
 @Composable
 fun ConnectedHomeFeedback(state: FeedbackConnection, model: FeedbackConnectionModel) {
-
+    val prompt = state.prompt ?: return
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        state.prompt?.let { FeedbackRatingCard(it, state.busy) { rating -> model.answer(rating) } }
-        ConnectionStatus(state)
+        FeedbackRatingCard(prompt, state.busy) { rating -> model.answer(rating) }
         if (state.error.isNotBlank()) {
-            TextButton(onClick = model::next, enabled = !state.busy) { Text("Retry feedback") }
+            Text(state.error, color = MaterialTheme.colorScheme.error)
         }
     }
 }
@@ -278,13 +277,24 @@ internal fun FeedbackRatingCard(prompt: JsonObject, busy: Boolean, answer: (Int?
                     Text(name, style = MaterialTheme.typography.titleMedium)
                     Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Muted)
                 }
+                TextButton(
+                    onClick = { answer(null) },
+                    enabled = !busy,
+                    contentPadding = PaddingValues(horizontal = 4.dp),
+                ) {
+                    Text(
+                        prompt.str("skipLabel").ifBlank { "Skip" }.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
             }
             Text(
                 prompt.str("title"),
                 style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Start,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
             )
-            Row(Modifier.widthIn(max = 280.dp).fillMaxWidth()) {
+            Row(Modifier.align(Alignment.CenterHorizontally).widthIn(max = 248.dp).fillMaxWidth()) {
                 for (rating in prompt.num("ratingMin").toInt()..prompt.num("ratingMax").toInt()) {
                     IconButton(
                         onClick = { answer(rating) },
@@ -298,17 +308,6 @@ internal fun FeedbackRatingCard(prompt: JsonObject, busy: Boolean, answer: (Int?
                             tint = Muted,
                         )
                     }
-                }
-            }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    "Tap a star · 1–5",
-                    Modifier.weight(1f),
-                    color = Muted,
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                TextButton(onClick = { answer(null) }, enabled = !busy) {
-                    Text(prompt.str("skipLabel").ifBlank { "Skip" })
                 }
             }
         }
@@ -336,7 +335,11 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
     val result = state.result
     val detail = state.detail
     if (result == null && detail == null) return
-    ModalBottomSheet(onDismissRequest = { if (!state.busy) model.closeResult() }) {
+    ModalBottomSheet(
+        onDismissRequest = { if (!state.busy) model.closeResult() },
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetGesturesEnabled = false,
+    ) {
         if (result != null && result.obj("issueForm") != null) {
             key(result.num("feedbackId")) {
                 IssueFields(result, requireNotNull(result.obj("issueForm")), state, model)

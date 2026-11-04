@@ -14,6 +14,7 @@ internal fun ConnectedOrders(
     state: FeedbackConnection,
     model: FeedbackConnectionModel,
     orderId: Long? = null,
+    openSubscriptions: () -> Unit = {},
     openOrder: (Long) -> Unit = {},
 ) {
     fun refresh() {
@@ -26,6 +27,8 @@ internal fun ConnectedOrders(
         }
     }
     ScreenBody {
+        if (orderId == null)
+            DeliveryTabs("Orders") { if (it == "My subscriptions") openSubscriptions() }
         val orders =
             if (orderId == null) state.orders
             else state.order?.takeIf { it.num("orderId") == orderId }?.let(::listOf)

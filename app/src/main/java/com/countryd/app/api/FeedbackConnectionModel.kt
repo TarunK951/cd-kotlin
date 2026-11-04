@@ -176,7 +176,7 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
                 call(
                         "/api/feedback-prompts/$id/${if (rating == null) "skip" else "rating"}",
                         "POST",
-                        rating?.let { buildJsonObject { put("rating", it) } },
+                        buildJsonObject { if (rating != null) put("rating", rating) },
                         true,
                     )
                     .jsonObject

@@ -25,21 +25,7 @@ fun CartExtras(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) 
         session.subscriptions.filter { it.status != "Past" }.map { it.productId }.toSet()
     val repeat =
         eligible.filter { product ->
-            if (product.id in subscribed) false
-            else if (session.orders.isEmpty() && session.subscriptions.isEmpty()) {
-                val rating =
-                    session.feedback
-                        .lastOrNull { it.request.demo && it.request.productId == product.id }
-                        ?.rating
-                product.id in setOf("p2", "p5", "p13", "p24") &&
-                    (rating
-                        ?: when (product.id) {
-                            "p2" -> 4
-                            "p5" -> 5
-                            "p13" -> 2
-                            else -> 3
-                        }) >= 4
-            } else
+            product.id !in subscribed &&
                 session.orders.any { order ->
                     order.status == "Delivered" &&
                         order.items.any {

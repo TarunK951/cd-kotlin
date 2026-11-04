@@ -376,7 +376,9 @@ fun CountryApp(
                 composable("subs") { SubscriptionsScreen(state, vm, ::go) }
                 composable("orders") {
                     if (connected.customer != null) {
-                        ConnectedOrders(connected, connection) { go("server-order/$it") }
+                        ConnectedOrders(connected, connection, openSubscriptions = { go("subs") }) {
+                            go("server-order/$it")
+                        }
                     } else OrdersScreen(state, vm, ::go)
                 }
                 composable(
@@ -494,6 +496,7 @@ fun CountryApp(
             onDismissRequest = ::closeOverlay,
             containerColor = Canvas,
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            sheetGesturesEnabled = destination != "cart",
         ) {
             Column(Modifier.fillMaxWidth().fillMaxHeight(.9f)) {
                 Row(

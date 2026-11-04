@@ -89,6 +89,7 @@ fun HomeScreen(
             }
         }
         item { DeliveryOverview(state, vm, go) }
+        item { CampaignCarousel(s, state.products, go) }
         item {
             if (connectedFeedback != null) {
                 connectedFeedback()
@@ -107,7 +108,6 @@ fun HomeScreen(
                 state.sampleRequests.firstOrNull()?.let { FeedbackPrompt(it, vm, go) }
         }
 
-        item { CampaignCarousel(s, state.products, go) }
         item {
             Text("Shop by category", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(10.dp))
