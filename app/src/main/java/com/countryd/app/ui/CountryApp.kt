@@ -21,6 +21,7 @@ import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.countryd.app.*
 import com.countryd.app.api.FeedbackConnectionModel
+import com.countryd.app.api.str
 import com.countryd.app.data.*
 import com.countryd.app.domain.*
 import kotlinx.coroutines.flow.first
@@ -30,9 +31,10 @@ import kotlinx.coroutines.flow.first
 fun CountryApp(
     vm: CountryViewModel = viewModel(),
     connection: FeedbackConnectionModel = viewModel(),
+    localShoppingTest: Boolean = false,
 ) {
-    val connected by connection.state.collectAsStateWithLifecycle()
-    var demo by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    val server by connection.state.collectAsStateWithLifecycle()
+    val connected = if (localShoppingTest) com.countryd.app.api.FeedbackConnection() else server
     val state by vm.state.collectAsStateWithLifecycle()
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
@@ -68,18 +70,12 @@ fun CountryApp(
         }
         return
     }
-    if (connected.customer == null && !demo) {
-        ConnectedSignIn(connected, connection) {
-            demo = true
-            overlay = null
-        }
+    if (localShoppingTest && !s.loggedIn) {
+        Onboarding(vm) { showMilkOffer = true }
         return
     }
-    if (!s.loggedIn && connected.customer == null) {
-        Onboarding(vm) {
-            showMilkOffer = true
-            overlay = null
-        }
+    if (!localShoppingTest && connected.customer == null) {
+        ConnectedSignIn(connected, connection)
         return
     }
     fun go(destination: String) {
@@ -112,7 +108,6 @@ fun CountryApp(
     }
     LaunchedEffect(connected.customer) {
         if (connected.customer != null) {
-            demo = false
             go("home")
         }
     }
@@ -120,6 +115,12 @@ fun CountryApp(
         if (route == "home" && connected.customer != null) {
             connection.state.first { !it.busy }
             connection.next()
+        }
+    }
+    LaunchedEffect(connected.openCart) {
+        if (connected.openCart) {
+            connection.consumeCartNavigation()
+            go("feedback-account")
         }
     }
     LaunchedEffect(showMilkOffer) {
@@ -353,11 +354,7 @@ fun CountryApp(
                 composable("home") {
                     val feedback: (@Composable () -> Unit)? =
                         if (connected.customer != null) {
-                            {
-                                ConnectedHomeFeedback(connected, connection) {
-                                    go("feedback-account")
-                                }
-                            }
+                            { ConnectedHomeFeedback(connected, connection) }
                         } else null
                     HomeScreen(state, vm, ::go, feedback)
                 }
@@ -389,7 +386,20 @@ fun CountryApp(
                     val id = requireNotNull(entry.arguments).getLong("id")
                     ConnectedOrders(connected, connection, id)
                 }
-                composable("profile") { ProfileScreen(state, vm, ::go) { dialog = it } }
+                composable("profile") {
+                    val customer = connected.customer
+                    val profile =
+                        if (customer == null) state
+                        else
+                            state.copy(
+                                session =
+                                    state.session.copy(
+                                        name = customer.str("name"),
+                                        phone = customer.str("phone"),
+                                    )
+                            )
+                    ProfileScreen(profile, vm, ::go) { dialog = it }
+                }
                 composable(
                     "product/{id}?mode={mode}",
                     listOf(
@@ -546,12 +556,12 @@ fun CountryApp(
                 Text(
                     if (dialog == "reset")
                         "This removes this native app’s saved orders, wallet, feedback and plans."
-                    else "This clears the local demo session, as in the source app."
+                    else "Sign in again to access your account."
                 )
             },
             confirmButton = {
                 TextButton({
-                    vm.reset()
+                    if (dialog == "signout") connection.logout() else vm.reset()
                     dialog = null
                 }) {
                     Text("Confirm")

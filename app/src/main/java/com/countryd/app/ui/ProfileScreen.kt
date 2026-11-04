@@ -158,7 +158,7 @@ fun ProfileScreen(
                     }
                     TextButton({
                         editing = false
-                        vm.reset()
+                        confirm("signout")
                     }) {
                         Text("Log out", color = MaterialTheme.colorScheme.error)
                     }

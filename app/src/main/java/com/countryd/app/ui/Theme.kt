@@ -157,7 +157,8 @@ fun PrimaryButton(
             .heightIn(min = 54.dp)
             .background(
                 Brush.linearGradient(
-                    if (gold) listOf(Color(0xFFF8D676), Color(0xFFEDB63A))
+                    if (!enabled) listOf(Line, Line)
+                    else if (gold) listOf(Color(0xFFF8D676), Color(0xFFEDB63A))
                     else listOf(Color(0xFF0A8456), Color(0xFF066B3F))
                 ),
                 RoundedCornerShape(30.dp),
@@ -172,6 +173,8 @@ fun PrimaryButton(
             ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent,
                 contentColor = if (gold) Ink else Color.White,
+                disabledContainerColor = Color.Transparent,
+                disabledContentColor = Muted,
             ),
         interactionSource = interactions,
     ) {

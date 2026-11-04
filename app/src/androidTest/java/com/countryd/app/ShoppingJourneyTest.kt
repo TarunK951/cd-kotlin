@@ -1,6 +1,7 @@
 package com.countryd.app
 
 import android.graphics.Bitmap
+import androidx.activity.compose.setContent
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
@@ -8,6 +9,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.countryd.app.data.CountryRepository
 import com.countryd.app.data.Session
+import com.countryd.app.ui.CountryApp
+import com.countryd.app.ui.CountryTheme
 import java.io.File
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -25,6 +28,9 @@ class ShoppingJourneyTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         runBlocking { CountryRepository(context).save(Session()) }
         activity = ActivityScenario.launch(MainActivity::class.java)
+        activity.onActivity {
+            it.setContent { CountryTheme { CountryApp(localShoppingTest = true) } }
+        }
     }
 
     @After
@@ -62,10 +68,6 @@ class ShoppingJourneyTest {
     }
 
     private fun completeOnboarding() {
-        compose.waitUntil(10_000) {
-            compose.onAllNodesWithText("Use local demo").fetchSemanticsNodes().isNotEmpty()
-        }
-        tap("Use local demo")
         compose.waitUntil(15000) {
             compose.onAllNodesWithText("Get started").fetchSemanticsNodes().isNotEmpty()
         }

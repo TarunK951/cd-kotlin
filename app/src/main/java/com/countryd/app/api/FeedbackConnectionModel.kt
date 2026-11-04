@@ -26,6 +26,7 @@ data class FeedbackConnection(
     val placedOrders: List<JsonObject> = emptyList(),
     val result: JsonObject? = null,
     val cart: JsonObject? = null,
+    val openCart: Boolean = false,
     val detail: JsonObject? = null,
     val products: List<JsonObject> = emptyList(),
     val options: List<JsonObject> = emptyList(),
@@ -189,7 +190,9 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
                 prompt = if (manual) it.prompt else null,
                 manualPrompt = if (manual) null else it.manualPrompt,
                 result =
-                    reply.takeIf { r -> r.str("nextStep") in setOf("BUY_AGAIN", "ISSUE_DETAILS") },
+                    reply
+                        .takeIf { r -> r.str("nextStep") in setOf("BUY_AGAIN", "ISSUE_DETAILS") }
+                        ?.let { JsonObject(it + ("ratedProduct" to prompt)) },
                 message = reply.str("message"),
             )
         }
@@ -197,20 +200,10 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
 
     fun closeResult() = change { it.copy(result = null, detail = null, error = "") }
 
-    fun upload(id: Long, uri: Uri) = run {
-        val reply =
-            api.photo(id, token ?: throw ApiFailure(401, "UNAUTHORIZED", "Sign in again."), uri)
-        change {
-            it.copy(
-                result =
-                    it.result?.let { result ->
-                        JsonObject(result + ("photoUrl" to JsonPrimitive(reply.str("photoUrl"))))
-                    }
-            )
+    fun issues(id: Long, codes: List<String>, note: String, photo: Uri?) = run {
+        if (photo != null) {
+            api.photo(id, token ?: throw ApiFailure(401, "UNAUTHORIZED", "Sign in again."), photo)
         }
-    }
-
-    fun issues(id: Long, codes: List<String>, note: String) = run {
         val reply =
             call(
                     "/api/feedback/$id/issues",
@@ -244,8 +237,17 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
                     true,
                 )
                 .jsonObject
-        change { it.copy(result = null, cart = reply.obj("cart"), message = reply.str("message")) }
+        change {
+            it.copy(
+                result = null,
+                cart = reply.obj("cart"),
+                openCart = true,
+                message = reply.str("message"),
+            )
+        }
     }
+
+    fun consumeCartNavigation() = change { it.copy(openCart = false) }
 
     fun cart() = run {
         val cart = call("/api/cart", secure = true).jsonObject
