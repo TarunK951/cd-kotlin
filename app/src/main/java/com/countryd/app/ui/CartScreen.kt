@@ -15,8 +15,13 @@ import com.countryd.app.data.*
 import com.countryd.app.domain.*
 
 @Composable
-fun CartScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) {
-    CheckoutScreen(state, vm, go, embedded = true) {
+fun CartScreen(
+    state: CountryState,
+    vm: CountryViewModel,
+    go: (String) -> Unit,
+    onPlaced: (String) -> Unit,
+) {
+    CheckoutScreen(state, vm, go, onPlaced, embedded = true) {
         val s = state.session
         OutlinedButton(
             onClick = { go("offers") },

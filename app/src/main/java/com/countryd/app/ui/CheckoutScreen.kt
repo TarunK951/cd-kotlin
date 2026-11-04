@@ -17,6 +17,7 @@ fun CheckoutScreen(
     state: CountryState,
     vm: CountryViewModel,
     go: (String) -> Unit,
+    onPlaced: (String) -> Unit,
     embedded: Boolean = false,
     basket: @Composable ColumnScope.() -> Unit = {},
 ) {
@@ -28,16 +29,25 @@ fun CheckoutScreen(
     var tip by rememberSaveable { mutableDoubleStateOf(0.0) }
     var points by rememberSaveable { mutableStateOf(false) }
     var wallet by rememberSaveable { mutableStateOf(false) }
-    var instructions by remember { mutableStateOf(setOf<String>()) }
+    var instructions by rememberSaveable {
+        mutableStateOf(listOf("Avoid ringing bell", "Leave at the door"))
+    }
     var coupon by rememberSaveable { mutableStateOf(s.coupon) }
     var payment by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf("") }
-    var complete by remember { mutableStateOf<String?>(null) }
     val items = s.cart.sumOf { lineTotal(it, state.products.first { p -> p.id == it.productId }) }
     val bill = totals(items, s, tip, points, wallet)
-    if (complete != null) {
-        OrderConfirmation({ go("home") }, { go("order/$complete") })
-        return
+    fun placeOrder() {
+        val id =
+            vm.checkout(
+                date,
+                slot,
+                tip,
+                (if (s.orderBag) instructions + "Add a carry bag" else instructions).toSet(),
+                points,
+                wallet,
+            )
+        if (id != null) onPlaced(id) else error = "Check your address, basket and delivery date."
     }
     if (s.cart.isEmpty()) {
         ScreenBody {
@@ -63,36 +73,9 @@ fun CheckoutScreen(
                         fontSize = 15.sp,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                     )
-                    Row(Modifier.fillMaxWidth()) {
-                        listOf(
-                                "Delivery" to CountryIcons.Calendar,
-                                "Tip" to CountryIcons.Heart,
-                                "Instructions" to CountryIcons.FileText,
-                            )
-                            .forEach { (label, icon) ->
-                                Surface(
-                                    onClick = { preference = label },
-                                    modifier = Modifier.weight(1f),
-                                    color = if (preference == label) Mint else Canvas,
-                                    shape =
-                                        androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
-                                ) {
-                                    Column(
-                                        Modifier.heightIn(min = 48.dp)
-                                            .padding(horizontal = 2.dp, vertical = 5.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center,
-                                    ) {
-                                        Icon(icon, null, Modifier.size(14.dp), tint = Green)
-                                        Text(
-                                            label,
-                                            fontSize = 11.sp,
-                                            textAlign =
-                                                androidx.compose.ui.text.style.TextAlign.Center,
-                                        )
-                                    }
-                                }
-                            }
+                    CartPreferenceTabs(preference) {
+                        preference = it
+                        deliveryPicker = false
                     }
                     if (preference == "Delivery") {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -123,42 +106,13 @@ fun CheckoutScreen(
                         if (deliveryPicker) DeliveryDatePanel(date, slot) { date = it }
                     }
                     if (preference == "Instructions") {
-                        Heading("Delivery instructions")
-                        listOf(
-                                "No bell, please",
-                                "Leave at the door",
-                                "Leave with security",
-                                "Hand it to me",
-                            )
-                            .forEach { label ->
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Checkbox(
-                                        label in instructions,
-                                        {
-                                            instructions =
-                                                if (it) instructions + label
-                                                else instructions - label
-                                        },
-                                    )
-                                    Icon(
-                                        CountryIcons.FileText,
-                                        null,
-                                        Modifier.size(16.dp),
-                                        tint = Green,
-                                    )
-                                    Text(label, Modifier.padding(start = 8.dp))
-                                }
-                            }
-                    }
-                    if (preference == "Tip") {
-                        Heading("Thank your delivery partner")
-                        Options(
-                            listOf("No tip", "₹10", "₹20", "₹30", "₹50"),
-                            if (tip == 0.0) "No tip" else "₹${tip.toInt()}",
-                        ) {
-                            tip = it.removePrefix("₹").toDoubleOrNull() ?: 0.0
+                        CartInstructionCards(instructions) { label ->
+                            instructions =
+                                if (label in instructions) instructions - label
+                                else instructions + label
                         }
                     }
+                    if (preference == "Tip") CartTipOptions(tip) { tip = it }
                 }
                 if (!embedded)
                     CountryCard {
@@ -255,22 +209,9 @@ fun CheckoutScreen(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Text(
-                    "Items ${money(bill.items)} · Savings ${money(bill.savings + bill.coupon)} · Delivery ${money(bill.delivery)}",
-                    fontSize = 10.sp,
-                    lineHeight = 13.sp,
-                    color = Muted,
-                )
-                BillRow("Order total", money(bill.total), true)
-                if (bill.walletUsed > 0)
-                    Caption("Wallet ${money(bill.walletUsed)} · To pay ${money(bill.toPay)}")
-                PrimaryButton(
-                    if (bill.walletUsed > 0 && bill.toPay == 0.0)
-                        "Place order · ${money(bill.walletUsed)} wallet"
-                    else "Place order · ${money(bill.toPay)}",
-                    enabled = s.address != null,
-                ) {
-                    payment = true
+                BillRow("Order total", money(bill.total), bold = true)
+                PrimaryButton("Place order", enabled = s.address != null) {
+                    if (bill.walletUsed > 0 && bill.toPay == 0.0) placeOrder() else payment = true
                 }
             }
         }
@@ -290,17 +231,7 @@ fun CheckoutScreen(
             confirmButton = {
                 TextButton({
                     payment = false
-                    val id =
-                        vm.checkout(
-                            date,
-                            slot,
-                            tip,
-                            if (s.orderBag) instructions + "Add a carry bag" else instructions,
-                            points,
-                            wallet,
-                        )
-                    if (id != null) complete = id
-                    else error = "Check your address, basket and delivery date."
+                    placeOrder()
                 }) {
                     Text("Complete demo checkout")
                 }
@@ -436,12 +367,6 @@ private fun DeliveryDatePanel(date: String, slot: String, onDate: (String) -> Un
                         lineHeight = 15.sp,
                         color = Green,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                    )
-                    Text(
-                        "Fastest (Club Priority)",
-                        fontSize = 10.sp,
-                        lineHeight = 13.sp,
-                        color = Muted,
                     )
                 }
             }

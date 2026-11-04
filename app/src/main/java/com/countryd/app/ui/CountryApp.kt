@@ -32,6 +32,8 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
     val route = entry?.destination?.route ?: "home"
     var dialog by remember { mutableStateOf<String?>(null) }
     var overlay by remember { mutableStateOf<String?>(null) }
+    var confirmedOrder by
+        androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     var returnToCart by remember { mutableStateOf(false) }
     val cartState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
     fun closeOverlay() {
@@ -39,6 +41,11 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
         returnToCart = false
     }
     var showMilkOffer by remember { mutableStateOf(false) }
+    fun onOrderPlaced(id: String) {
+        overlay = null
+        returnToCart = false
+        confirmedOrder = id
+    }
     val motionDuration = if (LocalReducedMotion.current) 0 else 180
     val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val s = state.session
@@ -350,8 +357,8 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                         it.arguments?.getString("offer") ?: "welcome",
                     )
                 }
-                composable("cart") { CartScreen(state, vm, ::go) }
-                composable("checkout") { CheckoutScreen(state, vm, ::go) }
+                composable("cart") { CartScreen(state, vm, ::go, ::onOrderPlaced) }
+                composable("checkout") { CheckoutScreen(state, vm, ::go, ::onOrderPlaced) }
                 composable("order/{id}") {
                     OrderScreen(state, vm, ::go, it.arguments?.getString("id").orEmpty())
                 }
@@ -443,7 +450,7 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                             )
                         }
                         IconButton({ go("addresses") }) {
-                            Icon(CountryIcons.MapPin, "Change delivery address", tint = Green)
+                            Icon(CountryIcons.Pencil, "Change delivery address", tint = Green)
                         }
                     } else {
                         Text(
@@ -464,7 +471,9 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                     "vip" -> VipScreen(state)
                     "routine" -> RoutineScreen(state, vm) { overlay = null }
                     "cart" ->
-                        cartState.SaveableStateProvider("cart") { CartScreen(state, vm, ::go) }
+                        cartState.SaveableStateProvider("cart") {
+                            CartScreen(state, vm, ::go, ::onOrderPlaced)
+                        }
                     "vacation" -> VacationScreen(state, vm) { overlay = null }
                 }
             }
@@ -491,6 +500,18 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
             },
             dismissButton = { TextButton({ dialog = null }) { Text("Cancel") } },
         )
+    confirmedOrder?.let { id ->
+        OrderConfirmation(
+            onHome = {
+                confirmedOrder = null
+                go("home")
+            },
+            onViewOrder = {
+                confirmedOrder = null
+                go("order/$id")
+            },
+        )
+    }
     state.error?.let { message ->
         AlertDialog(
             onDismissRequest = vm::clearError,

@@ -106,74 +106,97 @@ private fun ConfirmCancel(onDismiss: () -> Unit, onConfirm: () -> Unit) {
 fun OrderScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit, id: String) {
     val order = state.session.orders.find { it.id == id }
     var cancel by remember { mutableStateOf(false) }
-    ScreenBody {
-        if (order == null) {
-            EmptyState(
-                "This order is not on this device",
-                "Open your saved orders to choose another order.",
-                "View orders",
-            ) {
-                go("orders")
-            }
-            return@ScreenBody
-        }
-        CountryCard(color = Mint) {
-            Caption("ORDER → DELIVERY → HELP")
-            Heading(
-                if (order.status == "Cancelled") "Order cancelled" else "Everything for this order"
-            )
-            Caption("${order.id} · ${order.deliveryDate}")
-            Text(order.status, fontWeight = FontWeight.Bold)
-            Caption("${order.slot}\n${order.address}")
-        }
-        if (order.status != "Cancelled") DeliveryProgressCard(order)
-        CountryCard {
-            Heading("Manage this order")
-            PrimaryButton("Get help with this order") { go("support?order=${order.id}") }
-            if (order.items.any { it.line.plan != null })
-                TextButton({ go("subs") }) { Text("Manage my subscriptions") }
-            if (order.status in listOf("Order Placed", "Quality Tested"))
-                TextButton({ cancel = true }) { Text("Cancel order") }
-        }
-        Heading("What you ordered")
-        order.items.forEach { item ->
-            val p = state.products.first { it.id == item.line.productId }
-            CountryCard {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    AssetImage(productImage(p), p.name, Modifier.size(60.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(p.name, fontWeight = FontWeight.SemiBold)
-                        Caption("${item.line.qty} × ${item.line.variant?.unit ?: p.unit}")
+    Column(Modifier.fillMaxSize()) {
+        Box(Modifier.weight(1f)) {
+            ScreenBody {
+                if (order == null) {
+                    EmptyState(
+                        "This order is not on this device",
+                        "Open your saved orders to choose another order.",
+                        "View orders",
+                    ) {
+                        go("orders")
                     }
-                    Text(money(lineTotal(item.line, p)))
+                    return@ScreenBody
                 }
-                item.line.plan?.let { Caption("${it.frequency} from ${it.startDate} · ${it.slot}") }
-            }
-        }
-        Bill(order.totals, order.tip)
-        if (order.instructions.isNotEmpty())
-            CountryCard {
-                Heading("Delivery instructions")
-                Text(order.instructions.joinToString(" · "))
-            }
-        PrimaryButton("Buy again") {
-            vm.repeat(order)
-            go("cart")
-        }
-        if (order.status == "Delivered")
-            CountryCard {
-                Heading("Rate your delivery")
-                RatingStars(order.rating) { rating ->
-                    vm.update {
-                        it.copy(
-                            orders =
-                                it.orders.map { old ->
-                                    if (old.id == id) old.copy(rating = rating) else old
-                                }
+                CountryCard(color = Mint) {
+                    Caption("ORDER → DELIVERY → HELP")
+                    Heading(
+                        if (order.status == "Cancelled") "Order cancelled"
+                        else "Everything for this order"
+                    )
+                    Caption("Your items, purchased plan and receipt stay together.")
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(7.dp),
+                    ) {
+                        Icon(CountryIcons.Calendar, null, Modifier.size(16.dp), tint = Green)
+                        Text(
+                            "${order.deliveryDate} · ${order.slot}",
+                            fontSize = 12.sp,
+                            color = Green,
                         )
                     }
                 }
+                if (order.status != "Cancelled") DeliveryProgressCard(order)
+                CountryCard {
+                    Heading("Manage this order")
+                    PrimaryButton("Get help with this order") { go("support?order=${order.id}") }
+                    if (order.items.any { it.line.plan != null })
+                        TextButton({ go("subs") }) { Text("Manage my subscriptions") }
+                    if (order.status in listOf("Order Placed", "Quality Tested"))
+                        TextButton({ cancel = true }) { Text("Cancel order") }
+                }
+                Heading("What you ordered")
+                order.items.forEach { item ->
+                    val p = state.products.first { it.id == item.line.productId }
+                    CountryCard {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            AssetImage(productImage(p), p.name, Modifier.size(60.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(p.name, fontWeight = FontWeight.SemiBold)
+                                Caption("${item.line.qty} × ${item.line.variant?.unit ?: p.unit}")
+                            }
+                            Text(money(lineTotal(item.line, p)))
+                        }
+                        item.line.plan?.let {
+                            Caption("${it.frequency} from ${it.startDate} · ${it.slot}")
+                        }
+                    }
+                }
+                Bill(order.totals, order.tip)
+                if (order.instructions.isNotEmpty())
+                    CountryCard {
+                        Heading("Delivery instructions")
+                        Text(order.instructions.joinToString(" · "))
+                    }
+                PrimaryButton("Buy again") {
+                    vm.repeat(order)
+                    go("cart")
+                }
+                if (order.status == "Delivered")
+                    CountryCard {
+                        Heading("Rate your delivery")
+                        RatingStars(order.rating) { rating ->
+                            vm.update {
+                                it.copy(
+                                    orders =
+                                        it.orders.map { old ->
+                                            if (old.id == id) old.copy(rating = rating) else old
+                                        }
+                                )
+                            }
+                        }
+                    }
             }
+        }
+        if (order != null) {
+            Surface(color = Canvas) {
+                Box(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
+                    PrimaryButton("Continue shopping", arrow = true) { go("home") }
+                }
+            }
+        }
     }
     if (cancel && order != null)
         ConfirmCancel({ cancel = false }) {

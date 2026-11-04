@@ -8,17 +8,28 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun OrderConfirmation(onHome: () -> Unit, onViewOrder: () -> Unit) {
     val reduced = LocalReducedMotion.current
     val scale = remember { Animatable(if (reduced) 1f else .9f) }
     LaunchedEffect(Unit) { if (!reduced) scale.animateTo(1f, tween(220)) }
-    Dialog(onDismissRequest = onHome) {
-        Box(Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(24.dp))) {
+    Dialog(
+        onDismissRequest = onHome,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Box(
+            Modifier.padding(horizontal = 20.dp)
+                .widthIn(max = 390.dp)
+                .fillMaxWidth()
+                .background(Color.White, RoundedCornerShape(24.dp))
+        ) {
             IconButton(onHome, Modifier.align(Alignment.TopEnd)) {
                 Icon(CountryIcons.Close, "Close order confirmation")
             }
@@ -47,7 +58,7 @@ fun OrderConfirmation(onHome: () -> Unit, onViewOrder: () -> Unit) {
                     fontSize = 22.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Ink,
-                    modifier = Modifier.padding(top = 16.dp, bottom = 24.dp),
+                    modifier = Modifier.padding(top = 16.dp, bottom = 24.dp).semantics { heading() },
                 )
                 Button(
                     onHome,

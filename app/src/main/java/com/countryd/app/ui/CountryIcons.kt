@@ -87,4 +87,28 @@ object CountryIcons {
 
     val CircleHelp: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_circle_question_mark)
+
+    val BellOff: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_bell_off)
+
+    val DoorClosed: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_door_closed)
+
+    val Mic: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_mic)
+
+    val VolumeX: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_volume_x)
+
+    val ShieldCheck: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_shield_check)
+
+    val Person: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_user_round)
+
+    val CircleCheck: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_circle_check)
+
+    val Pencil: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_pencil)
 }
