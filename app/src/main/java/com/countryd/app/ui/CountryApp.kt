@@ -110,9 +110,7 @@ fun CountryApp(
     if (connected.customer != null) {
         ConnectedFeedbackSheet(connected, connection)
         ManualRatingSheet(connected, connection)
-        ConnectedOrderConfirmation(connected, connection) { id ->
-            go(if (id == null) "orders" else "server-order/$id")
-        }
+        ConnectedOrderConfirmation(connected, connection, { go("home") }) { go("orders") }
     }
     LaunchedEffect(connected.customer) {
         if (connected.customer != null) {

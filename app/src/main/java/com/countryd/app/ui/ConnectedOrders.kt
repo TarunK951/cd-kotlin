@@ -182,24 +182,53 @@ internal fun ManualRatingSheet(state: FeedbackConnection, model: FeedbackConnect
 internal fun ConnectedOrderConfirmation(
     state: FeedbackConnection,
     model: FeedbackConnectionModel,
-    open: (Long?) -> Unit,
+    continueShopping: () -> Unit,
+    openOrders: () -> Unit,
 ) {
     val orders = state.placedOrders
     if (orders.isEmpty()) return
-    AlertDialog(
-        onDismissRequest = model::dismissOrderConfirmation,
-        title = { Text(if (orders.size == 1) "Order placed" else "Orders placed") },
-        text = { Text(state.message) },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    model.dismissOrderConfirmation()
-                    open(null)
-                }
-            ) {
-                Text("View orders")
-            }
+    FeedbackConfirmation(
+        title = "Order success",
+        close = {
+            model.dismissOrderConfirmation()
+            continueShopping()
         },
-        dismissButton = { TextButton(onClick = model::dismissOrderConfirmation) { Text("Done") } },
-    )
+        successMessage =
+            if (orders.size == 1) "Order placed successfully" else "Orders placed successfully",
+        viewOrders = {
+            model.dismissOrderConfirmation()
+            openOrders()
+        },
+    ) {
+        val items = orders.flatMap { it.list("items") }
+        val single = items.singleOrNull()
+        Text(
+            if (single != null) "${single.str("productName")} has been ordered."
+            else if (orders.size == 1) "Your order has been placed."
+            else "Your orders have been placed.",
+            style = MaterialTheme.typography.titleLarge,
+        )
+        Text(state.message, color = Muted)
+        orders.forEach { order ->
+            CountryCard {
+                Text("Order #${order.num("orderId")}", style = MaterialTheme.typography.titleSmall)
+                order.list("items").forEach { item ->
+                    FeedbackProductSummary(item)
+                    Text(
+                        "Quantity ${item.num("quantity")} · ₹${item.str("lineTotal")}",
+                        color = Muted,
+                    )
+                }
+                Text(
+                    "Delivery · ${order.str("deliveryDate")}",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+        Text(
+            "Find your order under Subs → Orders.",
+            color = Muted,
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
 }

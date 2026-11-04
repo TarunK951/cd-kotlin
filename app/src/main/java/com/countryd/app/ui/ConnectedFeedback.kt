@@ -403,10 +403,12 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
 }
 
 @Composable
-private fun FeedbackConfirmation(
+internal fun FeedbackConfirmation(
     title: String,
     close: () -> Unit,
     buyAgain: (() -> Unit)? = null,
+    successMessage: String = "Feedback saved successfully",
+    viewOrders: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Dialog(
@@ -443,7 +445,7 @@ private fun FeedbackConfirmation(
                         ) {
                             Icon(CountryIcons.CircleCheck, null, Modifier.size(15.dp), tint = Green)
                             Text(
-                                "Feedback saved successfully",
+                                successMessage,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Green,
                             )
@@ -467,6 +469,8 @@ private fun FeedbackConfirmation(
                     Modifier.padding(vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
+                    if (viewOrders != null)
+                        OutlinedButton(viewOrders, Modifier.fillMaxWidth()) { Text("View orders") }
                     if (buyAgain != null) {
                         PrimaryButton("Buy again", onClick = buyAgain)
                         OutlinedButton(
@@ -647,7 +651,25 @@ private fun IssueFields(
             }
         }
         if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-        if (state.error.isNotBlank()) Text(state.error, color = MaterialTheme.colorScheme.error)
+        if (state.error.isNotBlank()) {
+            Surface(
+                color = MaterialTheme.colorScheme.errorContainer,
+                shape = RoundedCornerShape(10.dp),
+            ) {
+                Column(Modifier.fillMaxWidth().padding(10.dp)) {
+                    Text(
+                        "Couldn’t save your feedback. Your draft is still here.",
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Text(
+                        state.error,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+        }
         Button(
             onClick = { model.issues(result.num("feedbackId"), selected, note, photo) },
             enabled = !busy && selected.size >= form.num("minSelections"),
@@ -659,7 +681,7 @@ private fun IssueFields(
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).heightIn(min = 48.dp),
         ) {
-            Text("Submit feedback")
+            Text(if (state.error.isBlank()) "Submit feedback" else "Retry Submit")
         }
         Text(
             "Your rating is saved. Optional details are sent when you submit.",
@@ -671,7 +693,7 @@ private fun IssueFields(
 }
 
 @Composable
-private fun FeedbackProductSummary(prompt: JsonObject) {
+internal fun FeedbackProductSummary(prompt: JsonObject) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
