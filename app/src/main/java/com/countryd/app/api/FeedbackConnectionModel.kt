@@ -23,6 +23,7 @@ data class FeedbackConnection(
     val restoring: Boolean = true,
     val busy: Boolean = false,
     val homeRefreshing: Boolean = false,
+    val catalogueRefreshing: Boolean = false,
     val issueReceipt: JsonObject? = null,
     val photoProgress: Float? = null,
     val photoFailed: Boolean = false,
@@ -273,7 +274,11 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
         if (error is java.io.IOException) "Could not reach the server. Try again."
         else error.message ?: "Something went wrong. Try again."
 
-    fun next() = readWhenIdle("home") {
+    fun next() = refreshHome(false)
+
+    fun refreshHome() = refreshHome(true)
+
+    private fun refreshHome(refreshCatalogue: Boolean) = readWhenIdle("home") {
         change { it.copy(homeRefreshing = true) }
         try {
             val prompt = coroutineScope {
@@ -313,6 +318,7 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
                 }
             }
             change { it.copy(prompt = prompt) }
+            if (refreshCatalogue) loadCatalogue()
             loadCart()
             if (mutable.value.addresses == null) refreshAfterWrite { loadAddresses() }
         } finally {
@@ -331,6 +337,7 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
                 }
             }
             change { it.copy(prompt = null) }
+            next()
             return@run
         }
         val ratingPrompt = if (manual) prompt else requestRatingPrompt(prompt.num("orderItemId"))
@@ -364,7 +371,7 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
     }
 
     private suspend fun ratingDraft(product: JsonObject, rating: Int, existingForm: JsonObject? = null): JsonObject {
-        val form = if (rating > 3) null else existingForm ?: kotlin.run {
+        val form = existingForm ?: if (rating > 3) null else kotlin.run {
             val productId = Uri.encode(product.str("productId"))
             val options = call("/api/products/$productId/issue-options").jsonArray
             buildJsonObject {
@@ -400,8 +407,12 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
         onSaved(saved)
     }
 
-    fun closeResult() = change {
-        it.copy(result = null, detail = null, issueReceipt = null, photoFailed = false, error = "")
+    fun closeResult() {
+        val current = mutable.value
+        val completed = current.detail != null || current.issueReceipt != null ||
+            current.result?.let { !it.flag("ratingDraft") } == true
+        change { it.copy(result = null, detail = null, issueReceipt = null, photoFailed = false, error = "") }
+        if (completed) next()
     }
 
     fun removeIssuePhoto() = change { it.copy(photoFailed = false, error = "") }
@@ -1083,14 +1094,21 @@ class FeedbackConnectionModel(app: Application) : AndroidViewModel(app) {
 
     fun dismissManualPrompt() = change { it.copy(manualPrompt = null) }
 
+    private suspend fun loadCatalogue() {
+        val products = call("/api/products").jsonArray.map { it.jsonObject }
+        change { it.copy(products = products) }
+    }
+
     fun products() = readWhenIdle("products") {
-        if (mutable.value.products.isEmpty()) {
-            val products = call("/api/products").jsonArray.map { it.jsonObject }
-            change { it.copy(products = products) }
-        }
-        if (token != null) {
-            if (mutable.value.cart == null) loadCart()
-            if (mutable.value.buyAgainRecommendations.isEmpty()) loadBuyAgain()
+        change { it.copy(catalogueRefreshing = true) }
+        try {
+            loadCatalogue()
+            if (token != null) {
+                if (mutable.value.cart == null) loadCart()
+                if (mutable.value.buyAgainRecommendations.isEmpty()) loadBuyAgain()
+            }
+        } finally {
+            change { it.copy(catalogueRefreshing = false) }
         }
     }
 

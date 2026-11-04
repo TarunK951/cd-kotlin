@@ -402,7 +402,9 @@ fun ConnectedFeedbackSheet(
             draft = true,
         ) {
             Text("Your rating · $rating of 5", style = MaterialTheme.typography.titleMedium)
-            RatingChoices(rating, !state.busy, model::editIssueRating)
+            RatingChoices(rating, !state.busy) { stars ->
+                if (stars != rating) model.editIssueRating(stars)
+            }
             result.obj("ratedProduct")?.let { FeedbackProductSummary(it) }
             ConnectionStatus(state.copy(message = ""))
         }
@@ -701,7 +703,6 @@ private fun IssueFields(
     model: FeedbackConnectionModel,
 ) {
     val busy = state.busy
-    var editedRating by rememberSaveable { mutableStateOf<Int?>(null) }
     var selected by rememberSaveable { mutableStateOf(emptyList<String>()) }
     var note by rememberSaveable { mutableStateOf("") }
     var photo by rememberSaveable { mutableStateOf<Uri?>(null) }
@@ -740,20 +741,13 @@ private fun IssueFields(
                 "Your rating · ${result.num("rating")} of 5",
                 style = MaterialTheme.typography.titleSmall,
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.weight(1f)) { FeedbackStars(result.num("rating")) }
-                if (state.issueReceipt == null) {
-                    TextButton(onClick = { editedRating = result.num("rating").toInt() }, enabled = !busy) {
-                        Text("Edit rating")
-                    }
+            val rating = result.num("rating")
+            if (state.issueReceipt == null) {
+                RatingChoices(rating.toInt(), !busy) { stars ->
+                    if (stars.toLong() != rating) model.editIssueRating(stars)
                 }
-            }
-            editedRating?.let { draftRating ->
-                RatingChoices(draftRating, !busy) { stars ->
-                    editedRating = null
-                    model.editIssueRating(stars)
-                }
-                TextButton(onClick = { editedRating = null }) { Text("Cancel") }
+            } else {
+                FeedbackStars(rating)
             }
             val threeStars = result.num("rating") == 3L
             Text(
@@ -893,7 +887,7 @@ private fun IssueFields(
         }
         Button(
             onClick = { model.issues(selected, note, photo) },
-            enabled = !busy && editedRating == null && !state.photoFailed && selected.size >= form.num("minSelections"),
+            enabled = !busy && !state.photoFailed && selected.size >= form.num("minSelections"),
             colors =
                 ButtonDefaults.buttonColors(
                     disabledContentColor = Muted,

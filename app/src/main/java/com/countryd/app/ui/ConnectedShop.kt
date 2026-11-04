@@ -269,15 +269,11 @@ internal fun ConnectedShop(
             }
         }
     }
-    if (refreshHome == null) catalogue()
-    else
-        PullToRefreshBox(
-            isRefreshing = state.homeRefreshing,
-            onRefresh = refreshHome,
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            catalogue()
-        }
+    PullToRefreshBox(
+        isRefreshing = if (refreshHome == null) state.catalogueRefreshing else state.homeRefreshing,
+        onRefresh = refreshHome ?: model::products,
+        modifier = Modifier.fillMaxSize(),
+    ) { catalogue() }
 }
 
 @Composable

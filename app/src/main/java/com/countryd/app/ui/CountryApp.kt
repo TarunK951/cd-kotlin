@@ -444,7 +444,7 @@ fun CountryApp(
                             connection,
                             "all",
                             homeFeedback = { ConnectedHomeFeedback(connected, connection) },
-                            refreshHome = connection::next,
+                            refreshHome = connection::refreshHome,
                             viewAll = { go("shop") },
                         ) { id ->
                             go("server-product/$id")

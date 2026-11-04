@@ -199,7 +199,6 @@ fun FeedbackScreen(
     var photo by remember { mutableStateOf(existing?.photo) }
     var saved by rememberSaveable(request.id) { mutableStateOf(existing?.detailsComplete == true) }
     var reordering by rememberSaveable(request.id) { mutableStateOf(false) }
-    var editedRating by rememberSaveable(request.id) { mutableStateOf<Int?>(null) }
     var message by remember { mutableStateOf("") }
     val context = LocalContext.current
     val picker =
@@ -257,7 +256,6 @@ fun FeedbackScreen(
         message = ""
     }
     fun useRating(newRating: Int) {
-        editedRating = null
         if (rating == newRating) return
         rating = newRating
         val positive = rating >= 4
@@ -344,23 +342,8 @@ fun FeedbackScreen(
                 TextButton(onClick = reset) { Text("Try this sample again") }
             return@ScreenBody
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                if (editedRating != null) "Edit your rating" else "Your rating · $rating of 5",
-                Modifier.weight(1f),
-                style = MaterialTheme.typography.titleSmall,
-            )
-            if (editedRating == null) TextButton({ editedRating = rating }) { Text("Edit rating") }
-        }
-        RatingStars(
-            editedRating ?: rating,
-            if (editedRating != null) ({ editedRating = it }) else null,
-        )
-        if (editedRating != null) {
-            PrimaryButton("Use this rating") { editedRating?.let(::useRating) }
-            TextButton({ editedRating = null }) { Text("Cancel") }
-            return@ScreenBody
-        }
+        Text("Your rating · $rating of 5", style = MaterialTheme.typography.titleSmall)
+        RatingStars(rating, ::useRating)
         if (rating in 1..3) {
             Heading(
                 when (rating) {
