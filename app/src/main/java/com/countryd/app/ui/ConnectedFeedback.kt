@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,6 +26,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -257,8 +259,13 @@ fun ConnectedHomeFeedback(state: FeedbackConnection, model: FeedbackConnectionMo
 internal fun FeedbackRatingCard(prompt: JsonObject, busy: Boolean, answer: (Int?) -> Unit) {
 
     val name = prompt.str("productName")
+    val deliveryDate = prompt.str("deliveryDate")
+    val deliveryLabel =
+        prompt.str("subtitle").ifBlank {
+            if (deliveryDate.isBlank()) "" else "Delivered ${feedbackDate(deliveryDate)}"
+        }
     val subtitle =
-        listOf(prompt.str("subtitle"), prompt.str("productUnit"))
+        listOf(deliveryLabel, prompt.str("productUnit"))
             .filter(String::isNotBlank)
             .joinToString(" · ")
     Surface(
@@ -293,13 +300,13 @@ internal fun FeedbackRatingCard(prompt: JsonObject, busy: Boolean, answer: (Int?
                 }
             }
             Text(
-                prompt.str("title"),
+                prompt.str("title").ifBlank { "How was your $name?" },
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
             Row(Modifier.align(Alignment.CenterHorizontally).widthIn(max = 248.dp).fillMaxWidth()) {
-                for (rating in prompt.num("ratingMin").toInt()..prompt.num("ratingMax").toInt()) {
+                for (rating in 1..5) {
                     IconButton(
                         onClick = { answer(rating) },
                         enabled = !busy,
@@ -319,7 +326,7 @@ internal fun FeedbackRatingCard(prompt: JsonObject, busy: Boolean, answer: (Int?
 }
 
 @Composable
-private fun FeedbackProductImage(prompt: JsonObject) {
+internal fun FeedbackProductImage(prompt: JsonObject) {
     val photo =
         when (prompt.str("productId")) {
             "GHEE" -> "products/photos/ghee.jpg"
@@ -335,10 +342,17 @@ private fun FeedbackProductImage(prompt: JsonObject) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionModel) {
+fun ConnectedFeedbackSheet(
+    state: FeedbackConnection,
+    model: FeedbackConnectionModel,
+    openCart: () -> Unit,
+    chooseAddress: () -> Unit,
+    visible: Boolean = true,
+) {
     val result = state.result
     val detail = state.detail
     if (detail != null) {
+        if (!visible) return
         FeedbackConfirmation("Feedback saved", model::closeResult) {
             Text("Thank you for telling us.", style = MaterialTheme.typography.titleLarge)
             Text("Your feedback has been submitted to our quality team.", color = Muted)
@@ -355,52 +369,65 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
         return
     }
     if (result == null) return
-    val form = result.obj("issueForm")
+    val issueDraft = rememberSaveableStateHolder()
+    var openReorderAfterSave by rememberSaveable { mutableStateOf(false) }
+    val form = result.obj("issueForm").takeIf { result.num("rating") in 1L..3L }
     if (form != null) {
+        if (!visible) return
         Dialog(
             onDismissRequest = { if (!state.busy) model.closeResult() },
             properties = DialogProperties(usePlatformDefaultWidth = false),
         ) {
             Surface(Modifier.fillMaxSize(), color = Color.White) {
-                key(result.num("feedbackId")) { IssueFields(result, form, state, model) }
+                issueDraft.SaveableStateProvider(result.obj("ratedProduct")?.num("promptId") ?: 0L) {
+                    IssueFields(result, state.issueReceipt?.obj("issueForm") ?: form, state, model)
+                }
             }
         }
         return
     }
-    val offer = result.obj("buyAgain")
-    var reorderOpen by rememberSaveable(result.num("feedbackId")) { mutableStateOf(false) }
-    val draft = rememberSaveableStateHolder()
-    var subscriptionDate by rememberSaveable(result.num("feedbackId")) { mutableStateOf("") }
-    var subscriptionFailed by rememberSaveable(result.num("feedbackId")) { mutableStateOf(false) }
-    FeedbackConfirmation(
-        "Feedback saved",
-        { if (!reorderOpen && subscriptionDate.isEmpty()) model.closeResult() },
-        buyAgain = if (offer != null) ({ reorderOpen = true }) else null,
-    ) {
-        val name = state.customer?.str("name").orEmpty()
-        Text(
-            if (name.isBlank()) "Thanks for sharing!" else "Thanks for sharing, $name!",
-            style = MaterialTheme.typography.titleLarge,
-        )
-        val rating = result.num("rating")
-        val product = result.obj("ratedProduct")
-        val productName = product?.str("productName").orEmpty()
-        val thanks = if (rating >= 4 && productName.isNotBlank()) {
-            " We’re glad you enjoyed your $productName."
-        } else {
-            ""
+    if (result.flag("ratingDraft")) {
+        if (!visible) return
+        val rating = result.num("rating").toInt()
+        FeedbackConfirmation(
+            title = "Your rating",
+            close = { if (!state.busy) model.savePositiveRating { model.closeResult() } },
+            buyAgain = {
+                if (!state.busy) model.savePositiveRating { saved ->
+                    // The receipt opens the reorder sheet only when the server returns an offer.
+                    if (saved.obj("buyAgain") != null) openReorderAfterSave = true
+                }
+            },
+            successMessage = "Tap a star to change your rating.",
+            draft = true,
+        ) {
+            Text("Your rating · $rating of 5", style = MaterialTheme.typography.titleMedium)
+            RatingChoices(rating, !state.busy, model::editIssueRating)
+            result.obj("ratedProduct")?.let { FeedbackProductSummary(it) }
+            ConnectionStatus(state.copy(message = ""))
         }
-        Text("Your ${rating}-star rating is saved.$thanks", color = Muted)
-        FeedbackStars(rating)
-        product?.let {
-            CountryCard { FeedbackProductSummary(product) }
+        return
+    }
+    val offer = result.obj("buyAgain").takeIf { result.num("rating") in 4L..5L }
+    var reorderOpen by rememberSaveable(result.num("feedbackId")) { mutableStateOf(false) }
+    LaunchedEffect(openReorderAfterSave) {
+        if (openReorderAfterSave) {
+            reorderOpen = offer != null
+            openReorderAfterSave = false
         }
     }
+    val draft = rememberSaveableStateHolder()
+    var subscriptionDate by rememberSaveable(result.num("feedbackId")) { mutableStateOf("") }
+    var subscriptionError by rememberSaveable(result.num("feedbackId")) { mutableStateOf("") }
+    var subscriptionQuantity by rememberSaveable(result.num("feedbackId")) { mutableIntStateOf(1) }
+    if (!visible) return
+    val subscriptionFailed = subscriptionError.isNotBlank()
     if (subscriptionDate.isNotEmpty()) {
         FeedbackConfirmation(
             title = if (subscriptionFailed) "Subscription failed" else "Subscription confirmed",
             close = model::closeResult,
-            successMessage = if (subscriptionFailed) "Your feedback remains saved. You can try again."
+            successMessage =
+                if (subscriptionFailed) "Your feedback remains saved. You can try again."
                 else "Your feedback remains saved",
             failed = subscriptionFailed,
             backToChoice = {
@@ -412,39 +439,94 @@ fun ConnectedFeedbackSheet(state: FeedbackConnection, model: FeedbackConnectionM
                 if (subscriptionFailed) "Subscription failed" else "Thank you for subscribing!",
                 style = MaterialTheme.typography.titleLarge,
             )
-            Text(feedbackDate(subscriptionDate), color = Muted)
-            result.obj("ratedProduct")?.let { product ->
-                CountryCard { FeedbackProductSummary(product) }
+            if (subscriptionFailed) Text(subscriptionError, color = Muted)
+            else {
+                Text("Starts ${feedbackDate(subscriptionDate)}", color = Muted)
+                result.obj("ratedProduct")?.let { product ->
+                    CountryCard {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            FeedbackProductImage(product)
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    product.str("productName"),
+                                    style = MaterialTheme.typography.titleMedium,
+                                )
+                                Caption("$subscriptionQuantity × ${product.str("productUnit")}")
+                            }
+                        }
+                        state.activeDeliveryAddress()?.let { address ->
+                            Caption(
+                                listOf(
+                                        address.str("line1"),
+                                        address.str("area"),
+                                        address.str("city"),
+                                    )
+                                    .filter(String::isNotBlank)
+                                    .joinToString(", ")
+                            )
+                        }
+                    }
+                }
             }
         }
         return
     }
-    if (!reorderOpen || offer == null) return
-    ModalBottomSheet(
-        onDismissRequest = { if (!state.busy) reorderOpen = false },
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        sheetGesturesEnabled = false,
+    FeedbackConfirmation(
+        "Feedback saved",
+        close = {
+            if (reorderOpen) {
+                if (!state.busy) reorderOpen = false
+            } else model.closeResult()
+        },
+        buyAgain = if (offer != null) ({ reorderOpen = true }) else null,
+        sheet =
+            if (reorderOpen && offer != null)
+                ({
+                    draft.SaveableStateProvider("reorder") {
+                        BuyAgainFields(
+                            result,
+                            offer,
+                            state,
+                            model,
+                            close = { reorderOpen = false },
+                            openCart = openCart,
+                            chooseAddress = chooseAddress,
+                            subscriptionResult = { date, quantity, error ->
+                                subscriptionDate = date
+                                subscriptionQuantity = quantity
+                                subscriptionError = error
+                                reorderOpen = false
+                            },
+                        )
+                    }
+                    ConnectionStatus(state.copy(message = ""))
+                })
+            else null,
     ) {
-        Column(
-            Modifier.fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            key(result.num("feedbackId")) {
-                draft.SaveableStateProvider("reorder") {
-                    BuyAgainFields(
-                        result, offer, state, model,
-                        close = { reorderOpen = false },
-                        subscriptionResult = { date, failed ->
-                            subscriptionDate = date
-                            subscriptionFailed = failed
-                            reorderOpen = false
-                        },
-                    )
-                }
+        val name = state.customer?.str("name").orEmpty()
+        Text(
+            if (name.isBlank()) "Thanks for sharing!" else "Thanks for sharing, $name!",
+            style = MaterialTheme.typography.titleLarge,
+        )
+        val rating = result.num("rating")
+        val product = result.obj("ratedProduct")
+        val productName = product?.str("productName").orEmpty()
+        val thanks =
+            if (rating >= 4 && productName.isNotBlank()) {
+                " We’re glad you enjoyed your $productName."
+            } else {
+                ""
             }
-            ConnectionStatus(state.copy(message = ""))
+        Text("Your ${rating}-star rating is saved.$thanks", color = Muted)
+        FeedbackStars(rating)
+        product?.let {
+            CountryCard {
+                FeedbackProductSummary(product)
+                product.str("area").takeIf(String::isNotBlank)?.let { Caption(it) }
+            }
         }
     }
 }
@@ -457,88 +539,127 @@ internal fun FeedbackConfirmation(
     successMessage: String = "Feedback saved successfully",
     viewOrders: (() -> Unit)? = null,
     failed: Boolean = false,
+    draft: Boolean = false,
     backToChoice: (() -> Unit)? = null,
+    sheet: (@Composable ColumnScope.() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val accent = if (failed) MaterialTheme.colorScheme.error else Green
     val badge = if (failed) MaterialTheme.colorScheme.errorContainer else Mint
-    val statusIcon = if (failed) CountryIcons.Close else CountryIcons.CircleCheck
+    val statusIcon = if (failed) CountryIcons.Close else if (draft) CountryIcons.Star else CountryIcons.CircleCheck
     Dialog(
         onDismissRequest = close,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        Surface(Modifier.fillMaxSize(), color = Color.White) {
-            Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = close) { Icon(CountryIcons.ChevronLeft, "Back") }
-                    Text(
-                        title,
-                        Modifier.weight(1f),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    IconButton(onClick = close) { Icon(CountryIcons.Close, "Close") }
-                }
-                Column(
-                    Modifier.weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .padding(vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = badge,
-                        shape = RoundedCornerShape(8.dp),
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val maxSheetHeight = maxHeight * 0.88f
+            Surface(Modifier.fillMaxSize(), color = Color.White) {
+                val receipt = Modifier.fillMaxSize().padding(horizontal = 16.dp)
+                Column(if (sheet == null) receipt else receipt.clearAndSetSemantics {}) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = close) { Icon(CountryIcons.ChevronLeft, "Back") }
+                        Text(
+                            title,
+                            Modifier.weight(1f),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        IconButton(onClick = close) { Icon(CountryIcons.Close, "Close") }
+                    }
+                    Column(
+                        Modifier.weight(1f)
+                            .verticalScroll(rememberScrollState())
+                            .padding(vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Row(
-                            Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = badge,
+                            shape = RoundedCornerShape(8.dp),
                         ) {
-                            Icon(statusIcon, null, Modifier.size(15.dp), tint = accent)
-                            Text(
-                                successMessage,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = accent,
-                            )
+                            Row(
+                                Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Icon(statusIcon, null, Modifier.size(15.dp), tint = accent)
+                                Text(
+                                    successMessage,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = accent,
+                                )
+                            }
+                        }
+                        Surface(
+                            modifier =
+                                Modifier.align(Alignment.CenterHorizontally)
+                                    .padding(top = 10.dp)
+                                    .size(62.dp),
+                            color = badge,
+                            shape = RoundedCornerShape(50),
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(statusIcon, null, Modifier.size(36.dp), tint = accent)
+                            }
+                        }
+                        content()
+                    }
+                    Column(
+                        Modifier.padding(vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        if (viewOrders != null)
+                            OutlinedButton(viewOrders, Modifier.fillMaxWidth()) {
+                                Text("View orders")
+                            }
+                        if (buyAgain != null) {
+                            PrimaryButton("Buy again", onClick = buyAgain)
+                            OutlinedButton(
+                                onClick = close,
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                                shape = RoundedCornerShape(12.dp),
+                            ) {
+                                Text("Continue shopping")
+                            }
+                        } else {
+                            PrimaryButton("Continue shopping", onClick = close)
+                        }
+                        if (backToChoice != null) {
+                            OutlinedButton(backToChoice, Modifier.fillMaxWidth()) {
+                                Text("Back to subscription choice")
+                            }
                         }
                     }
-                    Surface(
-                        modifier =
+                }
+            }
+            if (sheet != null) {
+                Box(
+                    Modifier.matchParentSize()
+                        .background(Color.Black.copy(alpha = 0.35f))
+                        .clickable(onClick = close)
+                        .clearAndSetSemantics {}
+                )
+                Surface(
+                    modifier =
+                        Modifier.align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .heightIn(max = maxSheetHeight),
+                    shape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp),
+                    color = Color.White,
+                ) {
+                    Column(
+                        Modifier.fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .navigationBarsPadding()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Box(
                             Modifier.align(Alignment.CenterHorizontally)
-                                .padding(top = 10.dp)
-                                .size(62.dp),
-                        color = badge,
-                        shape = RoundedCornerShape(50),
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(statusIcon, null, Modifier.size(36.dp), tint = accent)
-                        }
-                    }
-                    content()
-                }
-                Column(
-                    Modifier.padding(vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    if (viewOrders != null)
-                        OutlinedButton(viewOrders, Modifier.fillMaxWidth()) { Text("View orders") }
-                    if (buyAgain != null) {
-                        PrimaryButton("Buy again", onClick = buyAgain)
-                        OutlinedButton(
-                            onClick = close,
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                        ) {
-                            Text("Continue shopping")
-                        }
-                    } else {
-                        PrimaryButton("Continue shopping", onClick = close)
-                    }
-                    if (backToChoice != null) {
-                        OutlinedButton(backToChoice, Modifier.fillMaxWidth()) {
-                            Text("Back to subscription choice")
-                        }
+                                .size(34.dp, 4.dp)
+                                .background(Line, RoundedCornerShape(4.dp))
+                        )
+                        sheet()
                     }
                 }
             }
@@ -560,17 +681,16 @@ private fun FeedbackStars(rating: Long) {
     }
 }
 
-private fun feedbackDate(date: String): String =
-    runCatching {
-            LocalDate.parse(date)
-                .format(
-                    java.time.format.DateTimeFormatter.ofPattern(
-                        "d MMM yyyy",
-                        java.util.Locale.ENGLISH,
-                    )
-                )
+@Composable
+private fun RatingChoices(rating: Int, enabled: Boolean, onSelect: (Int) -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        (1..5).forEach { stars ->
+            IconButton(onClick = { onSelect(stars) }, enabled = enabled) {
+                Icon(CountryIcons.Star, "Select $stars stars", tint = if (stars <= rating) Green else Muted)
+            }
         }
-        .getOrDefault(date)
+    }
+}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -581,12 +701,13 @@ private fun IssueFields(
     model: FeedbackConnectionModel,
 ) {
     val busy = state.busy
+    var editedRating by rememberSaveable { mutableStateOf<Int?>(null) }
     var selected by rememberSaveable { mutableStateOf(emptyList<String>()) }
     var note by rememberSaveable { mutableStateOf("") }
     var photo by rememberSaveable { mutableStateOf<Uri?>(null) }
     val picker =
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
-            if (it != null) photo = it
+            if (it != null) { photo = it; model.removeIssuePhoto() }
         }
     Column(Modifier.fillMaxSize().imePadding().padding(horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -619,10 +740,28 @@ private fun IssueFields(
                 "Your rating · ${result.num("rating")} of 5",
                 style = MaterialTheme.typography.titleSmall,
             )
-            FeedbackStars(result.num("rating"))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f)) { FeedbackStars(result.num("rating")) }
+                if (state.issueReceipt == null) {
+                    TextButton(onClick = { editedRating = result.num("rating").toInt() }, enabled = !busy) {
+                        Text("Edit rating")
+                    }
+                }
+            }
+            editedRating?.let { draftRating ->
+                RatingChoices(draftRating, !busy) { stars ->
+                    editedRating = null
+                    model.editIssueRating(stars)
+                }
+                TextButton(onClick = { editedRating = null }) { Text("Cancel") }
+            }
             val threeStars = result.num("rating") == 3L
             Text(
-                if (threeStars) "Good, but could be better." else "Sorry it wasn’t quite right.",
+                when (result.num("rating")) {
+                    1L -> "We’re really sorry about this"
+                    2L -> "Sorry, this fell short."
+                    else -> "Good, but could be better."
+                },
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(
@@ -671,7 +810,7 @@ private fun IssueFields(
                 Text("Anything else? (optional)", style = MaterialTheme.typography.titleSmall)
                 OutlinedTextField(
                     value = note,
-                    onValueChange = { note = it.take(form.num("noteMaxLength").toInt()) },
+                    onValueChange = { note = it.take(form.num("noteMaxLength").toInt().takeIf { limit -> limit > 0 } ?: 500) },
                     placeholder = { Text("Tell us a little more…") },
                     minLines = 2,
                     textStyle = MaterialTheme.typography.bodySmall,
@@ -685,30 +824,55 @@ private fun IssueFields(
                     enabled = !busy,
                 )
             }
-            if (form.flag("photoAllowed")) {
-                OutlinedButton(
-                    onClick = { picker.launch("image/*") },
-                    enabled = !busy,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                ) {
+            if (form.flag("photoAllowed") || photo != null) {
+                if (photo == null) {
+                    OutlinedButton(
+                        onClick = { picker.launch("image/*") },
+                        enabled = !busy,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                    ) { Text("Add a photo (optional)") }
+                    Caption("One JPEG, PNG, WebP or HEIC photo, up to 5 MB.")
+                } else {
+                    val progress = state.photoProgress
                     Text(
-                        if (photo == null) "Add a photo (optional)" else "Replace attached photo",
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.labelMedium,
+                        when {
+                            state.photoFailed -> "Photo · Upload failed"
+                            progress != null && progress >= 1f -> "Photo · Finishing upload"
+                            progress != null -> "Photo · Uploading ${(progress * 100).toInt()}%"
+                            else -> "Photo attached"
+                        },
+                        style = MaterialTheme.typography.bodySmall,
                     )
+                    if (progress != null) {
+                        LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
+                    }
+                    if (state.photoFailed) {
+                        Text(
+                            "Photo couldn’t upload. Your rating and note are safe.",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (state.photoFailed) {
+                            Button(onClick = { model.issues(selected, note, photo) }, enabled = !busy) {
+                                Text("Retry photo")
+                            }
+                        }
+                        OutlinedButton(
+                            onClick = { photo = null; model.removeIssuePhoto() },
+                            enabled = !busy,
+                        ) { Text("Remove") }
+                    }
                 }
-                if (photo != null)
-                    TextButton(onClick = { photo = null }, enabled = !busy) { Text("Remove photo") }
-                Text(
-                    "One photo, up to 5 MB. JPEG, PNG, WebP or HEIC.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Muted,
-                )
+            }
+            if (busy && state.photoProgress == null) {
+                LinearProgressIndicator(Modifier.fillMaxWidth())
+                Caption("Saving feedback… Please wait.")
             }
         }
-        if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-        if (state.error.isNotBlank()) {
+        if (state.error.isNotBlank() && !state.photoFailed) {
             Surface(
                 color = MaterialTheme.colorScheme.errorContainer,
                 shape = RoundedCornerShape(10.dp),
@@ -728,8 +892,8 @@ private fun IssueFields(
             }
         }
         Button(
-            onClick = { model.issues(result.num("feedbackId"), selected, note, photo) },
-            enabled = !busy && selected.size >= form.num("minSelections"),
+            onClick = { model.issues(selected, note, photo) },
+            enabled = !busy && editedRating == null && !state.photoFailed && selected.size >= form.num("minSelections"),
             colors =
                 ButtonDefaults.buttonColors(
                     disabledContentColor = Muted,
@@ -738,10 +902,10 @@ private fun IssueFields(
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).heightIn(min = 48.dp),
         ) {
-            Text(if (state.error.isBlank()) "Submit feedback" else "Retry Submit")
+            Text(if (busy) "Submitting…" else if (state.error.isBlank()) "Submit feedback" else "Retry Submit")
         }
         Text(
-            "Your rating is saved. Optional details are sent when you submit.",
+            "Your note and photo are optional.",
             style = MaterialTheme.typography.bodySmall,
             color = Muted,
             modifier = Modifier.padding(bottom = 10.dp),
@@ -776,7 +940,9 @@ private fun BuyAgainFields(
     state: FeedbackConnection,
     model: FeedbackConnectionModel,
     close: () -> Unit,
-    subscriptionResult: (String, Boolean) -> Unit,
+    openCart: () -> Unit,
+    chooseAddress: () -> Unit,
+    subscriptionResult: (String, Int, String) -> Unit,
 ) {
     val busy = state.busy
     val productId = offer.str("productId")
@@ -794,15 +960,23 @@ private fun BuyAgainFields(
     }
     var date by rememberSaveable { mutableStateOf(offer.str("suggestedDate")) }
     var subscription by rememberSaveable { mutableStateOf(false) }
-    var submitting by remember { mutableStateOf(false) }
-    LaunchedEffect(submitting) {
-        if (submitting) {
-            val response = model.state.first { !it.busy }
-            submitting = false
-            subscriptionResult(date, response.error.isNotBlank())
-        }
+    var submissionStart by rememberSaveable { mutableStateOf<Int?>(null) }
+    val pending =
+        state.subscriptionPending && state.failedSubscription?.str("productId") == productId
+    val editable = !busy && !pending && submissionStart == null
+    val address = state.activeDeliveryAddress()
+    LaunchedEffect(submissionStart) {
+        val before = submissionStart ?: return@LaunchedEffect
+        val response = model.state.first { !it.busy }
+        submissionStart = null
+        if (response.subscriptionCreationCount > before) subscriptionResult(date, quantity, "")
+        else if (!response.subscriptionPending)
+            subscriptionResult(
+                date,
+                quantity,
+                response.subscriptionFailure ?: response.error.ifBlank { "Try again." },
+            )
     }
-    val context = LocalContext.current
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text("Buy again", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
         IconButton(onClick = close, enabled = !busy) { Icon(CountryIcons.Close, "Close Buy again") }
@@ -827,7 +1001,7 @@ private fun BuyAgainFields(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextButton(
                     onClick = { quantity-- },
-                    enabled = !busy && quantity > 1,
+                    enabled = editable && quantity > 1,
                     modifier = Modifier.width(40.dp),
                     contentPadding = PaddingValues(0.dp),
                 ) {
@@ -836,7 +1010,7 @@ private fun BuyAgainFields(
                 Text("$quantity", style = MaterialTheme.typography.titleSmall)
                 TextButton(
                     onClick = { quantity++ },
-                    enabled = !busy && quantity < if (subscription) 10 else 20,
+                    enabled = editable && quantity < if (subscription) 10 else 20,
                     modifier = Modifier.width(40.dp),
                     contentPadding = PaddingValues(0.dp),
                 ) {
@@ -850,16 +1024,19 @@ private fun BuyAgainFields(
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
                 selected = subscription,
-                onClick = { subscription = true; quantity = quantity.coerceAtMost(10) },
+                onClick = {
+                    subscription = true
+                    quantity = quantity.coerceAtMost(10)
+                },
                 label = { Text("Subscription") },
-                enabled = !busy,
+                enabled = editable,
                 modifier = Modifier.weight(1f),
             )
             FilterChip(
                 selected = !subscription,
                 onClick = { subscription = false },
                 label = { Text("Buy Once") },
-                enabled = !busy,
+                enabled = editable,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -873,81 +1050,41 @@ private fun BuyAgainFields(
             ?.str("label")
             .orEmpty()
             .ifBlank { "Suggested date" }
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(
-            onClick = { date = suggested },
-            enabled = !busy,
-            modifier = Modifier.weight(1f).heightIn(min = 54.dp),
-            shape = RoundedCornerShape(12.dp),
-            border = BorderStroke(1.dp, if (date == suggested) Green else Line),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
-            colors =
-                ButtonDefaults.outlinedButtonColors(
-                    containerColor = if (date == suggested) Mint else Color.Transparent
-                ),
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(quickLabel, style = MaterialTheme.typography.titleSmall)
-                Text(feedbackDate(suggested), style = MaterialTheme.typography.bodySmall)
-            }
-        }
-        OutlinedButton(
-            enabled = !busy,
-            modifier = Modifier.weight(1f).heightIn(min = 54.dp),
-            shape = RoundedCornerShape(12.dp),
-            border = BorderStroke(1.dp, if (date != suggested) Green else Line),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
-            colors =
-                ButtonDefaults.outlinedButtonColors(
-                    containerColor = if (date != suggested) Mint else Color.Transparent
-                ),
-            onClick = {
-                val current = LocalDate.parse(date)
-                DatePickerDialog(
-                        context,
-                        { _, year, month, day ->
-                            date = LocalDate.of(year, month + 1, day).toString()
-                        },
-                        current.year,
-                        current.monthValue - 1,
-                        current.dayOfMonth,
-                    )
-                    .apply {
-                        val zone = java.time.ZoneId.systemDefault()
-                        datePicker.minDate =
-                            LocalDate.parse(offer.str("minDate"))
-                                .atStartOfDay(zone)
-                                .toInstant()
-                                .toEpochMilli()
-                        datePicker.maxDate =
-                            LocalDate.parse(offer.str("maxDate"))
-                                .atStartOfDay(zone)
-                                .toInstant()
-                                .toEpochMilli()
-                    }
-                    .show()
-            },
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Choose date", style = MaterialTheme.typography.titleSmall)
-                if (date != suggested)
-                    Text(feedbackDate(date), style = MaterialTheme.typography.bodySmall)
-            }
-        }
+    FeedbackDateChoices(
+        suggested = suggested,
+        suggestedLabel = quickLabel,
+        minimum = offer.str("minDate"),
+        maximum = offer.str("maxDate"),
+        date = date,
+        enabled = editable,
+        onDate = { date = it },
+    )
+    if (subscription && !pending && address?.isCompleteDeliveryAddress() != true) {
+        TextButton(onClick = chooseAddress, enabled = editable) { Text("Choose delivery address") }
     }
     PrimaryButton(
-        if (subscription) "Order Now" else "Add to cart",
-        enabled = !busy && !submitting && date.isNotBlank(),
+        if (pending) "Check subscription status"
+        else if (subscription) "Start subscription" else "Continue to checkout",
+        enabled =
+            !busy &&
+                submissionStart == null &&
+                date.isNotBlank() &&
+                (pending || !subscription || address?.isCompleteDeliveryAddress() == true),
     ) {
-        if (subscription) {
-            model.createSubscription(buildJsonObject {
-                put("productId", productId)
-                put("quantity", quantity)
-                put("startDate", date)
-            })
-            submitting = true
+        if (pending) {
+            submissionStart = state.subscriptionCreationCount
+            model.retrySubscription()
+        } else if (subscription) {
+            submissionStart = state.subscriptionCreationCount
+            model.createSubscription(
+                buildJsonObject {
+                    put("productId", productId)
+                    put("quantity", quantity)
+                    put("startDate", date)
+                }
+            )
         } else {
-            model.add(productId, quantity, date, result.num("feedbackId"))
+            model.add(productId, quantity, date, result.num("feedbackId"), onAdded = openCart)
         }
     }
 }
@@ -967,13 +1104,9 @@ fun ConnectedAccount(
     val cart = state.cart
     val items = cart?.list("items").orEmpty()
     val orderTotal = "₹${cart?.str("totalAmount").orEmpty()}"
-    val addressId = state.selectedAddressId ?: state.addresses?.num("defaultAddressId")
-    val address =
-        state.addresses?.list("addresses")?.firstOrNull { it.num("addressId") == addressId }
-    val complete =
-        address != null &&
-            address.str("line1").isNotBlank() &&
-            address.str("pincode").matches(Regex("[0-9]{6}"))
+    val address = state.activeDeliveryAddress()
+    val complete = address?.isCompleteDeliveryAddress() == true
+    val canEditCart = !state.busy && !state.checkoutPending
     val context = LocalContext.current
     var confirmClear by rememberSaveable { mutableStateOf(false) }
 
@@ -994,14 +1127,14 @@ fun ConnectedAccount(
                                 color = Muted,
                             )
                         }
-                        TextButton(onClick = chooseAddress, enabled = !state.busy) {
+                        TextButton(onClick = chooseAddress, enabled = canEditCart) {
                             Text(if (address == null) "Choose" else "Change")
                         }
                     }
                 }
                 TextButton(
                     onClick = { confirmClear = true },
-                    enabled = !state.busy,
+                    enabled = canEditCart,
                     modifier = Modifier.align(Alignment.End),
                 ) {
                     Text("Clear cart")
@@ -1046,7 +1179,7 @@ fun ConnectedAccount(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         TextButton(
-                            enabled = !state.busy,
+                            enabled = canEditCart,
                             onClick = {
                                 val today = LocalDate.now()
                                 val min = today.plusDays(1)
@@ -1081,7 +1214,7 @@ fun ConnectedAccount(
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             TextButton(
-                                enabled = !state.busy,
+                                enabled = canEditCart,
                                 onClick = {
                                     if (quantity <= 1) model.remove(id)
                                     else model.updateCartItem(id, quantity = quantity - 1)
@@ -1091,7 +1224,7 @@ fun ConnectedAccount(
                             }
                             Text(quantity.toString())
                             TextButton(
-                                enabled = !state.busy && quantity < 20,
+                                enabled = canEditCart && quantity < 20,
                                 onClick = { model.updateCartItem(id, quantity = quantity + 1) },
                             ) {
                                 Text("+")
@@ -1128,7 +1261,7 @@ fun ConnectedAccount(
                                 )
                             }
                             TextButton(
-                                enabled = !state.busy,
+                                enabled = canEditCart,
                                 onClick = {
                                     model.add(
                                         recommendation.str("productId"),
@@ -1158,7 +1291,7 @@ fun ConnectedAccount(
                     dates.forEach { date ->
                         TextButton(
                             onClick = { if (complete) model.placeOrder(date) else chooseAddress() },
-                            enabled = !state.busy,
+                            enabled = canEditCart,
                         ) {
                             Text("Order items for ${feedbackDate(date)}")
                         }
@@ -1168,10 +1301,10 @@ fun ConnectedAccount(
             if (items.isEmpty() && state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             if (items.isEmpty() && state.error.isNotBlank()) {
                 Text(state.error, color = MaterialTheme.colorScheme.error)
-                TextButton(onClick = model::cart, enabled = !state.busy) { Text("Retry") }
+                TextButton(onClick = model::cart, enabled = canEditCart) { Text("Retry") }
             }
         }
-        if (items.isNotEmpty()) {
+        if (items.isNotEmpty() || state.checkoutPending) {
             Surface(color = Color.White) {
                 Column(
                     Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
@@ -1183,10 +1316,12 @@ fun ConnectedAccount(
                     }
                     BillRow("Order total", orderTotal, bold = true)
                     PrimaryButton(
-                        if (complete) "Place order" else "Complete delivery address",
+                        if (state.checkoutPending) "Check order status"
+                        else if (complete) "Place order" else "Complete delivery address",
                         enabled = !state.busy,
                     ) {
-                        if (complete) model.placeOrder() else chooseAddress()
+                        if (state.checkoutPending) model.retryCheckout()
+                        else if (complete) model.placeOrder() else chooseAddress()
                     }
                 }
             }
@@ -1215,7 +1350,13 @@ fun ConnectedAccount(
 }
 
 @Composable
-internal fun FeedbackImage(path: String, description: String, fallback: String? = null) {
+internal fun FeedbackImage(
+    path: String,
+    description: String,
+    fallback: String? = null,
+    imageModifier: Modifier = Modifier.size(68.dp),
+    scale: ContentScale = ContentScale.Crop,
+) {
     if (path.isBlank() && fallback == null) return
     val bitmap by
         produceState<androidx.compose.ui.graphics.ImageBitmap?>(null, path) {
@@ -1263,8 +1404,8 @@ internal fun FeedbackImage(path: String, description: String, fallback: String? 
                         .getOrNull()
                 }
         }
-    val modifier = Modifier.size(68.dp).clip(RoundedCornerShape(10.dp))
+    val modifier = imageModifier.clip(RoundedCornerShape(10.dp))
     val image = bitmap
-    if (image != null) Image(image, description, modifier, contentScale = ContentScale.Crop)
-    else if (fallback != null) AssetImage(fallback, description, modifier, ContentScale.Crop)
+    if (image != null) Image(image, description, modifier, contentScale = scale)
+    else if (fallback != null) AssetImage(fallback, description, modifier, scale)
 }

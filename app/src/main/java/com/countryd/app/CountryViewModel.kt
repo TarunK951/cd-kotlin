@@ -20,6 +20,8 @@ data class CountryState(
     val error: String? = null,
     val feedbackPrompt: FeedbackRequest? = null,
     val sampleRequests: List<FeedbackRequest> = emptyList(),
+    val reorderDate: String? = null,
+    val feedbackReorderOrderId: String? = null,
 )
 
 class CountryViewModel(application: Application) : AndroidViewModel(application) {
@@ -89,6 +91,11 @@ class CountryViewModel(application: Application) : AndroidViewModel(application)
                         else it
                     }
         )
+    }
+
+    fun stageFeedbackReorder(line: CartLine, date: String) {
+        add(line)
+        mutable.update { it.copy(reorderDate = date) }
     }
 
     fun quantity(key: String, delta: Int) = update { s ->
@@ -237,6 +244,10 @@ class CountryViewModel(application: Application) : AndroidViewModel(application)
                             it.transactions
                     else it.transactions,
             )
+        }
+        mutable.update {
+            if (it.reorderDate == null) it
+            else it.copy(reorderDate = null, feedbackReorderOrderId = id)
         }
         return id
     }

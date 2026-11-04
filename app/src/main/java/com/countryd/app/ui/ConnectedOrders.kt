@@ -6,6 +6,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.countryd.app.api.*
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -24,18 +27,34 @@ internal fun ConnectedOrders(
     fun refresh() {
         if (orderId == null) model.orders() else model.order(orderId)
     }
-    LaunchedEffect(orderId, state.manualPrompt?.num("promptId")) {
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(lifecycle, orderId, state.manualPrompt?.num("promptId")) {
         if (state.manualPrompt == null) {
-            model.state.first { !it.busy }
-            refresh()
+            lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                model.state.first { !it.busy }
+                refresh()
+            }
         }
     }
     ScreenBody {
         if (orderId == null)
             DeliveryTabs("Orders") { if (it == "My subscriptions") openSubscriptions() }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                if (orderId == null) "My orders" else "Order details",
+                Modifier.weight(1f),
+                style = MaterialTheme.typography.titleLarge,
+            )
+            TextButton(onClick = ::refresh, enabled = !state.busy) { Text("Refresh status") }
+        }
+        if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+        if (state.error.isNotBlank()) Text(state.error, color = MaterialTheme.colorScheme.error)
         val orders =
             if (orderId == null) state.orders
-            else state.order?.takeIf { it.num("orderId") == orderId }?.let(::listOf)
+            else
+                (state.order?.takeIf { it.num("orderId") == orderId }
+                        ?: state.orders?.firstOrNull { it.num("orderId") == orderId })
+                    ?.let(::listOf)
         if (orders?.isEmpty() == true) Text("No orders yet.")
         if (orderId == null) {
             val entries = orders.orEmpty()
@@ -56,11 +75,6 @@ internal fun ConnectedOrders(
         } else {
             orders?.singleOrNull()?.let { order -> ConnectedOrderCard(order, state.busy, model) }
         }
-        if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-        if (state.message.isNotBlank() && state.result == null && state.detail == null)
-            Text(state.message)
-        if (state.error.isNotBlank()) Text(state.error, color = MaterialTheme.colorScheme.error)
-        TextButton(onClick = ::refresh, enabled = !state.busy) { Text("Refresh") }
     }
 }
 
@@ -202,7 +216,9 @@ internal fun ConnectedOrderConfirmation(
             continueShopping()
         },
         successMessage =
-            if (orders.size == 1) "Order placed successfully" else "Orders placed successfully",
+            if (state.placedFromFeedback) "Your feedback remains saved"
+            else if (orders.size == 1) "Order placed successfully"
+            else "Orders placed successfully",
         viewOrders = {
             model.dismissOrderConfirmation()
             openOrders()
@@ -231,7 +247,7 @@ internal fun ConnectedOrderConfirmation(
                     )
                 }
                 Text(
-                    "Delivery · ${order.str("deliveryDate")}",
+                    "Delivery · ${feedbackDate(order.str("deliveryDate"))}",
                     style = MaterialTheme.typography.bodySmall,
                 )
             }

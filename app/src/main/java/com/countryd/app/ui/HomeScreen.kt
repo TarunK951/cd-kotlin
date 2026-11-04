@@ -96,7 +96,7 @@ fun HomeScreen(
                 return@item
             }
             val request =
-                (state.feedbackPrompt ?: feedbackRequests(s, state.products).firstOrNull())
+                feedbackRequests(s, state.products, immediate = true).firstOrNull()
                     ?.takeUnless { r -> s.feedback.any { it.request.id == r.id } }
             if (request != null) FeedbackPrompt(request, vm, go)
             else if (
@@ -105,7 +105,9 @@ fun HomeScreen(
                     s.orders.isEmpty() &&
                     s.subscriptions.isEmpty()
             )
-                state.sampleRequests.firstOrNull()?.let { FeedbackPrompt(it, vm, go) }
+                state.sampleRequests.firstOrNull { candidate ->
+                    s.feedback.none { it.request.id == candidate.id }
+                }?.let { FeedbackPrompt(it, vm, go) }
         }
 
         item {

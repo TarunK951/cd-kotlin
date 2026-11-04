@@ -3,6 +3,7 @@ package com.countryd.app.domain
 import com.countryd.app.data.*
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
 data class FeedbackPolicy(val productId: String, val days: Long, val issues: List<String>)
@@ -41,6 +42,7 @@ fun feedbackRequests(
     catalogue: List<Product>,
     today: LocalDate = LocalDate.now(),
     now: Instant = Instant.now(),
+    immediate: Boolean = false,
 ): List<FeedbackRequest> {
     if (
         session.feedbackEvents.any {
@@ -54,60 +56,21 @@ fun feedbackRequests(
             session.feedback.filter { !it.request.demo }.map { it.request.productId }
     val counts =
         session.orders
-            .filter { it.status == "Delivered" }
+            .filter { if (immediate) it.status != "Cancelled" else it.status == "Delivered" }
             .flatMap { o -> o.items.map { it.line.productId }.distinct() }
             .groupingBy { it }
             .eachCount()
     return session.orders
         .filter { it.status == "Delivered" }
         .flatMap { order ->
-            order.items.mapIndexedNotNull { index, item ->
-                val policy =
-                    feedbackPolicies.find { it.productId == item.line.productId }
-                        ?: return@mapIndexedNotNull null
-                if (item.line.freeGift) return@mapIndexedNotNull null
-                if (
-                    (item.line.plan != null || item.subscriptionId != null) &&
-                        session.subscriptions.none {
-                            it.productId == item.line.productId &&
-                                it.status == "Past" &&
-                                (item.subscriptionId == null || it.id == item.subscriptionId)
-                        }
-                )
-                    return@mapIndexedNotNull null
-                if (
-                    item.line.productId in suppressed ||
-                        session.subscriptions.any {
-                            it.productId == item.line.productId && it.status != "Past"
-                        }
-                )
-                    return@mapIndexedNotNull null
-                val date =
-                    runCatching { LocalDate.parse(order.deliveryDate) }.getOrNull()
-                        ?: return@mapIndexedNotNull null
-                if (date.plusDays(policy.days) > today) return@mapIndexedNotNull null
-                if (
-                    order.deliveredAt != null &&
-                        runCatching {
-                                ChronoUnit.SECONDS.between(Instant.parse(order.deliveredAt), now) <
-                                    policy.days * 86400
-                            }
-                            .getOrDefault(true)
-                )
-                    return@mapIndexedNotNull null
-                val p =
-                    catalogue.find { it.id == item.line.productId } ?: return@mapIndexedNotNull null
-                FeedbackRequest(
-                    "${order.id}:$index:${p.id}",
-                    order.id,
-                    "${order.id}:$index",
-                    p.id,
-                    p.name,
-                    item.line.variant?.unit ?: p.unit,
-                    order.deliveryDate,
-                    order.address.split(',').takeLast(2).joinToString(", ").trim(),
-                    policy.issues,
-                )
+            orderFeedbackRequests(order, session, catalogue).filter { request ->
+                request.productId !in suppressed &&
+                    if (immediate) {
+                        counts[request.productId] == 1 &&
+                            session.subscriptions.none { it.productId == request.productId }
+                    } else {
+                        isDue(request, order.deliveredAt, today, now)
+                    }
             }
         }
         .sortedWith(
@@ -116,6 +79,69 @@ fun feedbackRequests(
                 .thenBy { it.id }
         )
         .take(1)
+}
+
+private fun isDue(
+    request: FeedbackRequest,
+    deliveredAt: String?,
+    today: LocalDate,
+    now: Instant,
+): Boolean {
+    val policy = feedbackPolicies.find { it.productId == request.productId } ?: return false
+    val date = runCatching { LocalDate.parse(request.deliveryDate) }.getOrNull() ?: return false
+    if (date.plusDays(policy.days) > today) return false
+    return deliveredAt == null ||
+        runCatching {
+                ChronoUnit.SECONDS.between(Instant.parse(deliveredAt), now) >= policy.days * 86400
+            }
+            .getOrDefault(false)
+}
+
+fun orderFeedbackRequests(
+    order: Order,
+    session: Session,
+    catalogue: List<Product>,
+): List<FeedbackRequest> {
+    if (order.status != "Delivered") return emptyList()
+    val deliveredDate =
+        runCatching { LocalDate.parse(order.deliveryDate) }.getOrNull()
+            ?: order.deliveredAt?.let {
+                runCatching { Instant.parse(it).atZone(ZoneId.systemDefault()).toLocalDate() }
+                    .getOrNull()
+            }
+            ?: return emptyList()
+    return order.items.mapIndexedNotNull { index, item ->
+        val line = item.line
+        if (
+            line.freeGift ||
+                session.subscriptions.any { it.productId == line.productId && it.status != "Past" }
+        ) {
+            return@mapIndexedNotNull null
+        }
+        if (
+            (line.plan != null || item.subscriptionId != null) &&
+                session.subscriptions.none {
+                    it.productId == line.productId &&
+                        it.status == "Past" &&
+                        (item.subscriptionId == null || it.id == item.subscriptionId)
+                }
+        ) {
+            return@mapIndexedNotNull null
+        }
+        val product = catalogue.find { it.id == line.productId } ?: return@mapIndexedNotNull null
+        val policy = feedbackPolicies.find { it.productId == product.id }
+        FeedbackRequest(
+            "${order.id}:$index:${product.id}",
+            order.id,
+            "${order.id}:$index",
+            product.id,
+            product.name,
+            line.variant?.unit ?: product.unit,
+            deliveredDate.toString(),
+            order.address.split(',').takeLast(2).joinToString(", ").trim(),
+            policy?.issues ?: listOf("Freshness", "Taste or smell", "Packaging", "Other"),
+        )
+    }
 }
 
 fun sampleFeedback(product: Product, today: LocalDate = LocalDate.now()): FeedbackRequest {

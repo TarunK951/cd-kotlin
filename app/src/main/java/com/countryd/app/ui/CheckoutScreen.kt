@@ -22,7 +22,9 @@ fun CheckoutScreen(
     basket: @Composable ColumnScope.() -> Unit = {},
 ) {
     val s = state.session
-    var date by rememberSaveable { mutableStateOf(LocalDate.now().plusDays(1).toString()) }
+    var date by rememberSaveable {
+        mutableStateOf(state.reorderDate ?: LocalDate.now().plusDays(1).toString())
+    }
     var deliveryPicker by rememberSaveable { mutableStateOf(false) }
     var preference by rememberSaveable { mutableStateOf("Delivery") }
     val slot = "Morning, 6:00 – 7:00 AM"
@@ -34,7 +36,8 @@ fun CheckoutScreen(
     }
     var coupon by rememberSaveable { mutableStateOf(s.coupon) }
     var payment by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf("") }
+    var showFailure by rememberSaveable { mutableStateOf(false) }
+    val validAddress = s.address?.isCompleteDeliveryAddress() == true
     val items = s.cart.sumOf { lineTotal(it, state.products.first { p -> p.id == it.productId }) }
     val bill = totals(items, s, tip, points, wallet)
     fun placeOrder() {
@@ -47,7 +50,7 @@ fun CheckoutScreen(
                 points,
                 wallet,
             )
-        if (id != null) onPlaced(id) else error = "Check your address, basket and delivery date."
+        if (id != null) onPlaced(id) else showFailure = true
     }
     if (s.cart.isEmpty()) {
         ScreenBody {
@@ -175,7 +178,6 @@ fun CheckoutScreen(
                     }
                     if (s.vipActive) BillRow("Delight VIP pass · Free", "₹0")
                 }
-                if (error.isNotEmpty()) Text(error, color = MaterialTheme.colorScheme.error)
             }
         }
         Surface(color = Canvas) {
@@ -184,8 +186,10 @@ fun CheckoutScreen(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 BillRow("Order total", money(bill.total), bold = true)
-                PrimaryButton("Place order", enabled = s.address != null) {
-                    if (bill.toPay == 0.0) placeOrder() else payment = true
+                PrimaryButton(if (validAddress) "Place order" else "Complete delivery address") {
+                    if (!validAddress) go("addresses")
+                    else if (bill.toPay == 0.0) placeOrder()
+                    else payment = true
                 }
             }
         }
@@ -212,6 +216,41 @@ fun CheckoutScreen(
             },
             dismissButton = { TextButton({ payment = false }) { Text("Cancel") } },
         )
+    if (showFailure) {
+        val subscription = s.cart.all { it.mode == "Subscribe" }
+        val lines = s.cart.mapNotNull { line ->
+            state.products.firstOrNull { it.id == line.productId }?.let { product ->
+                FailedPurchaseLine(
+                    product.name,
+                    "${feedbackDate(line.plan?.startDate ?: date)} · ${line.variant?.unit ?: product.unit}",
+                    imagePath = productImage(product),
+                )
+            }
+        }
+        CheckoutFailureDialog(
+            subscription = subscription,
+            pending = false,
+            busy = false,
+            error = "Check your delivery address and date before trying again.",
+            date = date,
+            lines = lines,
+            address = s.address?.display.orEmpty(),
+            onBack = { showFailure = false },
+            onRetry = {
+                showFailure = false
+                if (!validAddress) go("addresses")
+                else {
+                    val earliest = LocalDate.now().plusDays(1)
+                    if (runCatching { LocalDate.parse(date) < earliest }.getOrDefault(true)) {
+                        date = earliest.toString()
+                        preference = "Delivery"
+                        deliveryPicker = true
+                    } else if (bill.toPay == 0.0) placeOrder()
+                    else payment = true
+                }
+            },
+        )
+    }
 }
 
 @Composable

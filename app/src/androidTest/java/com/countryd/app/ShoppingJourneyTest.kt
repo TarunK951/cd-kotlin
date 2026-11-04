@@ -11,7 +11,10 @@ import com.countryd.app.data.CountryRepository
 import com.countryd.app.data.Session
 import com.countryd.app.ui.CountryApp
 import com.countryd.app.ui.CountryTheme
+import com.countryd.app.ui.feedbackDate
 import java.io.File
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -303,6 +306,30 @@ class ShoppingJourneyTest {
     }
 
     @Test
+    fun positiveFeedbackOpensBuyAgainWithItsSelectedDeliveryDate() {
+        completeOnboarding()
+        tap("More")
+        tap("Try product feedback", true)
+        compose.onNodeWithContentDescription("5 stars").performScrollTo().performClick()
+        compose.onNodeWithText("Feedback saved successfully").assertExists()
+        compose.onNodeWithText("Your 5-star rating is saved.", substring = true).assertExists()
+        tap("Buy again")
+        tap("Choose date", true)
+        val delivery = LocalDate.now().plusDays(2)
+        if (delivery.month != LocalDate.now().plusDays(1).month) tap("Next", true)
+        compose
+            .onNodeWithContentDescription(feedbackDate(delivery.toString()))
+            .performScrollTo()
+            .performClick()
+        tap("Continue to checkout", true)
+        compose.onNodeWithText("One-time order").assertExists()
+        compose
+            .onNodeWithText(delivery.format(DateTimeFormatter.ofPattern("EEE, d MMM")))
+            .performScrollTo()
+            .assertExists()
+    }
+
+    @Test
     fun productFeedbackKeepsItsRequestAndRevisionInTheOutbox() {
         completeOnboarding()
         tap("More")
@@ -317,7 +344,7 @@ class ShoppingJourneyTest {
             it.getSystemService(android.view.inputmethod.InputMethodManager::class.java)
                 .hideSoftInputFromWindow(it.window.decorView.windowToken, 0)
         }
-        tap("Save feedback", true)
+        tap("Submit feedback", true)
         compose.waitForIdle()
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val saved = runBlocking {
@@ -336,6 +363,14 @@ class ShoppingJourneyTest {
         Assert.assertEquals(listOf("Hard texture"), pending.record.issues)
         screenshot("feedback")
         activity.recreate()
+        activity.onActivity {
+            it.setContent { CountryTheme { CountryApp(localShoppingTest = true) } }
+        }
+        compose.waitUntil(15000) {
+            compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty()
+        }
+        tap("More")
+        tap("Try product feedback", true)
         compose.waitUntil(15000) {
             compose.onAllNodesWithText("Pack was firm.").fetchSemanticsNodes().isNotEmpty()
         }

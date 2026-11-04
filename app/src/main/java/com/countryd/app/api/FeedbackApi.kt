@@ -1,17 +1,18 @@
 package com.countryd.app.api
 
 import android.content.Context
-import android.net.Uri
-import android.security.keystore.KeyGenParameterSpec
-import android.security.keystore.KeyProperties
+import javax.crypto.spec.GCMParameterSpec
+import javax.crypto.SecretKey
+import javax.crypto.KeyGenerator
+import javax.crypto.Cipher
+import java.security.KeyStore
 import android.util.Base64
+import android.security.keystore.KeyProperties
+import android.security.keystore.KeyGenParameterSpec
+import android.net.Uri
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
-import java.security.KeyStore
-import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
-import javax.crypto.SecretKey
-import javax.crypto.spec.GCMParameterSpec
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -28,7 +29,7 @@ class FeedbackApi(private val context: Context) {
         body: JsonObject? = null,
     ): JsonElement = send(path, method, token, body?.toString()?.toByteArray(), "application/json")
 
-    suspend fun photo(id: Long, token: String, uri: Uri): JsonObject =
+    suspend fun photo(id: Long, token: String, uri: Uri, progress: (Float) -> Unit): JsonObject =
         withContext(Dispatchers.IO) {
             val mime = context.contentResolver.getType(uri)
             val ext =
@@ -65,6 +66,7 @@ class FeedbackApi(private val context: Context) {
                     token,
                     header.toByteArray() + bytes + "\r\n--$boundary--\r\n".toByteArray(),
                     "multipart/form-data; boundary=$boundary",
+                    progress,
                 )
                 .jsonObject
         }
@@ -75,9 +77,11 @@ class FeedbackApi(private val context: Context) {
         token: String?,
         bytes: ByteArray?,
         type: String,
+        progress: ((Float) -> Unit)? = null,
     ): JsonElement =
         withContext(Dispatchers.IO) {
             val conn = URL(BASE + path).openConnection() as HttpURLConnection
+            var sendingBody = false
             try {
                 conn.requestMethod = method
                 conn.instanceFollowRedirects = false
@@ -89,7 +93,19 @@ class FeedbackApi(private val context: Context) {
                     conn.doOutput = true
                     conn.setRequestProperty("Content-Type", type)
                     conn.setFixedLengthStreamingMode(bytes.size)
-                    conn.outputStream.use { it.write(bytes) }
+                    conn.outputStream.use {
+                        sendingBody = true
+                        if (progress == null) it.write(bytes)
+                        else {
+                            var sent = 0
+                            while (sent < bytes.size) {
+                                val count = minOf(8192, bytes.size - sent)
+                                it.write(bytes, sent, count)
+                                sent += count
+                                progress(sent.toFloat() / bytes.size)
+                            }
+                        }
+                    }
                 }
                 val status = conn.responseCode
                 val raw =
@@ -107,6 +123,8 @@ class FeedbackApi(private val context: Context) {
                     )
                 }
                 Json.parseToJsonElement(raw)
+            } catch (error: IOException) {
+                throw ApiTransportFailure(sendingBody, error)
             } finally {
                 conn.disconnect()
             }
@@ -114,6 +132,9 @@ class FeedbackApi(private val context: Context) {
 }
 
 class ApiFailure(val status: Int, val code: String, message: String) : Exception(message)
+
+internal class ApiTransportFailure(val requestMayHaveArrived: Boolean, cause: IOException) :
+    IOException(cause.message, cause)
 
 internal fun JsonObject.str(key: String) = (get(key) as? JsonPrimitive)?.contentOrNull.orEmpty()
 

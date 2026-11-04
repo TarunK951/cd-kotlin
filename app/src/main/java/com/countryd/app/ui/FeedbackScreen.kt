@@ -23,51 +23,80 @@ import com.countryd.app.domain.*
 import java.time.Instant
 
 @Composable
-fun RatingStars(value: Int, onChange: (Int) -> Unit) {
-    Row {
+fun RatingStars(value: Int, onChange: ((Int) -> Unit)? = null) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         (1..5).forEach { n ->
-            IconButton({ onChange(n) }) {
-                Icon(
-                    if (n <= value) CountryIcons.StarFilled else CountryIcons.Star,
-                    "$n star${if(n==1)"" else "s"}",
-                    tint = if (n <= value) Color(0xFFE3A82F) else Muted,
-                )
+            val description = "$n star${if (n == 1) "" else "s"}"
+            val icon = if (n <= value) CountryIcons.StarFilled else CountryIcons.Star
+            val tint = if (n <= value) Green else Muted
+            if (onChange != null) {
+                IconButton(onClick = { onChange(n) }, modifier = Modifier.weight(1f)) {
+                    Icon(icon, description, Modifier.size(30.dp), tint = tint)
+                }
+            } else {
+                Box(Modifier.weight(1f).height(40.dp), contentAlignment = Alignment.Center) {
+                    Icon(
+                        icon,
+                        if (n == value) "$value out of 5 stars" else null,
+                        Modifier.size(26.dp),
+                        tint = tint,
+                    )
+                }
             }
         }
     }
 }
 
+internal fun feedbackRoute(request: FeedbackRequest, from: String = "") =
+    "feedback/${request.productId}?from=$from&requestId=${android.net.Uri.encode(request.id)}"
+
+internal fun feedbackLabel(request: FeedbackRequest) =
+    request.label.ifBlank {
+        request.productName.removePrefix("Fresh ").removePrefix("Whole Wheat ")
+    }
+
 @Composable
 fun FeedbackPrompt(request: FeedbackRequest, vm: CountryViewModel, go: (String) -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(request.id) { if (!request.demo) vm.markFeedbackShown(request) }
-    CountryCard(color = Color(0xFFEFF4E8)) {
+    CountryCard(color = Color(0xFFF5F8F4)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             state.products
                 .find { it.id == request.productId }
-                ?.let {
-                    AssetImage(
-                        productImage(it),
-                        it.name,
-                        Modifier.size(46.dp)
-                            .background(
-                                Color.White,
-                                androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-                            ),
-                    )
-                }
+                ?.let { AssetImage(productImage(it), it.name, Modifier.size(56.dp)) }
             Column(Modifier.weight(1f)) {
                 Text(request.productName, fontWeight = FontWeight.SemiBold)
-                Caption("Rate your product")
+                Caption("Delivered ${feedbackDate(request.deliveryDate)} · ${request.unit}")
             }
-            IconButton({ vm.dismissFeedback(request) }) {
-                Icon(CountryIcons.Close, "Skip feedback reminder")
+            TextButton(
+                { vm.dismissFeedback(request) },
+                contentPadding = PaddingValues(horizontal = 6.dp),
+            ) {
+                Text("SKIP", style = MaterialTheme.typography.labelSmall)
             }
         }
-        PrimaryButton("Rate product") { go("feedback/${request.productId}") }
+        Text(
+            "How was your ${feedbackLabel(request)}?",
+            Modifier.fillMaxWidth(),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            style = MaterialTheme.typography.titleMedium,
+        )
+        RatingStars(0) { rating ->
+            vm.markFeedbackShown(request)
+            vm.saveFeedback(
+                FeedbackResponse(
+                    request,
+                    rating,
+                    emptyList(),
+                    "",
+                    Instant.now().toString(),
+                    rating >= 4,
+                )
+            )
+            go(feedbackRoute(request))
+        }
     }
 }
 
@@ -114,9 +143,9 @@ fun FeedbackSampleCards(state: CountryState, vm: CountryViewModel, go: (String) 
                                 rating >= 4,
                             )
                         )
-                        go("feedback/${p.id}?from=orders")
+                        go(feedbackRoute(request, "orders"))
                     }
-                    TextButton({ go("feedback/${p.id}?from=orders") }) {
+                    TextButton({ go(feedbackRoute(request, "orders")) }) {
                         Text(
                             if (response?.rating != null && response.rating >= 4) "Buy again"
                             else if (response != null) "View feedback" else "Rate product"
@@ -135,16 +164,28 @@ fun FeedbackScreen(
     go: (String) -> Unit,
     id: String,
     from: String = "",
+    requestId: String = "",
+    onBack: () -> Unit,
 ) {
     val p = state.products.find { it.id == id } ?: return
-    val real =
-        state.feedbackPrompt?.takeIf { it.productId == id }
-            ?: feedbackRequests(state.session, state.products).find { it.productId == id }
-    val stored = state.session.feedback.lastOrNull { it.request.productId == id }
+    val stored =
+        state.session.feedback.lastOrNull {
+            it.request.productId == id && (requestId.isBlank() || it.request.id == requestId)
+        }
+    val exact =
+        state.session.orders
+            .asSequence()
+            .flatMap { orderFeedbackRequests(it, state.session, state.products).asSequence() }
+            .firstOrNull { it.id == requestId && it.productId == id }
     val request =
-        real
-            ?: stored?.request
-            ?: if (BuildConfig.DEBUG) state.sampleRequests.find { it.productId == id } else null
+        if (requestId.isNotBlank()) {
+            exact
+                ?: stored?.request
+                ?: state.sampleRequests.find { BuildConfig.DEBUG && it.id == requestId }
+        } else {
+            state.feedbackPrompt?.takeIf { it.productId == id }
+                ?: if (BuildConfig.DEBUG) state.sampleRequests.find { it.productId == id } else null
+        }
     val existing = stored?.takeIf { it.request.id == request?.id }
     if (request == null) {
         ScreenBody {
@@ -156,7 +197,9 @@ fun FeedbackScreen(
     var issues by remember { mutableStateOf(existing?.issues?.toSet() ?: emptySet()) }
     var note by rememberSaveable { mutableStateOf(existing?.note.orEmpty()) }
     var photo by remember { mutableStateOf(existing?.photo) }
-    var saved by remember { mutableStateOf(existing != null) }
+    var saved by rememberSaveable(request.id) { mutableStateOf(existing?.detailsComplete == true) }
+    var reordering by rememberSaveable(request.id) { mutableStateOf(false) }
+    var editedRating by rememberSaveable(request.id) { mutableStateOf<Int?>(null) }
     var message by remember { mutableStateOf("") }
     val context = LocalContext.current
     val picker =
@@ -202,6 +245,70 @@ fun FeedbackScreen(
             }
         }
     val subscribed = state.session.subscriptions.any { it.productId == id && it.status != "Past" }
+    val reset = {
+        vm.update { session ->
+            session.copy(feedback = session.feedback.filterNot { it.request.id == request.id })
+        }
+        rating = 0
+        issues = emptySet()
+        note = ""
+        photo = null
+        saved = false
+        message = ""
+    }
+    fun useRating(newRating: Int) {
+        editedRating = null
+        if (rating == newRating) return
+        rating = newRating
+        val positive = rating >= 4
+        vm.saveFeedback(
+            FeedbackResponse(
+                request,
+                rating,
+                if (positive) emptyList() else issues.toList(),
+                if (positive) "" else note,
+                Instant.now().toString(),
+                positive,
+                if (positive) null else photo,
+            )
+        )
+        vm.clearFeedbackPrompt()
+        saved = positive
+    }
+    if (saved && rating >= 4 && !subscribed) {
+        FeedbackConfirmation(
+            title = "Feedback saved",
+            close = { if (reordering) reordering = false else onBack() },
+            buyAgain = if (request.canReorder) ({ reordering = true }) else null,
+            sheet =
+                if (reordering)
+                    ({
+                        LocalFeedbackReorder(request, p, onBack = { reordering = false }) {
+                            line,
+                            date ->
+                            vm.stageFeedbackReorder(line, date)
+                            onBack()
+                            go("cart")
+                        }
+                    })
+                else null,
+        ) {
+            val name = state.session.name.trim().substringBefore(' ')
+            Text(
+                if (name.isBlank()) "Thanks for sharing!" else "Thanks for sharing, $name!",
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Text(
+                "Your $rating-star rating is saved. We’re glad you enjoyed your ${feedbackLabel(request)}.",
+                color = Muted,
+            )
+            RatingStars(rating)
+            CountryCard { LocalFeedbackSummary(request, p) }
+            if (request.demo && from != "orders")
+                TextButton(onClick = reset) { Text("Try this sample again") }
+        }
+        return
+    }
     ScreenBody {
         if (request.demo && from != "orders")
             Options(
@@ -213,16 +320,7 @@ fun FeedbackScreen(
                 )
             }
         if (request.demo) Caption("SAMPLE DELIVERY · no real purchase")
-        CountryCard {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                AssetImage(productImage(p), p.name, Modifier.size(64.dp))
-                Column {
-                    Heading(p.name)
-                    Caption("${request.unit} · ${request.deliveryDate}")
-                    Caption(request.area)
-                }
-            }
-        }
+        CountryCard { LocalFeedbackSummary(request, p) }
         if (subscribed) {
             EmptyState(
                 "Subscribed product",
@@ -230,27 +328,48 @@ fun FeedbackScreen(
             )
             return@ScreenBody
         }
-        Heading("How was your product?")
-        RatingStars(rating) {
-            rating = it
-            issues = emptySet()
-            note = ""
-            photo = null
-            vm.saveFeedback(
-                FeedbackResponse(
-                    request,
-                    rating,
-                    emptyList(),
-                    "",
-                    Instant.now().toString(),
-                    rating >= 4,
-                )
+        if (rating == 0) {
+            Heading("How was your ${feedbackLabel(request)}?")
+            RatingStars(rating, ::useRating)
+            return@ScreenBody
+        }
+        if (saved) {
+            Heading("Feedback saved")
+            RatingStars(rating)
+            issues.forEach { Text(it) }
+            if (note.isNotBlank()) Text(note)
+            photo?.let { Caption(it.fileName) }
+            PrimaryButton("Continue shopping", onClick = onBack)
+            if (request.demo && from != "orders")
+                TextButton(onClick = reset) { Text("Try this sample again") }
+            return@ScreenBody
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                if (editedRating != null) "Edit your rating" else "Your rating · $rating of 5",
+                Modifier.weight(1f),
+                style = MaterialTheme.typography.titleSmall,
             )
-            vm.clearFeedbackPrompt()
-            saved = true
+            if (editedRating == null) TextButton({ editedRating = rating }) { Text("Edit rating") }
+        }
+        RatingStars(
+            editedRating ?: rating,
+            if (editedRating != null) ({ editedRating = it }) else null,
+        )
+        if (editedRating != null) {
+            PrimaryButton("Use this rating") { editedRating?.let(::useRating) }
+            TextButton({ editedRating = null }) { Text("Cancel") }
+            return@ScreenBody
         }
         if (rating in 1..3) {
-            Heading("What could be better?")
+            Heading(
+                when (rating) {
+                    1 -> "We’re really sorry about this"
+                    2 -> "Sorry, this fell short."
+                    else -> "Good, but could be better."
+                }
+            )
+            Caption("What wasn’t right? Pick all that apply.")
             request.issues.forEach { issue ->
                 Row(
                     Modifier.fillMaxWidth()
@@ -280,7 +399,7 @@ fun FeedbackScreen(
             minLines = 3,
         )
         OutlinedButton({ picker.launch(arrayOf("image/*")) }, Modifier.fillMaxWidth()) {
-            Text(if (photo == null) "Attach a product photo" else "Change photo")
+            Text(if (photo == null) "Add a photo (optional)" else "Replace attached photo")
         }
         photo?.let {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -294,11 +413,8 @@ fun FeedbackScreen(
             }
         }
         if (message.isNotEmpty()) Caption(message)
-        PrimaryButton(
-            if (saved) "Update feedback" else "Save feedback",
-            enabled = rating in 1..5 && (rating >= 4 || issues.isNotEmpty()),
-        ) {
-            val response =
+        PrimaryButton("Submit feedback") {
+            vm.saveFeedback(
                 FeedbackResponse(
                     request,
                     rating,
@@ -308,41 +424,87 @@ fun FeedbackScreen(
                     true,
                     photo,
                 )
-            vm.saveFeedback(response)
+            )
             vm.clearFeedbackPrompt()
             saved = true
-            message =
-                "Feedback saved on this device. Submission is pending until a backend is connected."
         }
-        if (saved && rating >= 4 && request.canReorder) {
-            Heading("Glad you enjoyed it")
-            PrimaryButton("Buy again") {
-                vm.add(CartLine(p.id, variant = p.defaultVariant))
-                go("cart")
-            }
-        }
-        TextButton({
-            vm.dismissFeedback(request)
-            go(if (from == "orders") "orders" else "home")
-        }) {
-            Text("Not now")
-        }
+        TextButton(onClick = onBack) { Text("Not now") }
         if (request.demo && from != "orders")
-            TextButton({
-                vm.update {
-                    it.copy(
-                        feedback = it.feedback.filterNot { old -> old.request.id == request.id }
-                    )
-                }
-                rating = 0
-                issues = emptySet()
-                note = ""
-                photo = null
-                saved = false
-                message = ""
-            }) {
-                Text("Try this sample again")
-            }
-        Caption("Sample data only. Cart actions are simulated and do not place an order.")
+            TextButton(onClick = reset) { Text("Try this sample again") }
+    }
+}
+
+@Composable
+private fun LocalFeedbackSummary(request: FeedbackRequest, product: Product) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        AssetImage(productImage(product), product.name, Modifier.size(60.dp))
+        Column(Modifier.weight(1f)) {
+            Text(product.name, style = MaterialTheme.typography.titleMedium)
+            Caption("Delivered ${feedbackDate(request.deliveryDate)} · ${request.unit}")
+            Caption(request.area)
+        }
+    }
+}
+
+@Composable
+private fun LocalFeedbackReorder(
+    request: FeedbackRequest,
+    product: Product,
+    onBack: () -> Unit,
+    onContinue: (CartLine, String) -> Unit,
+) {
+    val tomorrow = java.time.LocalDate.now().plusDays(1)
+    var qty by rememberSaveable { mutableIntStateOf(1) }
+    var date by rememberSaveable { mutableStateOf(tomorrow.toString()) }
+    var subscription by rememberSaveable { mutableStateOf(false) }
+    val variant = product.variants.firstOrNull { it.unit.equals(request.unit, ignoreCase = true) }
+    val available = variant != null || product.unit.equals(request.unit, ignoreCase = true)
+    val eligibleDate =
+        runCatching { java.time.LocalDate.parse(date) >= tomorrow }.getOrDefault(false)
+    TextButton(onClick = onBack) { Text("Back to feedback") }
+    Heading("Buy again")
+    Caption("Your feedback remains saved. This optional order is separate.")
+    CountryCard { LocalFeedbackSummary(request, product) }
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text("Quantity · ${money(variant?.price ?: product.price)} / pack", Modifier.weight(1f))
+        Quantity(qty, { qty = it }, maximum = if (subscription) 10 else 20)
+    }
+    if (product.frequency.isNotEmpty()) {
+        Heading("How do you want it?")
+        Options(
+            listOf("Subscription", "Buy once"),
+            if (subscription) "Subscription" else "Buy once",
+        ) {
+            subscription = it == "Subscription"
+            if (subscription) qty = qty.coerceAtMost(10)
+        }
+    }
+    Heading(if (subscription) "Start delivery on" else "Deliver on")
+    FeedbackDateChoices(
+        suggested = tomorrow.toString(),
+        suggestedLabel = "Tomorrow",
+        minimum = tomorrow.toString(),
+        maximum = tomorrow.plusDays(30).toString(),
+        date = date,
+        enabled = true,
+        onDate = { date = it },
+    )
+    if (subscription) Caption("Daily deliveries starting ${feedbackDate(date)}.")
+    if (!available) Caption("This pack size is no longer available.")
+    PrimaryButton("Continue to checkout", enabled = available && eligibleDate) {
+        val plan = if (subscription) Plan(startDate = date) else null
+        onContinue(
+            CartLine(
+                product.id,
+                qty,
+                if (subscription) "Subscribe" else "Once",
+                variant,
+                plan = plan,
+            ),
+            date,
+        )
     }
 }

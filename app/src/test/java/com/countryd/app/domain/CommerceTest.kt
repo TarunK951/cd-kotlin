@@ -189,6 +189,59 @@ class CommerceTest {
     }
 
     @Test
+    fun deliveredProductsCanBeReviewedImmediatelyAndSkippedRemindersStaySuppressed() {
+        val date = LocalDate.parse("2026-11-04")
+        val now = Instant.parse("2026-11-04T03:00:00Z")
+        val order =
+            Order(
+                "o2",
+                now.toString(),
+                date.toString(),
+                "Morning",
+                "Home",
+                listOf(OrderLine(CartLine(milk.id))),
+                totals(milk.price, Session()),
+                status = "Delivered",
+                deliveredAt = now.toString(),
+            )
+        val session = Session(orders = listOf(order))
+        val request = feedbackRequests(session, listOf(milk), date, now, immediate = true).single()
+        assertEquals("o2:0:${milk.id}", request.id)
+        assertEquals(request, orderFeedbackRequests(order, session, listOf(milk)).single())
+        assertTrue(
+            orderFeedbackRequests(order.copy(status = "Scheduled"), session, listOf(milk)).isEmpty()
+        )
+        val repeat = session.copy(orders = listOf(order, order.copy(id = "previous")))
+        assertTrue(feedbackRequests(repeat, listOf(milk), date, now, immediate = true).isEmpty())
+        val past = Subscription("past", milk.id, 1, milk.unit, milk.price, Plan(), status = "Past")
+        assertTrue(
+            feedbackRequests(
+                    session.copy(subscriptions = listOf(past)),
+                    listOf(milk),
+                    date,
+                    now,
+                    immediate = true,
+                )
+                .isEmpty()
+        )
+        val skipped =
+            session.copy(
+                feedbackEvents =
+                    listOf(FeedbackEvent(request.id, request.productId, now.toString(), true))
+            )
+        assertTrue(
+            feedbackRequests(
+                    skipped,
+                    listOf(milk),
+                    date.plusDays(5),
+                    now.plusSeconds(5 * 86400),
+                    immediate = true,
+                )
+                .isEmpty()
+        )
+    }
+
+    @Test
     fun feedbackCooldownAppliesAcrossProducts() {
         val session =
             Session(feedbackEvents = listOf(FeedbackEvent("r", "p2", "2026-11-02T00:00:00Z")))

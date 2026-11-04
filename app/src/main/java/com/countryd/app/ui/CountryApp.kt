@@ -14,17 +14,22 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.countryd.app.*
 import com.countryd.app.api.FeedbackConnectionModel
+import com.countryd.app.api.list
 import com.countryd.app.api.num
 import com.countryd.app.api.str
 import com.countryd.app.data.*
 import com.countryd.app.domain.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -108,23 +113,43 @@ fun CountryApp(
         }
     }
     if (connected.customer != null) {
-        ConnectedFeedbackSheet(connected, connection)
+        ConnectedFeedbackSheet(
+            connected,
+            connection,
+            openCart = { go("cart") },
+            chooseAddress = { go("server-addresses?pick=true") },
+            visible = !route.startsWith("server-addresses"),
+        )
         ManualRatingSheet(connected, connection)
         ConnectedOrderConfirmation(connected, connection, { go("home") }) { go("orders") }
+        ConnectedCheckoutFailure(connected, connection)
     }
-    LaunchedEffect(connected.customer) {
-        if (connected.customer != null) {
-            go("home")
+    val signedIn = connected.customer != null
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(signedIn) {
+        if (signedIn) {
+            val destination = nav.currentBackStackEntryFlow.first().destination
+            if (destination.route != "home") go("home")
         }
     }
-    LaunchedEffect(route, connected.customer) {
-        if (route == "home" && connected.customer != null) {
-            connection.state.first { !it.busy }
-            connection.next()
+    LaunchedEffect(route, signedIn, lifecycle) {
+        if (route == "home" && signedIn) {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                while (true) {
+                    val current = connection.state.first { !it.busy }
+                    if (current.manualPrompt == null &&
+                        current.result == null && current.detail == null && current.placedOrders.isEmpty()
+                    ) {
+                        connection.next()
+                    }
+                    delay(60_000)
+                }
+            }
         }
     }
     LaunchedEffect(showMilkOffer) {
         if (showMilkOffer) {
+            nav.currentBackStackEntryFlow.first()
             nav.navigate("milk-offer") {
                 launchSingleTop = true
                 popUpTo(nav.graph.startDestinationId) { inclusive = false }
@@ -166,24 +191,30 @@ fun CountryApp(
                     )
                     val customer = connected.customer
                     if (customer != null) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Deliver to", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        val address = connected.activeDeliveryAddress()
+                        Column(
+                            Modifier.weight(1f).heightIn(min = 44.dp)
+                                .clickable { go("server-addresses?pick=true") },
+                            verticalArrangement = Arrangement.Center,
+                        ) {
                             Text(
-                                listOf(customer.str("area"), customer.str("city"))
+                                if (address == null) "Choose delivery address"
+                                else if (!address.isCompleteDeliveryAddress()) "Complete delivery address"
+                                else "Deliver to ${address.str("label").ifBlank { "Home" }}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Text(
+                                listOf(
+                                    address?.str("area").orEmpty().ifBlank { customer.str("area") },
+                                    address?.str("city").orEmpty().ifBlank { customer.str("city") },
+                                )
                                     .filter(String::isNotBlank)
                                     .joinToString(", "),
                                 fontSize = 11.sp,
                                 color = Muted,
+                                maxLines = 1,
                             )
-                        }
-                        IconButton(onClick = { go("cart") }) {
-                            val count =
-                                connected.cartSummary?.num("totalQuantity")
-                                    ?: connected.cart?.num("totalQuantity")
-                                    ?: 0
-                            BadgedBox(badge = { if (count > 0) Badge { Text(count.toString()) } }) {
-                                Icon(CountryIcons.ShoppingBag, "View cart")
-                            }
                         }
                     } else {
                         Column(Modifier.weight(1f).clickable { go("addresses") }) {
@@ -210,7 +241,9 @@ fun CountryApp(
                         IconButton({ go("wishlist") }) { Icon(CountryIcons.Heart, "Open wishlist") }
                     }
                 }
-            else if (
+            else if (route.startsWith("server-addresses")) {
+                // The address editor owns its header so Back can return to the saved list.
+            } else if (
                 route == "profile" ||
                     route.startsWith("shop") ||
                     route == "assistant" ||
@@ -245,6 +278,7 @@ fun CountryApp(
             if (
                 !keyboardVisible &&
                     route !in listOf("checkout", "payment") &&
+                    !route.startsWith("server-addresses") &&
                     !route.startsWith("feedback/")
             ) {
                 Column(
@@ -252,6 +286,28 @@ fun CountryApp(
                 ) {
                     val showOffers =
                         route == "home" || route.startsWith("shop") || route == "protein"
+                    val connectedCartCount = connected.cart?.list("items")?.sumOf { it.num("quantity") }
+                        ?: connected.cartSummary?.num("totalQuantity")
+                        ?: 0
+                    if (connected.customer != null && showOffers && connectedCartCount > 0) {
+                        Surface(
+                            onClick = { go("cart") },
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                            shape = RoundedCornerShape(18.dp),
+                            color = Green,
+                            contentColor = Color.White,
+                        ) {
+                            Row(
+                                Modifier.heightIn(min = 48.dp).padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                Icon(CountryIcons.ShoppingBag, null, Modifier.size(19.dp))
+                                Text("View cart", Modifier.weight(1f), fontWeight = FontWeight.Bold)
+                                Text(if (connectedCartCount == 1L) "1 item" else "$connectedCartCount items")
+                            }
+                        }
+                    }
                     if (connected.customer == null && (showOffers || s.cart.isNotEmpty())) {
                         Row(
                             Modifier.fillMaxWidth().padding(bottom = 6.dp),
@@ -387,8 +443,9 @@ fun CountryApp(
                             connected,
                             connection,
                             "all",
-                            { go("cart") },
                             homeFeedback = { ConnectedHomeFeedback(connected, connection) },
+                            refreshHome = connection::next,
+                            viewAll = { go("shop") },
                         ) { id ->
                             go("server-product/$id")
                         }
@@ -418,20 +475,30 @@ fun CountryApp(
                             connected,
                             connection,
                             category,
-                            { go("feedback-account") },
                         ) { id ->
-                            go("server-product/$id")
+                            go("server-product/$id?subscribe=${category == "subscribe"}")
                         }
                     } else ShopScreen(state, vm, ::go, category)
                 }
-                composable("server-product/{id}") { entry ->
+                composable(
+                    "server-product/{id}?subscribe={subscribe}",
+                    listOf(navArgument("subscribe") { type = NavType.BoolType; defaultValue = false }),
+                ) { entry ->
                     val id = entry.arguments?.getString("id").orEmpty()
-                    ConnectedProduct(connected, connection, id)
+                    val subscribe = entry.arguments?.getBoolean("subscribe") == true
+                    ConnectedProduct(
+                        connected,
+                        connection,
+                        id,
+                        subscribe,
+                        openSubscriptions = { go("subs") },
+                        chooseAddress = { go("server-addresses?pick=true") },
+                    )
                 }
                 composable("protein") {
                     if (connected.customer == null) ProteinScreen(state, vm, ::go)
                     else
-                        ConnectedShop(connected, connection, "protein", { go("cart") }) { id ->
+                        ConnectedShop(connected, connection, "protein") { id ->
                             go("server-product/$id")
                         }
                 }
@@ -442,7 +509,7 @@ fun CountryApp(
                             connected,
                             connection,
                             { go("orders") },
-                            { go("shop") },
+                            { go("shop?category=subscribe") },
                         )
                 }
                 composable(
@@ -455,15 +522,12 @@ fun CountryApp(
                     ),
                 ) { entry ->
                     val selecting = entry.arguments?.getBoolean("pick") == true
+                    val back: () -> Unit = { if (!nav.popBackStack()) go("home") }
                     ConnectedAddresses(
                         connected,
                         connection,
-                        if (selecting)
-                            ({
-                                nav.popBackStack()
-                                Unit
-                            })
-                        else null,
+                        onClose = back,
+                        onSelected = back.takeIf { selecting },
                     )
                 }
                 composable("orders") {
@@ -566,8 +630,11 @@ fun CountryApp(
                 composable("information") { InformationScreen() }
                 composable("feedback-samples") { FeedbackSamplesScreen(state, vm, ::go) }
                 composable(
-                    "feedback/{id}?from={from}",
-                    listOf(navArgument("from") { defaultValue = "" }),
+                    "feedback/{id}?from={from}&requestId={requestId}",
+                    listOf(
+                        navArgument("from") { defaultValue = "" },
+                        navArgument("requestId") { defaultValue = "" },
+                    ),
                 ) { entry ->
                     val id = entry.arguments?.getString("id").orEmpty()
                     key(id) {
@@ -577,6 +644,8 @@ fun CountryApp(
                             ::go,
                             id,
                             entry.arguments?.getString("from").orEmpty(),
+                            entry.arguments?.getString("requestId").orEmpty(),
+                            onBack = { if (!nav.popBackStack()) go("home") },
                         )
                     }
                 }
@@ -634,7 +703,10 @@ fun CountryApp(
                     }
                 }
                 when (destination) {
-                    "addresses" -> AddressesScreen(state, vm)
+                    "addresses" -> {
+                        val picking = returnToCart || route == "home" || route == "checkout"
+                        AddressesScreen(state, vm, (::closeOverlay).takeIf { picking })
+                    }
                     "wishlist" -> WishlistScreen(state, vm, ::go)
                     "wallet" -> WalletScreen(state, vm)
                     "offers" -> OffersScreen(state, vm, ::go)
@@ -671,17 +743,39 @@ fun CountryApp(
             dismissButton = { TextButton({ dialog = null }) { Text("Cancel") } },
         )
     confirmedOrder?.let { id ->
-        OrderConfirmation(
-            onHome = {
-                confirmedOrder = null
-                go("home")
-            },
-            onViewOrder = {
-                confirmedOrder = null
-                go("order/$id")
-            },
-        )
+        val order = state.session.orders.find { it.id == id }
+        val finish = {
+            confirmedOrder = null
+            go("home")
+        }
+        val view = {
+            confirmedOrder = null
+            go("order/$id")
+        }
+        if (order != null && state.feedbackReorderOrderId == id) {
+            val subscription = order.items.filterNot { it.line.freeGift }.all { it.line.plan != null }
+            FeedbackConfirmation(
+                title = if (subscription) "Subscription confirmed" else "Order success",
+                close = finish,
+                successMessage = "Your feedback remains saved",
+                viewOrders = view,
+            ) {
+                Text(if (subscription) "Thank you for subscribing!" else "Your order has been placed.",
+                    style = MaterialTheme.typography.titleLarge)
+                CountryCard {
+                    order.items.filterNot { it.line.freeGift }.take(3).forEach { item ->
+                        val product = state.products.find { it.id == item.line.productId }
+                        if (product != null) Text("${product.name} · ${item.line.qty} × ${item.line.variant?.unit ?: product.unit}")
+                    }
+                    Caption(feedbackDate(order.deliveryDate))
+                    Caption(order.address)
+                }
+            }
+        } else {
+            OrderConfirmation(onHome = finish, onViewOrder = view)
+        }
     }
+
     state.error?.let { message ->
         AlertDialog(
             onDismissRequest = vm::clearError,
@@ -694,7 +788,7 @@ fun CountryApp(
 
 private fun screenTitle(route: String): String =
     when {
-        route.startsWith("product/") -> "Product details"
+        route.startsWith("product/") || route.startsWith("server-product/") -> "Product details"
         route.startsWith("milk-plan/") -> "Your milk plan"
         route.startsWith("order/") -> "Your order"
         route.startsWith("edit-sub/") -> "Edit subscription"
@@ -723,7 +817,6 @@ private fun screenTitle(route: String): String =
                 "feedback-samples" to "Sample deliveries",
                 "feedback-account" to "Cart",
                 "server-addresses?pick={pick}" to "Saved addresses",
-                "server-product/{id}" to "Product details",
             )[route] ?: "Country Delight"
     }
 

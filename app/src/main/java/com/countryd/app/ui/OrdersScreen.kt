@@ -138,6 +138,32 @@ fun OrderScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit,
                         )
                     }
                 }
+                val reviews = orderFeedbackRequests(order, state.session, state.products)
+                if (reviews.isNotEmpty()) {
+                    CountryCard {
+                        Heading("Product feedback")
+                        reviews.forEach { request ->
+                            val response =
+                                state.session.feedback.find { it.request.id == request.id }
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(request.productName, fontWeight = FontWeight.SemiBold)
+                                    Caption(request.unit)
+                                }
+                                if (response == null) {
+                                    TextButton({ go(feedbackRoute(request, "order")) }) {
+                                        Text("Rate product")
+                                    }
+                                } else {
+                                    Text("Rated ${response.rating}★", color = Green)
+                                }
+                            }
+                        }
+                    }
+                }
                 if (order.status != "Cancelled") DeliveryProgressCard(order)
                 CountryCard {
                     Heading("Manage this order")
