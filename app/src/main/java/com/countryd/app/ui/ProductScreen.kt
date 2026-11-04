@@ -46,7 +46,7 @@ fun ProductScreen(
         ) {
             Row(
                 Modifier.fillMaxWidth()
-                    .height(148.dp)
+                    .heightIn(min = 148.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .background(
                         Brush.horizontalGradient(listOf(Color(0xFFE6F1E6), Color(0xFFFFE7CB)))
@@ -58,11 +58,11 @@ fun ProductScreen(
                     productImage(product),
                     product.name,
                     Modifier.weight(.42f)
-                        .fillMaxHeight()
+                        .height(140.dp)
                         .background(Color.White, RoundedCornerShape(18.dp)),
                 )
                 Column(
-                    Modifier.weight(.58f).padding(16.dp),
+                    Modifier.weight(.58f).padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Text("YOUR SELECTED PACK", fontSize = 10.sp, color = Muted)

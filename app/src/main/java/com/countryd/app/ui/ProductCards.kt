@@ -31,7 +31,7 @@ fun ProductShelf(
     val width = (LocalConfiguration.current.screenWidthDp.coerceAtMost(600) - 58) / 3.25f
     LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         items(products, key = { it.id }) { p ->
-            ProductTile(p, session, vm, go, Modifier.width(width.dp))
+            ProductTile(p, session, vm, go, Modifier.width(width.coerceAtLeast(90f).dp))
         }
     }
 }

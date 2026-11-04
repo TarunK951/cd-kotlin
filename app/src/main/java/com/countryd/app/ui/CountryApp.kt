@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +32,12 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
     val route = entry?.destination?.route ?: "home"
     var dialog by remember { mutableStateOf<String?>(null) }
     var overlay by remember { mutableStateOf<String?>(null) }
+    var returnToCart by remember { mutableStateOf(false) }
+    val cartState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+    fun closeOverlay() {
+        overlay = if (returnToCart && state.session.cart.isNotEmpty()) "cart" else null
+        returnToCart = false
+    }
     var showMilkOffer by remember { mutableStateOf(false) }
     val motionDuration = if (LocalReducedMotion.current) 0 else 180
     val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
@@ -58,9 +65,12 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
         if (
             destination in
                 setOf("addresses", "wishlist", "offers", "vip", "routine", "cart", "vacation")
-        )
+        ) {
+            returnToCart = overlay == "cart" && destination in setOf("offers", "addresses")
+            if (destination == "cart" && overlay != "cart") cartState.removeState("cart")
             overlay = destination
-        else {
+        } else {
+            returnToCart = false
             overlay = null
             nav.navigate(destination) {
                 launchSingleTop = true
@@ -241,6 +251,7 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                                     Column(
                                         Modifier.weight(1f)
                                             .heightIn(min = 52.dp)
+                                            .clip(RoundedCornerShape(22.dp))
                                             .background(
                                                 if (selected) Mint else Color.Transparent,
                                                 RoundedCornerShape(22.dp),
@@ -404,7 +415,7 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
     }
     overlay?.let { destination ->
         ModalBottomSheet(
-            onDismissRequest = { overlay = null },
+            onDismissRequest = ::closeOverlay,
             containerColor = Canvas,
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         ) {
@@ -413,14 +424,37 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                     Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        screenTitle(destination),
-                        Modifier.weight(1f),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    IconButton({ overlay = null }) {
-                        Icon(CountryIcons.Close, "Close ${screenTitle(destination)}")
+                    if (destination == "cart") {
+                        IconButton(::closeOverlay) { Icon(CountryIcons.ChevronLeft, "Close cart") }
+                        Column(Modifier.weight(1f)) {
+                            val count = s.cart.sumOf { it.qty }
+                            Text(
+                                "Your cart · $count ${if (count == 1) "item" else "items"}",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                s.address?.display ?: "Choose a delivery address",
+                                fontSize = 11.sp,
+                                lineHeight = 14.sp,
+                                color = Muted,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            )
+                        }
+                        IconButton({ go("addresses") }) {
+                            Icon(CountryIcons.MapPin, "Change delivery address", tint = Green)
+                        }
+                    } else {
+                        Text(
+                            screenTitle(destination),
+                            Modifier.weight(1f),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        IconButton(::closeOverlay) {
+                            Icon(CountryIcons.Close, "Close ${screenTitle(destination)}")
+                        }
                     }
                 }
                 when (destination) {
@@ -429,7 +463,8 @@ fun CountryApp(vm: CountryViewModel = viewModel()) {
                     "offers" -> OffersScreen(state, vm, ::go)
                     "vip" -> VipScreen(state)
                     "routine" -> RoutineScreen(state, vm) { overlay = null }
-                    "cart" -> CartScreen(state, vm, ::go)
+                    "cart" ->
+                        cartState.SaveableStateProvider("cart") { CartScreen(state, vm, ::go) }
                     "vacation" -> VacationScreen(state, vm) { overlay = null }
                 }
             }

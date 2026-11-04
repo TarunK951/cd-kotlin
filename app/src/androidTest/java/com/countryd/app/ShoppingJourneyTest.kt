@@ -99,14 +99,8 @@ class ShoppingJourneyTest {
         screenshot("product")
         tap("Add")
         compose.onAllNodesWithText("Cow Milk").onFirst().assertExists()
-        compose
-            .onNode(hasText("Continue to checkout", substring = true) and hasClickAction())
-            .performClick()
-        compose.onAllNodes(isToggleable()).onLast().performScrollTo().performClick()
-        compose
-            .onNode(hasText("Place demo order", substring = true) and hasClickAction())
-            .performScrollTo()
-            .performClick()
+        tap("Wallet", true)
+        compose.onNode(hasText("Place order", substring = true) and hasClickAction()).performClick()
         tap("Complete demo checkout")
         compose.onNodeWithText("Order placed").assertExists()
         tap("View order")
@@ -145,13 +139,7 @@ class ShoppingJourneyTest {
             .onNode(hasText("Add plan", substring = true) and hasClickAction())
             .performScrollTo()
             .performClick()
-        compose
-            .onNode(hasText("Continue to checkout", substring = true) and hasClickAction())
-            .performClick()
-        compose
-            .onNode(hasText("Place demo order", substring = true) and hasClickAction())
-            .performScrollTo()
-            .performClick()
+        compose.onNode(hasText("Place order", substring = true) and hasClickAction()).performClick()
         tap("Complete demo checkout")
         tap("View order")
         tap("Subs")
@@ -200,13 +188,21 @@ class ShoppingJourneyTest {
         tap("Price drops", true)
         tap("Buy again", true)
         screenshot("cart-extras")
-        tap("Continue to checkout", substring = true)
         tap("Instructions", true)
         compose.onNodeWithText("Delivery instructions").assertExists()
         tap("Tip", true)
         compose.onNodeWithText("Thank your delivery partner").assertExists()
         tap("Delivery", true)
-        compose.onNodeWithText("Morning slot").assertExists()
+        tap("Change", true)
+        compose.onNodeWithText("Delivery date & slot").assertExists()
+        compose.onNodeWithText("Morning, 7:00 – 8:00 AM").assertDoesNotExist()
+        val nextDate = java.time.LocalDate.now().plusDays(2)
+        tap(nextDate.dayOfMonth.toString(), true)
+        compose
+            .onNodeWithText(
+                nextDate.format(java.time.format.DateTimeFormatter.ofPattern("EEE, d MMM"))
+            )
+            .assertExists()
         screenshot("checkout-preferences")
     }
 
@@ -269,8 +265,7 @@ class ShoppingJourneyTest {
                 .hideSoftInputFromWindow(it.window.decorView.windowToken, 0)
         }
         tap("Save follow-up", true)
-        tap("Resolved", true)
-        tap("Resolved")
+        tap("Mark resolved", true)
         compose.onAllNodesWithText("Missing delivery").onFirst().assertExists()
         compose.waitForIdle()
         val context = InstrumentationRegistry.getInstrumentation().targetContext

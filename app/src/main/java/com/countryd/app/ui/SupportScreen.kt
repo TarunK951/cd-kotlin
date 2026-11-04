@@ -244,17 +244,31 @@ fun SupportScreen(
                         }) {
                             Text("Save follow-up")
                         }
-                        Options(listOf("Open", "Escalated", "Resolved", "Closed"), r.status) {
-                            status ->
-                            vm.update {
-                                it.copy(
-                                    requests =
-                                        it.requests.map { old ->
-                                            if (old.id == r.id) old.copy(status = status) else old
+                        listOf(
+                                "Open" to "Reopen request",
+                                "Escalated" to "Request escalation",
+                                "Resolved" to "Mark resolved",
+                                "Closed" to "Close request",
+                            )
+                            .filter { it.first != r.status }
+                            .forEach { (status, label) ->
+                                TextButton(
+                                    onClick = {
+                                        vm.update { session ->
+                                            session.copy(
+                                                requests =
+                                                    session.requests.map {
+                                                        if (it.id == r.id) it.copy(status = status)
+                                                        else it
+                                                    }
+                                            )
                                         }
-                                )
+                                        filter = if (status == "Escalated") "Open" else status
+                                    }
+                                ) {
+                                    Text(label)
+                                }
                             }
-                        }
                     }
                 }
             }

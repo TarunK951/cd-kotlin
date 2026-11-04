@@ -33,6 +33,8 @@ fun DeliveryTabs(selected: String, onSelect: (String) -> Unit) {
             ) {
                 Text(
                     label,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 5.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = if (label == selected) Color.White else Muted,

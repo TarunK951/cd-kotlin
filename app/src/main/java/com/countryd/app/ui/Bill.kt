@@ -25,9 +25,15 @@ fun BillRow(label: String, value: String, bold: Boolean = false) {
 }
 
 @Composable
-fun Bill(bill: Totals, tip: Double) {
+fun Bill(
+    bill: Totals,
+    tip: Double,
+    title: String = "Bill details",
+    itemRows: @Composable ColumnScope.() -> Unit = {},
+) {
     CountryCard {
-        Heading("Bill details")
+        Heading(title)
+        itemRows()
         BillRow("Items total", money(bill.items))
         if (bill.savings > 0) BillRow("VIP savings", "−${money(bill.savings)}")
         if (bill.coupon > 0) BillRow("Coupon", "−${money(bill.coupon)}")

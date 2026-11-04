@@ -171,9 +171,14 @@ fun ScheduleEditor(plan: Plan, onChange: (Plan) -> Unit) {
                             )
                         },
                         label = {
-                            Text(LocalDate.parse(date).dayOfMonth.toString(), fontSize = 11.sp)
+                            Text(
+                                LocalDate.parse(date).dayOfMonth.toString(),
+                                fontSize = 10.sp,
+                                maxLines = 1,
+                            )
                         },
-                        modifier = Modifier.widthIn(min = 40.dp),
+                        modifier = Modifier.weight(1f),
+                        colors = FilterChipDefaults.filterChipColors(),
                     )
                 }
             }

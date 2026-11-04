@@ -13,11 +13,18 @@ import com.countryd.app.domain.*
 import java.time.LocalDate
 
 @Composable
-fun CheckoutScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Unit) {
+fun CheckoutScreen(
+    state: CountryState,
+    vm: CountryViewModel,
+    go: (String) -> Unit,
+    embedded: Boolean = false,
+    basket: @Composable ColumnScope.() -> Unit = {},
+) {
     val s = state.session
     var date by rememberSaveable { mutableStateOf(LocalDate.now().plusDays(1).toString()) }
+    var deliveryPicker by rememberSaveable { mutableStateOf(false) }
     var preference by rememberSaveable { mutableStateOf("Delivery") }
-    var slot by rememberSaveable { mutableStateOf("Morning, 6:00 – 7:00 AM") }
+    val slot = "Morning, 6:00 – 7:00 AM"
     var tip by rememberSaveable { mutableDoubleStateOf(0.0) }
     var points by rememberSaveable { mutableStateOf(false) }
     var wallet by rememberSaveable { mutableStateOf(false) }
@@ -40,110 +47,232 @@ fun CheckoutScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Un
         }
         return
     }
-    ScreenBody {
-        CountryCard {
-            Heading("Delivery address")
-            Text(s.address?.display ?: "Choose a delivery address")
-            TextButton({ go("addresses") }) { Text("Change address ›") }
-        }
-        CountryCard {
-            Heading("Delivery preferences")
-            Row(Modifier.fillMaxWidth()) {
-                listOf(
-                        "Delivery" to CountryIcons.Calendar,
-                        "Tip" to CountryIcons.Heart,
-                        "Instructions" to CountryIcons.FileText,
-                    )
-                    .forEach { (label, icon) ->
-                        FilterChip(
-                            selected = preference == label,
-                            onClick = { preference = label },
-                            modifier = Modifier.weight(1f),
-                            label = { Text(label, fontSize = 11.sp) },
-                            leadingIcon = { Icon(icon, null, Modifier.size(14.dp)) },
-                        )
+    Column(Modifier.fillMaxSize()) {
+        Box(Modifier.weight(1f)) {
+            ScreenBody {
+                basket()
+                if (!embedded)
+                    CountryCard {
+                        Heading("Delivery address")
+                        Text(s.address?.display ?: "Choose a delivery address")
+                        TextButton({ go("addresses") }) { Text("Change address ›") }
                     }
-            }
-            if (preference == "Delivery") {
-                Heading("Delivery date")
-                DateOptions(date) { date = it }
-                Heading("Morning slot")
-                Options(listOf("Morning, 6:00 – 7:00 AM", "Morning, 7:00 – 8:00 AM"), slot) {
-                    slot = it
-                }
-            }
-            if (preference == "Instructions") {
-                Heading("Delivery instructions")
-                listOf(
-                        "No bell, please",
-                        "Leave at the door",
-                        "Leave with security",
-                        "Hand it to me",
+                CountryCard {
+                    Text(
+                        "Delivery preferences",
+                        fontSize = 15.sp,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                     )
-                    .forEach { label ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                label in instructions,
-                                {
-                                    instructions =
-                                        if (it) instructions + label else instructions - label
-                                },
+                    Row(Modifier.fillMaxWidth()) {
+                        listOf(
+                                "Delivery" to CountryIcons.Calendar,
+                                "Tip" to CountryIcons.Heart,
+                                "Instructions" to CountryIcons.FileText,
                             )
-                            Icon(CountryIcons.FileText, null, Modifier.size(16.dp), tint = Green)
-                            Text(label, Modifier.padding(start = 8.dp))
+                            .forEach { (label, icon) ->
+                                Surface(
+                                    onClick = { preference = label },
+                                    modifier = Modifier.weight(1f),
+                                    color = if (preference == label) Mint else Canvas,
+                                    shape =
+                                        androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
+                                ) {
+                                    Column(
+                                        Modifier.heightIn(min = 48.dp)
+                                            .padding(horizontal = 2.dp, vertical = 5.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center,
+                                    ) {
+                                        Icon(icon, null, Modifier.size(14.dp), tint = Green)
+                                        Text(
+                                            label,
+                                            fontSize = 11.sp,
+                                            textAlign =
+                                                androidx.compose.ui.text.style.TextAlign.Center,
+                                        )
+                                    }
+                                }
+                            }
+                    }
+                    if (preference == "Delivery") {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    if (date == LocalDate.now().plusDays(1).toString()) "Tomorrow"
+                                    else
+                                        LocalDate.parse(date)
+                                            .format(
+                                                java.time.format.DateTimeFormatter.ofPattern(
+                                                    "EEE, d MMM"
+                                                )
+                                            ),
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                )
+                                Text(slot, fontSize = 10.sp, lineHeight = 14.sp, color = Muted)
+                            }
+                            TextButton({ deliveryPicker = !deliveryPicker }) {
+                                Text("Change", fontSize = 11.sp)
+                                Icon(
+                                    CountryIcons.Calendar,
+                                    null,
+                                    Modifier.padding(start = 6.dp).size(18.dp),
+                                )
+                            }
+                        }
+                        if (deliveryPicker) DeliveryDatePanel(date, slot) { date = it }
+                    }
+                    if (preference == "Instructions") {
+                        Heading("Delivery instructions")
+                        listOf(
+                                "No bell, please",
+                                "Leave at the door",
+                                "Leave with security",
+                                "Hand it to me",
+                            )
+                            .forEach { label ->
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Checkbox(
+                                        label in instructions,
+                                        {
+                                            instructions =
+                                                if (it) instructions + label
+                                                else instructions - label
+                                        },
+                                    )
+                                    Icon(
+                                        CountryIcons.FileText,
+                                        null,
+                                        Modifier.size(16.dp),
+                                        tint = Green,
+                                    )
+                                    Text(label, Modifier.padding(start = 8.dp))
+                                }
+                            }
+                    }
+                    if (preference == "Tip") {
+                        Heading("Thank your delivery partner")
+                        Options(
+                            listOf("No tip", "₹10", "₹20", "₹30", "₹50"),
+                            if (tip == 0.0) "No tip" else "₹${tip.toInt()}",
+                        ) {
+                            tip = it.removePrefix("₹").toDoubleOrNull() ?: 0.0
                         }
                     }
+                }
+                if (!embedded)
+                    CountryCard {
+                        Heading("Apply coupon")
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            OutlinedTextField(
+                                coupon,
+                                { coupon = it.uppercase() },
+                                modifier = Modifier.weight(1f),
+                                label = { Text("Coupon code") },
+                                singleLine = true,
+                            )
+                            TextButton({ vm.update { it.copy(coupon = coupon) } }) { Text("Apply") }
+                        }
+                        if (s.coupon.isNotEmpty())
+                            Caption(
+                                if (s.coupon == "DELIGHT10" && items >= 200) "DELIGHT10 applied"
+                                else
+                                    "DELIGHT10 requires a ₹200 basket. Other codes are unavailable in this preview."
+                            )
+                    }
+                Text(
+                    "Use your balance",
+                    fontSize = 15.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    BalanceCard(
+                        "Wallet",
+                        money(s.wallet),
+                        "wallet",
+                        s.wallet > 0,
+                        wallet,
+                        { wallet = it },
+                        Modifier.weight(1f),
+                    )
+                    BalanceCard(
+                        "Coins",
+                        s.points.toString(),
+                        "coins",
+                        s.points > 0,
+                        points,
+                        { points = it },
+                        Modifier.weight(1f),
+                    )
+                }
+                if (wallet && s.wallet < bill.total)
+                    CountryCard(color = Mint) {
+                        Text("Add ${money(bill.total-s.wallet)} to cover this order")
+                        TextButton({ go("wallet") }) { Text("Top up wallet") }
+                    }
+                CountryCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Nutrition")
+                            val known =
+                                s.cart.mapNotNull { line ->
+                                    state.products
+                                        .find { it.id == line.productId }
+                                        ?.let { product ->
+                                            packNutrients(
+                                                product.id,
+                                                line.variant?.unit ?: product.unit,
+                                                line.qty,
+                                            )
+                                        }
+                                }
+                            Caption(
+                                if (known.isEmpty()) "Values unavailable"
+                                else
+                                    "${grams(known.sumOf { it.protein })} protein · ${grams(known.sumOf { it.fiber })} fibre"
+                            )
+                        }
+                        TextButton({ go("nutrition") }) { Text("Details") }
+                    }
+                }
+                Bill(bill, tip, title = "Bill summary") {
+                    s.cart.forEach { line ->
+                        val product = state.products.first { it.id == line.productId }
+                        BillRow(product.name, money(lineTotal(line, product)))
+                        Caption("${line.qty} × ${line.variant?.unit ?: product.unit}")
+                    }
+                    if (s.vipActive) BillRow("Delight VIP pass · Free", "₹0")
+                }
+                if (embedded) CartExtras(state, vm, go)
+                if (error.isNotEmpty()) Text(error, color = MaterialTheme.colorScheme.error)
             }
-            if (preference == "Tip") {
-                Heading("Thank your delivery partner")
-                Options(
-                    listOf("No tip", "₹10", "₹20", "₹30", "₹50"),
-                    if (tip == 0.0) "No tip" else "₹${tip.toInt()}",
+        }
+        Surface(color = Canvas) {
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    "Items ${money(bill.items)} · Savings ${money(bill.savings + bill.coupon)} · Delivery ${money(bill.delivery)}",
+                    fontSize = 10.sp,
+                    lineHeight = 13.sp,
+                    color = Muted,
+                )
+                BillRow("Order total", money(bill.total), true)
+                if (bill.walletUsed > 0)
+                    Caption("Wallet ${money(bill.walletUsed)} · To pay ${money(bill.toPay)}")
+                PrimaryButton(
+                    if (bill.walletUsed > 0 && bill.toPay == 0.0)
+                        "Place order · ${money(bill.walletUsed)} wallet"
+                    else "Place order · ${money(bill.toPay)}",
+                    enabled = s.address != null,
                 ) {
-                    tip = it.removePrefix("₹").toDoubleOrNull() ?: 0.0
+                    payment = true
                 }
             }
-        }
-        CountryCard {
-            Heading("Apply coupon")
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                OutlinedTextField(
-                    coupon,
-                    { coupon = it.uppercase() },
-                    modifier = Modifier.weight(1f),
-                    label = { Text("Coupon code") },
-                    singleLine = true,
-                )
-                TextButton({ vm.update { it.copy(coupon = coupon) } }) { Text("Apply") }
-            }
-            if (s.coupon.isNotEmpty())
-                Caption(
-                    if (s.coupon == "DELIGHT10" && items >= 200) "DELIGHT10 applied"
-                    else
-                        "DELIGHT10 requires a ₹200 basket. Other codes are unavailable in this preview."
-                )
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(points, { points = it })
-            Text("Use ${s.points} reward points")
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(wallet, { wallet = it })
-            Text("Use wallet · ${money(s.wallet)}")
-        }
-        if (wallet && s.wallet < bill.total)
-            CountryCard(color = Mint) {
-                Text("Add ${money(bill.total-s.wallet)} to cover this order")
-                TextButton({ go("wallet") }) { Text("Top up wallet") }
-            }
-        Bill(bill, tip)
-        Caption("Demo checkout. No money will be charged and no real delivery will be placed.")
-        if (error.isNotEmpty()) Text(error, color = MaterialTheme.colorScheme.error)
-        PrimaryButton("Place demo order · ${money(bill.toPay)}", enabled = s.address != null) {
-            payment = true
         }
     }
     if (payment)
@@ -178,4 +307,144 @@ fun CheckoutScreen(state: CountryState, vm: CountryViewModel, go: (String) -> Un
             },
             dismissButton = { TextButton({ payment = false }) { Text("Cancel") } },
         )
+}
+
+@Composable
+private fun BalanceCard(
+    label: String,
+    value: String,
+    artwork: String,
+    enabled: Boolean,
+    selected: Boolean,
+    onChange: (Boolean) -> Unit,
+    modifier: Modifier,
+) {
+    Surface(
+        onClick = { onChange(!selected) },
+        enabled = enabled,
+        modifier = modifier,
+        color = if (selected) Mint else androidx.compose.ui.graphics.Color.White,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+        border = BorderStroke(1.dp, if (selected) Green else Line),
+    ) {
+        Row(
+            Modifier.heightIn(min = 64.dp).padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
+            AssetImage("native-art/balance-$artwork.png", null, Modifier.size(26.dp))
+            Column(Modifier.weight(1f)) {
+                Text(label, fontSize = 12.sp)
+                Text(value, fontSize = 13.sp)
+            }
+            Checkbox(selected, onCheckedChange = null)
+        }
+    }
+}
+
+@Composable
+private fun DeliveryDatePanel(date: String, slot: String, onDate: (String) -> Unit) {
+    val tomorrow = LocalDate.now().plusDays(1)
+    val dayFormat = java.time.format.DateTimeFormatter.ofPattern("EEE", java.util.Locale.ENGLISH)
+    val monthFormat = java.time.format.DateTimeFormatter.ofPattern("MMM", java.util.Locale.ENGLISH)
+    Column(
+        Modifier.fillMaxWidth()
+            .background(
+                androidx.compose.ui.graphics.Color(0xFFFBF8F0),
+                androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+            )
+            .border(1.dp, Line, androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            "Delivery date & slot",
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+        )
+        Caption(
+            LocalDate.parse(date)
+                .format(
+                    java.time.format.DateTimeFormatter.ofPattern(
+                        "EEE d MMM",
+                        java.util.Locale.ENGLISH,
+                    )
+                )
+        )
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val tileWidth = ((maxWidth - 18.dp) / 4).coerceIn(50.dp, 64.dp)
+            Row(
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                (0L..6L).forEach { offset ->
+                    val day = tomorrow.plusDays(offset)
+                    val selected = day.toString() == date
+                    val foreground = if (selected) androidx.compose.ui.graphics.Color.White else Ink
+                    Surface(
+                        onClick = { onDate(day.toString()) },
+                        modifier = Modifier.width(tileWidth),
+                        color = if (selected) Green else androidx.compose.ui.graphics.Color.White,
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, if (selected) Green else Line),
+                    ) {
+                        Column(
+                            Modifier.padding(vertical = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(
+                                if (offset == 0L) "Tomorrow" else day.format(dayFormat).uppercase(),
+                                fontSize = 9.sp,
+                                lineHeight = 12.sp,
+                                color = foreground,
+                            )
+                            Text(
+                                day.dayOfMonth.toString(),
+                                fontSize = 14.sp,
+                                lineHeight = 18.sp,
+                                color = foreground,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            )
+                            Text(
+                                day.format(monthFormat),
+                                fontSize = 9.sp,
+                                lineHeight = 12.sp,
+                                color = foreground,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        Surface(
+            color = Mint,
+            border = BorderStroke(1.dp, Green),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(
+                Modifier.padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                RadioButton(selected = true, onClick = null)
+                Column {
+                    Text(
+                        slot,
+                        fontSize = 11.sp,
+                        lineHeight = 15.sp,
+                        color = Green,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                    )
+                    Text(
+                        "Fastest (Club Priority)",
+                        fontSize = 10.sp,
+                        lineHeight = 13.sp,
+                        color = Muted,
+                    )
+                }
+            }
+        }
+    }
 }
