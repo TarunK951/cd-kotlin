@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import com.countryd.app.R
 
-// Original Lucide paths, imported as Android vectors. See third-party/LUCIDE-LICENSE.
+// Lucide icons. See third-party/LUCIDE-LICENSE.
 object CountryIcons {
     val Wallet: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_wallet)

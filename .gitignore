@@ -7,8 +7,4 @@ local.properties
 *.jks
 *.keystore
 captures/
-reference-assets/
-migration/reference-browser-session.json
-migration/emulator*.log
 tools/ktfmt.jar
-migration/window.xml
